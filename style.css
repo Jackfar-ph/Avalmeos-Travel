@@ -1,0 +1,79 @@
+/* --- Global Styles --- */
+body { 
+    font-family: 'Poppins', sans-serif; 
+}
+/* Headers and Titles */
+h1, h2, .font-header {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700; 
+    letter-spacing: -0.02em; 
+}
+
+h3, h4 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700; 
+}
+
+/* General body text */
+body {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+/* --- Scroll Entrance Animation --- */
+section, .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+section.visible, .animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Card Image Zoom on Hover --- */
+.card-zoom-container {
+    overflow: hidden; 
+    position: relative;
+}
+
+.card-zoom-image {
+    transition: transform 0.7s ease-in-out;
+}
+
+.card-zoom-container:hover .card-zoom-image {
+    transform: scale(1.1);
+}
+
+/* --- Text Lift on Hover --- */
+.hover-lift-text {
+    transition: transform 0.3s ease-out;
+}
+
+.card-zoom-container:hover .hover-lift-text {
+    transform: translateY(-8px);
+}
+
+/* --- Revised Scroll Entrance Animation with Navbar Fix --- */
+section[id], 
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.9s cubic-bezier(0.17, 0.55, 0.55, 1);
+}
+
+section.visible, 
+.animate-on-scroll.visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+/* Ensure navbar and header are always visible */
+nav, #navbar-placeholder, header {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+}
+html {
+    scroll-behavior: smooth;
+}

@@ -1,0 +1,36 @@
+<section id="contact" class="py-20 px-[8%] bg-[#1a4d41] text-white">
+        <div class="grid md:grid-cols-2 gap-12">
+            <div>
+                <h2 class="font-header text-4xl mb-6 uppercase">Plan Your Trip With Us</h2>
+                <p class="opacity-80 mb-8">Reach out for customized travel packages and local guide assistance.</p>
+                <div class="space-y-4">
+                    <p class="flex items-center gap-4"><span>📍</span> Plaridel, Central Luzon, Philippines</p>
+                    <p class="flex items-center gap-4"><span>📧</span> contact@avalmeos.com</p>
+                </div>
+            </div>
+            <form class="space-y-4">
+                <input type="text" placeholder="Your Name" class="w-full p-4 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:bg-white/20">
+                <textarea placeholder="Message" rows="4" class="w-full p-4 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:bg-white/20"></textarea>
+                <button type="button" class="bg-orange-500 w-full py-4 rounded-lg font-bold hover:bg-orange-600 transition">Send Message</button>
+            </form>
+        </div>
+</section>
+
+<footer class="py-10 text-center text-sm opacity-60">
+    &copy; 2014-2026 Avalmeo's Travel. All rights reserved.
+</footer>
+
+<div id="booking-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-8 relative text-[#1a4d41]">
+        <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 text-xl">✕</button>
+        <div id="modal-form-content">
+            <h2 class="font-header text-2xl mb-2">Book Your Trip</h2>
+            <p class="text-gray-500 mb-6 text-sm">Fill out the form to confirm your reservation.</p>
+            <form class="space-y-4">
+                <input type="text" placeholder="Full Name" class="w-full p-3 border rounded-xl">
+                <input type="date" class="w-full p-3 border rounded-xl">
+                <button type="submit" class="w-full bg-[#1a4d41] text-white py-4 rounded-xl font-bold">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+</div>

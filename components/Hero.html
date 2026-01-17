@@ -1,0 +1,26 @@
+<section id="home" class="relative h-screen w-full overflow-hidden flex items-center">
+    <div class="absolute inset-0 z-0">
+        <img id="hero-main" src="Picture/Cebu City.jpg" class="w-full h-full object-cover brightness-75 bg-gray-300">
+    </div>
+
+    <div class="relative z-10 px-[8%] text-white">
+        <h1 class="font-header leading-[0.9] uppercase">
+            <span class="block text-3xl sm:text-4xl md:text-6xl font-700">DISCOVER</span>
+            <span class="block text-5xl md:text-9xl font-900 tracking-tighter">PHILIPPINES</span>
+        </h1>
+        <p class="mt-6 text-lg max-w-lg opacity-90">Choose Destinations, plan activities, and book your perfect travel experience!</p>
+        <button onclick="document.getElementById('destinations').scrollIntoView({ behavior: 'smooth' })" 
+            class="mt-8 bg-[#1a3020] text-white px-10 py-4 rounded-lg font-bold hover:scale-105 transition-all">
+            Explore more
+        </button>
+    </div>
+
+    <div class="absolute right-[5%] top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-4 z-20">
+        <img src="Picture/Cebu City.jpg" data-src="Picture/Cebu City.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-white object-cover">
+        <img src="Picture/Old Manila.jpg" data-src="Picture/Old Manila.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+        <img src="Picture/Baguio.jpg" data-src="Picture/Baguio.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+        <img src="Picture/Davao.jpg" data-src="Picture/Davao.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+        <img src="Picture/Puerto Princesa.jpg" data-src="Picture/Puerto Princesa.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+        <img src="Picture/Iloilo.jpg" data-src="Picture/Iloilo.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+    </div>
+</section>

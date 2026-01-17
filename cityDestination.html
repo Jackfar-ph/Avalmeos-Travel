@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Destination | Avalmeo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="data.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+
+    <a href="index.html" class="fixed top-6 left-6 z-[60] bg-white/20 hover:bg-white/40 backdrop-blur-md text-white px-4 py-2 rounded-full font-bold transition">← Back</a>
+
+    <div class="relative h-[400px] w-full flex items-end">
+        <img id="pkg-banner" src="" class="absolute inset-0 w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+        <div class="relative max-w-7xl mx-auto px-8 pb-12 text-white w-full">
+            <h1 id="pkg-title" class="text-5xl font-bold mb-2">Loading...</h1>
+            <p id="pkg-subtitle" class="text-orange-400 font-bold uppercase tracking-widest text-sm"></p>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl font-bold mb-4 text-[#1a4d41]">About this Package</h2>
+            <p id="pkg-desc" class="text-gray-600 leading-relaxed mb-8"></p>
+            
+            <h3 class="text-xl font-bold mb-6 text-[#1a4d41]">Activities Included</h3>
+            <div id="activity-list" class="flex flex-col gap-4">
+                </div>
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 sticky top-10">
+                <p class="text-gray-400 text-sm">Price starts at</p>
+                <div id="pkg-price" class="text-4xl font-black text-[#1a4d41] mb-6"></div>
+                <button onclick="openModal()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg shadow-orange-200">Book This Package</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="booking-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-black">✕</button>
+            <h2 class="text-2xl font-bold text-[#1a4d41] mb-2">Book Your Trip</h2>
+            <p class="text-gray-500 text-sm mb-6">Enter your details and our agent will contact you.</p>
+            <form id="inquiry-form" class="space-y-4">
+                <input type="text" placeholder="Full Name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]">
+                <input type="email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]">
+                <textarea placeholder="Special Requests" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]"></textarea>
+                <button type="submit" class="w-full bg-[#1a4d41] text-white py-4 rounded-xl font-bold hover:bg-black transition">Confirm Inquiry</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+       function loadPackageDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const cityParam = decodeURIComponent(params.get('city') || "Cebu City");
+
+            // Access data directly using the city name as the key
+            const pkg = packageData[cityParam];
+            const activities = cityData[cityParam];
+
+            if (!pkg) {
+                document.getElementById('pkg-title').innerText = "Package not found";
+                return;
+            }
+
+            // Set Banner Image
+            const bannerImg = document.getElementById('pkg-banner');
+            if (pkg.img) {
+                bannerImg.src = pkg.img;
+            }
+
+            // Update Text Content
+            document.getElementById('pkg-title').innerText = pkg.title;
+            document.getElementById('pkg-subtitle').innerText = cityParam;
+            document.getElementById('pkg-desc').innerText = pkg.details;
+            document.getElementById('pkg-price').innerText = pkg.price;
+
+            // Render Activity List
+            if (activities) {
+                const list = document.getElementById('activity-list');
+                list.innerHTML = activities.map(act => `
+                    <div class="animate-on-scroll card-zoom-container flex items-center gap-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+                        <div class="overflow-hidden rounded-xl w-32 h-24 flex-shrink-0">
+                            <img src="${act.img}" class="card-zoom-image w-full h-full object-cover">
+                        </div>
+                        <div class="hover-lift-text">
+                            <h4 class="font-bold text-[#1a4d41] text-lg">${act.title}</h4>
+                            <p class="text-sm text-orange-500 font-bold">★ ${act.rating}</p>
+                            <p class="text-gray-600 font-bold mt-1">${act.price}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // --- RE-TRIGGER ANIMATIONS ---
+                if (typeof setupAnimations === "function") {
+                    setupAnimations(); 
+                } else {
+                    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                        el.classList.add('visible');
+                    });
+                }
+            }
+        }
+
+        function openModal() { document.getElementById('booking-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('booking-modal').classList.add('hidden'); }
+
+        document.getElementById('inquiry-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert("Thank you for your inquiry! An Avalmeo's travel agent will contact you via email within 24 hours.");
+            closeModal();
+            e.target.reset();
+        });
+
+        window.onload = loadPackageDetails;
+    </script>
+</body>
+</html>

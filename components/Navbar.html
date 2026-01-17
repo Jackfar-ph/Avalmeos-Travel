@@ -1,0 +1,36 @@
+<nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+    <div class="max-w-[1440px] mx-auto px-8 md:px-12 py-5 flex items-center justify-between">
+        <div class="flex items-center min-w-fit">
+            <h1 class="font-header font-900 text-2xl lg:text-3xl text-[#1a4d41] tracking-tighter">AVALMEO'S</h1>
+        </div>
+
+        <div class="hidden sm:flex flex-1 max-w-xl mx-4 lg:mx-10 items-center gap-4 relative group">
+            <div class="relative flex-1">
+                <input type="text" id="destination-search" placeholder="Search destinations..." 
+                    class="w-full bg-gray-100 rounded-full py-3 px-12 text-base outline-none">
+                <div id="suggestion-box" class="absolute top-full left-0 w-full bg-white mt-2 rounded-2xl shadow-xl hidden z-[100]"></div>
+            </div>
+            <button id="currency-toggle" class="bg-[#1a4d41] text-white px-4 py-2 rounded-full text-xs font-bold">PHP ₱</button>
+        </div>
+
+        <ul class="hidden lg:flex items-center gap-12 font-bold text-base uppercase tracking-widest">
+            <li><a href="#home">Home</a></li> 
+            <li><a href="#destinations">Destination</a></li>
+            <li><a href="#packages">Travel Package</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+
+        <button id="menu-btn" class="block lg:hidden w-8 h-6 relative z-[110]">
+            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-0"></span>
+            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-2.5"></span>
+            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 bottom-0"></span>
+        </button>
+    </div>
+</nav>
+
+<div id="mobile-menu" class="fixed inset-0 bg-white z-[100] transform translate-x-full transition-transform duration-500 flex flex-col items-center justify-center gap-10 lg:hidden">
+    <a href="#home" class="mobile-link text-2xl font-bold">Home</a>
+    <a href="#destinations" class="mobile-link text-2xl font-bold">Destinations</a>
+    <a href="#packages" class="mobile-link text-2xl font-bold">Travel Package</a>
+    <a href="#contact" class="mobile-link text-2xl font-bold">Contact</a>
+</div>
