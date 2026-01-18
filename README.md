@@ -62,7 +62,7 @@ A modern, responsive travel landing page designed to showcase the beauty of the 
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/avalmeo-travel.git
+git clone https://github.com/Jackfar-ph/Avalmeos-Travel.git
 
 ```
 
