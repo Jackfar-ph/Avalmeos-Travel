@@ -34,23 +34,22 @@ window.addEventListener('DOMContentLoaded', initSite);
 // --- 3. FORM LOGIC ---
 function setupFormLogic() {
     document.addEventListener('submit', function(e) {
-        const isContactForm = e.target.id === 'inquiry-form';
-        const isBookingForm = e.target.id === 'booking-form';
-
-        if (isContactForm || isBookingForm) {
-            e.preventDefault(); 
-
-            if (isContactForm) {
-                document.getElementById('contact-form-container').classList.add('hidden');
-                document.getElementById('contact-success-content').classList.remove('hidden');
-            } 
-            
-            if (isBookingForm) {
-                document.getElementById('modal-form-content').classList.add('hidden');
-                document.getElementById('modal-success-content').classList.remove('hidden');
+        if (e.target && (e.target.id === 'inquiry-form' || e.target.id === 'booking-form')) {
+            e.preventDefault();   
+            // Handle Contact Form
+            if (e.target.id === 'inquiry-form') {
+                const formContainer = document.getElementById('contact-form-container');
+                const successMsg = document.getElementById('contact-success-content');
+                if(formContainer) formContainer.classList.add('hidden');
+                if(successMsg) successMsg.classList.remove('hidden');
             }
-
-            e.target.reset();
+            // Handle Booking Modal
+            if (e.target.id === 'booking-form') {
+                const modalForm = document.getElementById('modal-form-content');
+                const modalSuccess = document.getElementById('modal-success-content');
+                if(modalForm) modalForm.classList.add('hidden');
+                if(modalSuccess) modalSuccess.classList.remove('hidden');
+            }
         }
     });
 }
