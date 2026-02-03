@@ -83,3 +83,20 @@ nav, #navbar-placeholder, header {
 html {
     scroll-behavior: smooth;
 }
+
+/* Photo carousel */
+#photo-carousel {
+    display: flex;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+#photo-carousel > div {
+    scroll-snap-align: center;
+    flex-shrink: 0; 
+}
+
+#photo-carousel::after {
+    content: '';
+    padding-right: 8%;
+}

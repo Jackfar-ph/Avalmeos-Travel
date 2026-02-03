@@ -38,12 +38,12 @@ const cityData = {
 };
 
 const packageData = {
-    "Cebu City": { title: "Cebu City Package Tour", price: "US$ 143.41", details: "3D2N All-In: Hotel, Transfers, Temple of Leah, and Sirao Garden.", img: "Picture/Cebu City.jpg" },
-    "Manila": { title: "Old Manila Heritage Tour", price: "US$ 40.49", details: "Full Day: Intramuros, Luneta, and National Museum with Lunch.", img: "Picture/Old Manila.jpg" },
-    "Baguio": { title: "Baguio City Package", price: "US$ 99.55", details: "3D2N Escape: Camp John Hay, Mines View, and Strawberry Farm.", img: "Picture/Baguio.jpg" },
-    "Davao City": { title: "Davao Highland Tour", price: "US$ 70.86", details: "Nature Adventure: Eden Nature Park and Philippine Eagle Center.", img: "Picture/Davao.jpg" },
-    "Puerto Princesa": { title: "Puerto Princesa Package", price: "US$ 121.48", details: "Nature Escape: Underground River and Honda Bay Island Hopping.", img: "Picture/Puerto Princesa.jpg" },
-    "Iloilo": { title: "Iloilo City & Gigantes", price: "US$ 109.67", details: "Cultural & Island Tour: Molo Church and Islas de Gigantes.", img: "Picture/Iloilo.jpg" }
+    "Cebu City": { title: "Cebu City Package Tour", price: "₱8,497", details: "3D2N All-In: Hotel, Transfers, Temple of Leah, and Sirao Garden.", img: "Picture/Cebu City.jpg" },
+    "Manila": { title: "Old Manila Heritage Tour", price: "₱2,399", details: "Full Day: Intramuros, Luneta, and National Museum with Lunch.", img: "Picture/Old Manila.jpg" },
+    "Baguio": { title: "Baguio City Package", price: "₱5,898", details: "3D2N Escape: Camp John Hay, Mines View, and Strawberry Farm.", img: "Picture/Baguio.jpg" },
+    "Davao City": { title: "Davao Highland Tour", price: "₱4,198", details: "Nature Adventure: Eden Nature Park and Philippine Eagle Center.", img: "Picture/Davao.jpg" },
+    "Puerto Princesa": { title: "Puerto Princesa Package", price: "₱7,198", details: "Nature Escape: Underground River and Honda Bay Island Hopping.", img: "Picture/Puerto Princesa.jpg" },
+    "Iloilo": { title: "Iloilo City & Gigantes", price: "₱6,498", details: "Cultural & Island Tour: Molo Church and Islas de Gigantes.", img: "Picture/Iloilo.jpg" }
 };
 
 const packageMapping = {
@@ -70,3 +70,42 @@ const renderActivityCard = (act) => `
         </button>
     </div>
 `;
+
+const cityPhotos = {
+    "Cebu City": [
+        "Picture/Cebu Ocean Park.webp",
+        "Picture/Oslob Whaleshark.webp",
+        "Picture/Cebu City Private Day Tour.webp",
+        "Picture/Plantation Bay Day.webp"
+    ],
+    "Manila": [
+        "Picture/Manila Ocean Park.png",
+        "Picture/Intramuros.webp",
+        "Picture/Fort Santiago.jpg",
+        "Picture/Okada Manila.webp"
+    ],
+    "Baguio": [
+        "Picture/Sky Ranch Baguio.webp",
+        "Picture/Atok Gardens.webp",
+        "Picture/Breathe Baguio.webp",
+        "Picture/Mt. Ulap Hiking Day Tour from Baguio.webp"
+    ],
+    "Davao City": [
+        "Picture/Davao City Tour.webp",
+        "Picture/Malagos Garden Resort.webp",
+        "Picture/Nature Tour in Davao.webp",
+        "Picture/Highlands Tour in Davao.webp"
+    ],
+    "Puerto Princesa": [
+        "Picture/Puerto Princesa Underground River.webp",
+        "Picture/Honda Bay Palawan Island.webp",
+        "Picture/Puerto Princesa City Heritage Tour.webp",
+        "Picture/Sunset Watching.webp"
+    ],
+    "Iloilo": [
+        "Picture/Science XPdition.webp",
+        "Picture/Guimaras Island.webp",
+        "Picture/Gigantes & Sicogon Island.webp",
+        "Picture/Iloilo Pilgrimage.webp"
+    ]
+};
