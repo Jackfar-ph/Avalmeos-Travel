@@ -11,49 +11,57 @@
 
 <body class="bg-gray-100 text-[#1a4d41]">
     <!-- Admin Navbar -->
-    <nav class="bg-[#1a4d41] text-white py-4 px-6 shadow-lg">
+    <nav class="bg-[#1a4d41] text-white py-3 px-4 shadow-lg fixed w-full top-0 z-50">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <h1 class="font-header font-900 text-2xl">✈️ Avalmeo's Admin</h1>
+            <div class="flex items-center gap-2">
+                <button id="admin-menu-btn" onclick="toggleAdminMenu()" class="md:hidden p-2 hover:bg-white/20 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <h1 class="font-header font-900 text-xl md:text-2xl">✈️ Avalmeo's Admin</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="index.html" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm flex items-center gap-2 transition">
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-xs md:text-sm flex items-center gap-1 md:gap-2 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Back to Website
+                    <span class="hidden sm:inline">Back</span>
                 </a>
-                <span id="admin-user-name" class="px-3 py-1 bg-white/10 rounded-lg text-sm">Admin</span>
-                <button onclick="logoutFromAdmin()" class="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition">
-                    Log Out
+                <span id="admin-user-name" class="hidden md:inline px-3 py-1 bg-white/10 rounded-lg text-sm">Admin</span>
+                <button onclick="logoutFromAdmin()" class="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-xs md:text-sm transition">
+                    <span class="hidden sm:inline">Log Out</span>
+                    <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- Admin Sidebar & Content -->
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen pt-16 md:pt-0">
         <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-lg hidden md:block">
-            <div class="p-4">
+        <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 md:static md:block">
+            <div class="p-4 pt-20 md:pt-4">
                 <nav class="space-y-2">
-                    <button onclick="showAdminTab('dashboard')" id="tab-dashboard" 
+                    <button onclick="showAdminTab('dashboard'); closeAdminMenu();" id="tab-dashboard" 
                         class="w-full text-left px-4 py-3 rounded-lg bg-[#1a4d41] text-white font-medium">
                         📊 Dashboard
                     </button>
-                    <button onclick="showAdminTab('bookings')" id="tab-bookings"
+                    <button onclick="showAdminTab('bookings'); closeAdminMenu();" id="tab-bookings"
                         class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-600">
                         📋 Bookings
                     </button>
-                    <button onclick="showAdminTab('packages')" id="tab-packages"
+                    <button onclick="showAdminTab('packages'); closeAdminMenu();" id="tab-packages"
                         class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-600">
                         📦 Packages
                     </button>
-                    <button onclick="showAdminTab('users')" id="tab-users"
+                    <button onclick="showAdminTab('users'); closeAdminMenu();" id="tab-users"
                         class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-600">
                         👥 Users
                     </button>
-                    <button onclick="showAdminTab('chat')" id="tab-chat"
+                    <button onclick="showAdminTab('chat'); closeAdminMenu();" id="tab-chat"
                         class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-600">
                         💬 Chat
                     </button>
@@ -61,8 +69,11 @@
             </div>
         </aside>
 
+        <!-- Sidebar Overlay -->
+        <div id="admin-sidebar-overlay" onclick="closeAdminMenu()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
         <!-- Main Content -->
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-4 md:p-6 w-full">
             <!-- Dashboard Tab -->
             <div id="admin-dashboard-tab" class="admin-tab">
                 <h2 class="text-2xl font-bold mb-6">Dashboard Overview</h2>
@@ -73,10 +84,10 @@
 
             <!-- Bookings Tab -->
             <div id="admin-bookings-tab" class="admin-tab hidden">
-                <h2 class="text-2xl font-bold mb-6">Bookings Management</h2>
+                <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">Bookings Management</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full">
+                        <table class="w-full min-w-[600px]">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
@@ -105,11 +116,9 @@
 
             <!-- Users Tab -->
             <div id="admin-users-tab" class="admin-tab hidden">
-                <h2 class="text-2xl font-bold mb-6">User Management</h2>
-                <div id="admin-users-list" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <!-- Users rendered here -->
-                </div>
-            </div>
+                <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">User Management</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 overflow-x-auto">
+                    <table class="w-full min-w-[500px]">
 
             <!-- Chat Tab -->
             <div id="admin-chat-tab" class="admin-tab hidden">
@@ -172,6 +181,21 @@
             }
         });
 
+        // Mobile menu functions
+        window.toggleAdminMenu = function() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        };
+
+        window.closeAdminMenu = function() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-sidebar-overlay');
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        };
+
         // Admin tab switching
         window.showAdminTab = function(tabName) {
             // Hide all tabs
@@ -183,7 +207,7 @@
             document.getElementById(`admin-${tabName}-tab`).classList.remove('hidden');
             
             // Update sidebar buttons
-            document.querySelectorAll('aside button').forEach(btn => {
+            document.querySelectorAll('#admin-sidebar button').forEach(btn => {
                 btn.classList.remove('bg-[#1a4d41]', 'text-white');
                 btn.classList.add('hover:bg-gray-100', 'text-gray-600');
             });
@@ -268,32 +292,34 @@
             const container = document.getElementById('admin-users-list');
             
             container.innerHTML = `
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        ${userList.map(u => `
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 text-sm font-medium">${u.name}</td>
-                                <td class="px-4 py-3 text-sm text-gray-500">${u.email}</td>
-                                <td class="px-4 py-3 text-sm text-gray-500">${u.phone || '-'}</td>
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-1 text-xs rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
-                                        ${u.role}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-500">${formatDate(u.createdAt)}</td>
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[500px]">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            ${userList.map(u => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2 text-sm font-medium">${u.name}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-500">${u.email}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-500">${u.phone || '-'}</td>
+                                    <td class="px-3 py-2">
+                                        <span class="px-2 py-1 text-xs rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
+                                            ${u.role}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-500">${formatDate(u.createdAt)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 

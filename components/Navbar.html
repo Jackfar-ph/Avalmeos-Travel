@@ -54,14 +54,6 @@
                 </div>
             </div>
 
-            <!-- Cart Button (Mobile) -->
-            <button onclick="toggleFloatingCart()" class="md:hidden relative p-2 text-[#1a4d41]">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <span id="cart-count-mobile" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
-            </button>
-
             <button id="menu-btn" class="block lg:hidden w-8 h-6 relative z-[110]">
                 <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-0"></span>
                 <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-2.5"></span>
@@ -71,48 +63,63 @@
     </div>
 </nav>
 
-<div id="mobile-menu" class="fixed inset-0 bg-white z-[100] transform translate-x-full transition-transform duration-500 flex flex-col items-center justify-center gap-10 lg:hidden">
-    <div id="mobile-auth" class="flex flex-col gap-4 w-full max-w-xs px-4">
-        <button onclick="openLoginModal(); closeMobileMenu();" class="w-full py-3 border border-[#1a4d41] text-[#1a4d41] rounded-lg font-medium">
+<div id="mobile-menu" class="fixed inset-0 bg-white z-[100] transform translate-x-full transition-transform duration-500 flex flex-col items-center justify-center gap-8 lg:hidden">
+    
+    <!-- Navigation Links -->
+    <nav class="flex flex-col items-center gap-6">
+        <a href="#home" class="mobile-link text-2xl font-bold text-[#1a4d41] hover:text-orange-500 transition" onclick="closeMobileMenu()">Home</a>
+        <a href="#destinations" class="mobile-link text-2xl font-bold text-[#1a4d41] hover:text-orange-500 transition" onclick="closeMobileMenu()">Destinations</a>
+        <a href="#packages" class="mobile-link text-2xl font-bold text-[#1a4d41] hover:text-orange-500 transition" onclick="closeMobileMenu()">Travel Package</a>
+        <a href="#contact" class="mobile-link text-2xl font-bold text-[#1a4d41] hover:text-orange-500 transition" onclick="closeMobileMenu()">Contact</a>
+    </nav>
+    
+    <hr class="w-full max-w-xs border-gray-200">
+    
+    <!-- Auth Section -->
+    <div id="mobile-auth" class="flex flex-col gap-3 w-full max-w-xs px-4">
+        <button onclick="openLoginModal(); closeMobileMenu();" class="w-full py-3 border-2 border-[#1a4d41] text-[#1a4d41] rounded-lg font-bold text-lg">
             Log In
         </button>
-        <button onclick="openSignupModal(); closeMobileMenu();" class="w-full py-3 bg-[#1a4d41] text-white rounded-lg font-medium">
+        <button onclick="openSignupModal(); closeMobileMenu();" class="w-full py-3 bg-[#1a4d41] text-white rounded-lg font-bold text-lg">
             Sign Up
         </button>
     </div>
     
-    <div id="mobile-user-menu" class="hidden flex-col gap-4 w-full max-w-xs px-4">
-        <div class="text-center py-2">
-            <span id="mobile-user-name" class="font-bold text-[#1a4d41]">User</span>
-        </div>
-        <button onclick="toggleFloatingCart(); closeMobileMenu();" class="w-full py-3 bg-orange-500 text-white rounded-lg font-medium flex items-center justify-center gap-2">
-            <span>🛒</span> View Cart
-        </button>
-        <a href="admin.html" id="mobile-admin-link" class="hidden w-full py-3 bg-[#1a4d41] text-white rounded-lg font-medium text-center">
+    <!-- User Menu (shown when logged in) -->
+    <div id="mobile-user-menu" class="hidden flex-col gap-3 w-full max-w-xs px-4">
+        <a href="admin.html" id="mobile-admin-link" class="hidden w-full py-3 bg-[#1a4d41] text-white rounded-lg font-bold text-lg text-center">
             Admin Dashboard
         </a>
-        <button onclick="logoutUser(); closeMobileMenu();" class="w-full py-3 border border-red-500 text-red-500 rounded-lg font-medium">
+        <button onclick="logoutUser(); closeMobileMenu();" class="w-full py-3 border-2 border-red-500 text-red-500 rounded-lg font-bold text-lg">
             Log Out
         </button>
     </div>
     
-    <hr class="w-full max-w-xs">
-    
-    <a href="#home" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Home</a>
-    <a href="#destinations" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Destinations</a>
-    <a href="#packages" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Travel Package</a>
-    <a href="#contact" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Contact</a>
+    <!-- Cart Quick Access -->
+    <button onclick="toggleFloatingCart(); closeMobileMenu();" class="mt-4 px-8 py-3 bg-orange-500 text-white rounded-full font-bold text-lg hover:bg-orange-600 transition flex items-center gap-2">
+        <span>🛒</span> View Cart
+    </button>
 </div>
 
 <script>
 // Mobile menu close helper
-function closeMobileMenu() {
+window.closeMobileMenu = function() {
     const mobileMenu = document.getElementById('mobile-menu');
-    const lines = document.querySelector('#menu-btn span');
+    const menuBtn = document.getElementById('menu-btn');
+    
     if (mobileMenu) {
         mobileMenu.classList.add('translate-x-full');
     }
-}
+    
+    if (menuBtn) {
+        const lines = menuBtn.querySelectorAll('span');
+        if (lines.length >= 3) {
+            lines[0].classList.remove('rotate-45', 'translate-y-2');
+            lines[1].classList.remove('opacity-0');
+            lines[2].classList.remove('-rotate-45', '-translate-y-2.5');
+        }
+    }
+};
 
 // Note: toggleUserDropdown is now defined in js/auth-handlers.js
 // and exposed globally as window.toggleUserDropdown

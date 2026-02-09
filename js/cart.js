@@ -183,7 +183,7 @@ function getCartCount() {
 // Update cart count in UI
 function updateCartCount() {
     // Update all cart count elements (there may be multiple in navbar and floating cart)
-    const countElements = document.querySelectorAll('#cart-count, #cart-count-mobile');
+    const countElements = document.querySelectorAll('#cart-count, #cart-count-mobile, #cart-count-floating');
     const count = getCartCount();
     countElements.forEach(el => {
         if (el) {
