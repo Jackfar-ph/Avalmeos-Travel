@@ -1,0 +1,327 @@
+<!-- Auth Modal -->
+<div id="auth-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <!-- Close button -->
+        <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <!-- Header -->
+        <div class="bg-[#1a4d41] px-6 py-8 text-center">
+            <h2 class="text-2xl font-bold text-white">✈️ Avalmeo's Travel</h2>
+            <p class="text-white/80 text-sm mt-1">Sign in to your account</p>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex border-b">
+            <button id="login-tab" onclick="showAuthTab('login')" class="flex-1 px-6 py-3 text-sm font-medium bg-[#1a4d41] text-white">
+                Log In
+            </button>
+            <button id="signup-tab" onclick="showAuthTab('signup')" class="flex-1 px-6 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+                Sign Up
+            </button>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="login-form" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="login-email" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="login-password" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="••••••••">
+            </div>
+            <button type="submit" onclick="handleLogin(event)" 
+                class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition">
+                Log In
+            </button>
+            <p class="text-xs text-center text-gray-500">
+                Demo admin: admin@avalmeos.com / admin123
+            </p>
+        </form>
+        
+        <!-- Signup Form -->
+        <form id="signup-form" class="p-6 space-y-4 hidden">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="signup-name" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="John Doe">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="signup-email" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone (Philippines)</label>
+                <input type="tel" id="signup-phone" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="09123456789" maxlength="13" pattern="[0-9+\s]*" oninput="this.value = this.value.replace(/[^0-9+\s]/g, '').slice(0, 13);">
+                <p class="text-xs text-gray-500 mt-1">Format: 09XXXXXXXXX or +639XXXXXXXXX (max 13 chars)</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="signup-password" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="Min 6 chars, 1 uppercase, 1 number">
+            </div>
+            <button type="submit" onclick="handleSignup(event)" 
+                class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition">
+                Create Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="booking-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+        <!-- Close button -->
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <div id="modal-form-content">
+            <div class="bg-[#1a4d41] px-6 py-6">
+                <h2 class="text-xl font-bold text-white">Book Your Package</h2>
+                <p class="text-white/80 text-sm mt-1" id="booking-city-name"></p>
+            </div>
+            
+            <form id="booking-form" class="p-6 space-y-4">
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-[#1a4d41]" id="booking-package-name"></h3>
+                            <p class="text-sm text-gray-500">Best Value Package</p>
+                        </div>
+                        <div class="text-2xl font-bold text-orange-500" id="booking-package-price"></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date</label>
+                        <input type="date" id="booking-date" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Number of Pax</label>
+                        <input type="number" id="booking-pax" value="1" min="1" max="20" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1" id="pax-display">1 Person</p>
+                    </div>
+                </div>
+                
+                <!-- Personalization Options -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Personalize Your Trip (Optional)</label>
+                    <div id="personalization-options" class="space-y-2 bg-gray-50 p-4 rounded-xl">
+                        <!-- Options loaded dynamically -->
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Leave all options unchecked to book without additional activities</p>
+                </div>
+                
+                <div class="bg-orange-50 p-4 rounded-xl">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Estimated Total:</span>
+                        <span class="text-2xl font-bold text-orange-500" id="booking-price-display"></span>
+                    </div>
+                </div>
+                
+                <button type="submit" 
+                    class="w-full bg-[#1a4d41] text-white font-bold py-4 rounded-lg hover:bg-opacity-90 transition text-lg">
+                    Add to Cart 🛒
+                </button>
+            </form>
+        </div>
+        
+        <div id="modal-success-content" class="hidden p-8 text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-[#1a4d41] mb-2">Added to Cart!</h3>
+            <p class="text-gray-600 mb-4">Your package has been added to your cart. Continue shopping or checkout now.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+                    Continue Shopping
+                </button>
+                <button onclick="toggleFloatingCart(); closeModal();" class="px-6 py-2 bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90">
+                    View Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Cart -->
+<div id="floating-cart" class="fixed bottom-4 right-4 w-96 max-w-[calc(100vw-2rem)] z-40 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+        <div class="bg-[#1a4d41] px-4 py-3 flex items-center justify-between">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span>🛒</span> Your Cart
+                <span id="cart-count" class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+            </h3>
+            <button onclick="toggleFloatingCart()" class="text-white/80 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="cart-items-container" class="max-h-80 overflow-y-auto p-4">
+            <p class="text-center text-gray-500 py-8">Your cart is empty</p>
+        </div>
+        
+        <div id="cart-total" class="p-4 border-t bg-gray-50">
+            <!-- Total rendered here -->
+        </div>
+        
+        <div class="p-4 border-t">
+            <button onclick="checkoutFromCart()" 
+                class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition">
+                Checkout Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Widget -->
+<div id="chat-widget" class="fixed bottom-4 right-4 w-80 z-40 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+        <div class="bg-[#1a4d41] px-4 py-3 flex items-center justify-between">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span>💬</span> Chat with Us
+            </h3>
+            <button onclick="toggleChat()" class="text-white/80 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="chat-messages" class="h-64 overflow-y-auto p-4 bg-gray-50">
+            <!-- Messages rendered here -->
+        </div>
+        
+        <div id="chat-quick-replies" class="px-2 py-2 border-t bg-white flex flex-wrap gap-1">
+            <!-- Quick replies rendered here -->
+        </div>
+        
+        <div class="p-3 border-t flex gap-2">
+            <input type="text" id="chat-input" 
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent text-sm"
+                placeholder="Type a message...">
+            <button id="chat-send-btn" class="w-10 h-10 bg-[#1a4d41] text-white rounded-full flex items-center justify-center hover:bg-opacity-90">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Toggle Button -->
+<button id="chat-toggle-btn" onclick="toggleChat()" 
+    class="fixed bottom-4 right-4 w-14 h-14 bg-[#1a4d41] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-opacity-90 transition z-30">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+    </svg>
+</button>
+
+<!-- Admin Dashboard Modal -->
+<div id="admin-dashboard-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="absolute inset-4 md:inset-8 bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="bg-[#1a4d41] px-6 py-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-white">Admin Dashboard</h2>
+            <button onclick="closeAdminDashboard()" class="text-white/80 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="admin-dashboard" class="p-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+            <!-- Dashboard content rendered here -->
+        </div>
+    </div>
+</div>
+
+<!-- Booking Details Modal -->
+<div id="booking-details-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeBookingDetailsModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="bg-[#1a4d41] px-6 py-4">
+            <h3 class="text-lg font-bold text-white">Booking Details</h3>
+        </div>
+        <div id="booking-details-content" class="p-6">
+            <!-- Details rendered here -->
+        </div>
+        <div class="p-4 border-t">
+            <button onclick="closeBookingDetailsModal()" class="w-full py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Package Form Modal -->
+<div id="package-form-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePackageFormModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="bg-[#1a4d41] px-6 py-4">
+            <h3 id="package-form-title" class="text-lg font-bold text-white">Add Package</h3>
+        </div>
+        <form id="package-form" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input type="text" id="package-city" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Package Title</label>
+                <input type="text" id="package-title" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <input type="text" id="package-price" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    placeholder="₱5,000">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
+                <textarea id="package-details" rows="3" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closePackageFormModal()" 
+                    class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" 
+                    class="flex-1 py-2 bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90">
+                    Save Package
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notification Container -->
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>

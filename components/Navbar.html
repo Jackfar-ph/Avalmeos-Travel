@@ -13,24 +13,110 @@
             <button id="currency-toggle" class="bg-[#1a4d41] text-white px-4 py-2 rounded-full text-xs font-bold">PHP ₱</button>
         </div>
 
-        <ul class="hidden lg:flex items-center gap-12 font-bold text-base uppercase tracking-widest">
-            <li><a href="#home">Home</a></li> 
-            <li><a href="#destinations">Destination</a></li>
-            <li><a href="#packages">Travel Package</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
+        <div class="flex items-center gap-4">
+            <!-- Auth Buttons -->
+            <div id="auth-buttons" class="hidden md:flex items-center gap-2">
+                <button onclick="openLoginModal()" class="px-4 py-2 text-[#1a4d41] font-medium hover:text-orange-500 transition">
+                    Log In
+                </button>
+                <button onclick="openSignupModal()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg font-medium hover:bg-opacity-90 transition">
+                    Sign Up
+                </button>
+            </div>
 
-        <button id="menu-btn" class="block lg:hidden w-8 h-6 relative z-[110]">
-            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-0"></span>
-            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-2.5"></span>
-            <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 bottom-0"></span>
-        </button>
+            <!-- User Menu -->
+            <div id="user-menu" class="hidden md:flex items-center gap-3">
+                <button onclick="toggleFloatingCart()" class="relative p-2 text-[#1a4d41] hover:text-orange-500 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+                
+                <div class="relative" id="user-dropdown">
+                    <button onclick="toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                        <span id="user-display-name" class="font-medium text-[#1a4d41]">User</span>
+                        <svg class="w-4 h-4 transition-transform" id="dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 hidden z-50">
+                        <a href="#profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+                        <a href="#bookings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</a>
+                        <a href="admin.html" id="admin-link" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                            Admin Dashboard
+                        </a>
+                        <hr class="my-2">
+                        <button onclick="logoutUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+                            Log Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Button (Mobile) -->
+            <button onclick="toggleFloatingCart()" class="md:hidden relative p-2 text-[#1a4d41]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <span id="cart-count-mobile" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+
+            <button id="menu-btn" class="block lg:hidden w-8 h-6 relative z-[110]">
+                <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-0"></span>
+                <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-2.5"></span>
+                <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 bottom-0"></span>
+            </button>
+        </div>
     </div>
 </nav>
 
 <div id="mobile-menu" class="fixed inset-0 bg-white z-[100] transform translate-x-full transition-transform duration-500 flex flex-col items-center justify-center gap-10 lg:hidden">
-    <a href="#home" class="mobile-link text-2xl font-bold">Home</a>
-    <a href="#destinations" class="mobile-link text-2xl font-bold">Destinations</a>
-    <a href="#packages" class="mobile-link text-2xl font-bold">Travel Package</a>
-    <a href="#contact" class="mobile-link text-2xl font-bold">Contact</a>
+    <div id="mobile-auth" class="flex flex-col gap-4 w-full max-w-xs px-4">
+        <button onclick="openLoginModal(); closeMobileMenu();" class="w-full py-3 border border-[#1a4d41] text-[#1a4d41] rounded-lg font-medium">
+            Log In
+        </button>
+        <button onclick="openSignupModal(); closeMobileMenu();" class="w-full py-3 bg-[#1a4d41] text-white rounded-lg font-medium">
+            Sign Up
+        </button>
+    </div>
+    
+    <div id="mobile-user-menu" class="hidden flex-col gap-4 w-full max-w-xs px-4">
+        <div class="text-center py-2">
+            <span id="mobile-user-name" class="font-bold text-[#1a4d41]">User</span>
+        </div>
+        <button onclick="toggleFloatingCart(); closeMobileMenu();" class="w-full py-3 bg-orange-500 text-white rounded-lg font-medium flex items-center justify-center gap-2">
+            <span>🛒</span> View Cart
+        </button>
+        <a href="admin.html" id="mobile-admin-link" class="hidden w-full py-3 bg-[#1a4d41] text-white rounded-lg font-medium text-center">
+            Admin Dashboard
+        </a>
+        <button onclick="logoutUser(); closeMobileMenu();" class="w-full py-3 border border-red-500 text-red-500 rounded-lg font-medium">
+            Log Out
+        </button>
+    </div>
+    
+    <hr class="w-full max-w-xs">
+    
+    <a href="#home" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Home</a>
+    <a href="#destinations" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Destinations</a>
+    <a href="#packages" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Travel Package</a>
+    <a href="#contact" class="mobile-link text-2xl font-bold" onclick="closeMobileMenu()">Contact</a>
 </div>
+
+<script>
+// Mobile menu close helper
+function closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const lines = document.querySelector('#menu-btn span');
+    if (mobileMenu) {
+        mobileMenu.classList.add('translate-x-full');
+    }
+}
+
+// Note: toggleUserDropdown is now defined in js/auth-handlers.js
+// and exposed globally as window.toggleUserDropdown
+
+// Close dropdown when clicking outside
+// This is handled by auth-handlers.js
+</script>

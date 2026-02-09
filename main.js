@@ -1,4 +1,80 @@
 // --- 1. COMPONENT LOADER ---
+// Fallback functions if not loaded from cart.js
+if (typeof window.getPersonalizationOptions === 'undefined') {
+    window.getPersonalizationOptions = function() {
+        return [
+            { id: 'hotel', name: 'Hotel Accommodation', icon: '🏨', priceMultiplier: 1.5 },
+            { id: 'transport', name: 'Private Transport', icon: '🚗', priceMultiplier: 1.3 },
+            { id: 'guide', name: 'Tour Guide', icon: '👨‍🏫', priceMultiplier: 1.2 },
+            { id: 'meals', name: 'All Meals Included', icon: '🍽️', priceMultiplier: 1.4 },
+            { id: 'insurance', name: 'Travel Insurance', icon: '🛡️', priceMultiplier: 1.1 },
+            { id: 'photography', name: 'Professional Photography', icon: '📸', priceMultiplier: 1.25 },
+            { id: 'souvenir', name: 'Souvenir Package', icon: '🎁', priceMultiplier: 1.15 },
+            { id: 'wifi', name: 'Portable WiFi', icon: '📶', priceMultiplier: 1.05 }
+        ];
+    };
+}
+
+if (typeof window.parsePrice === 'undefined') {
+    window.parsePrice = function(priceStr) {
+        if (!priceStr) return 0;
+        const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
+        return parseFloat(cleaned) || 0;
+    };
+}
+
+if (typeof window.formatPrice === 'undefined') {
+    window.formatPrice = function(price, currency = 'PHP') {
+        if (currency === 'USD') {
+            return `US$ ${price.toFixed(2)}`;
+        }
+        return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    };
+}
+
+if (typeof window.addToCart === 'undefined') {
+    window.addToCart = function(packageData, paxSize, travelDate, personalization = []) {
+        console.log('Fallback addToCart called:', packageData);
+        alert('Added to cart: ' + (packageData.title || 'Item'));
+    };
+}
+
+if (typeof window.removeFromCart === 'undefined') {
+    window.removeFromCart = function(itemId) {
+        console.log('Fallback removeFromCart called:', itemId);
+    };
+}
+
+if (typeof window.getCart === 'undefined') {
+    window.getCart = function() {
+        return { items: [], total: 0 };
+    };
+}
+
+if (typeof window.clearCart === 'undefined') {
+    window.clearCart = function() {
+        console.log('Fallback clearCart called');
+    };
+}
+
+if (typeof window.checkoutFromCart === 'undefined') {
+    window.checkoutFromCart = function() {
+        alert('Please log in to checkout');
+    };
+}
+
+if (typeof window.initCartSystem === 'undefined') {
+    window.initCartSystem = function() {
+        console.log('Initializing cart system (fallback)');
+        if (typeof window.updateCartCount === 'function') {
+            window.updateCartCount();
+        }
+        if (typeof window.updateFloatingCart === 'function') {
+            window.updateFloatingCart();
+        }
+    };
+}
+
 async function loadComponent(elementId, filePath) {
     const container = document.getElementById(elementId);
     if (!container) return;
@@ -9,6 +85,192 @@ async function loadComponent(elementId, filePath) {
 }
 
 // --- 2. INITIALIZATION ---
+
+// Component loading promise tracker
+const componentLoadState = {
+    navbar: false,
+    hero: false,
+    destinations: false,
+    packages: false,
+    tips: false,
+    footer: false,
+    modals: false
+};
+
+// Callback registry for component-dependent code
+const componentReadyCallbacks = [];
+
+// Register a callback to run when components are ready
+window.registerComponentReady = function(callback) {
+    if (typeof callback === 'function') {
+        // Check if all components are already loaded
+        if (Object.values(componentLoadState).every(Boolean)) {
+            // Components already loaded, run callback immediately
+            setTimeout(callback, 0);
+        } else {
+            componentReadyCallbacks.push(callback);
+        }
+    }
+};
+
+// Check if all components are ready
+function checkComponentsReady() {
+    if (Object.values(componentLoadState).every(Boolean)) {
+        // All components loaded - dispatch event and run callbacks
+        document.dispatchEvent(new CustomEvent('componentsLoaded'));
+        
+        // Run registered callbacks
+        componentReadyCallbacks.forEach(callback => {
+            try {
+                callback();
+            } catch (e) {
+                console.error('Error in component ready callback:', e);
+            }
+        });
+    }
+}
+
+// Modified component loader that tracks loading state
+async function loadComponent(elementId, filePath) {
+    const container = document.getElementById(elementId);
+    if (!container) {
+        console.warn('Container not found:', elementId);
+        return;
+    }
+    console.log('Loading component:', elementId, 'from', filePath);
+    try {
+        const response = await fetch(filePath);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        container.innerHTML = await response.text();
+        console.log('Loaded component:', elementId);
+        
+        // Trigger animations for newly loaded content
+        const targets = container.querySelectorAll('section[id], .animate-on-scroll');
+        targets.forEach(t => {
+            // Add visible class immediately for sections in view
+            const rect = t.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                t.classList.add('visible');
+            }
+        });
+        
+        // Mark component as loaded
+        const componentName = elementId.replace('-placeholder', '');
+        if (componentLoadState.hasOwnProperty(componentName)) {
+            componentLoadState[componentName] = true;
+            checkComponentsReady();
+        }
+    } catch (err) { 
+        console.error(`Error loading ${filePath}:`, err);
+        // Fallback: Try to load modals inline if fetch fails
+        if (elementId === 'modals-placeholder') {
+            loadModalsFallback(container);
+        }
+    }
+}
+
+// Fallback for modals if fetch fails
+function loadModalsFallback(container) {
+    container.innerHTML = `<!-- Booking Modal -->
+<div id="booking-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">✕</button>
+        <div id="modal-form-content">
+            <div class="bg-[#1a4d41] px-6 py-6">
+                <h2 class="text-xl font-bold text-white">Book Your Package</h2>
+                <p class="text-white/80 text-sm mt-1" id="booking-city-name"></p>
+            </div>
+            <form id="booking-form" class="p-6 space-y-4">
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-[#1a4d41]" id="booking-package-name"></h3>
+                            <p class="text-sm text-gray-500">Best Value Package</p>
+                        </div>
+                        <div class="text-2xl font-bold text-orange-500" id="booking-package-price"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date</label>
+                        <input type="date" id="booking-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Number of Pax</label>
+                        <input type="number" id="booking-pax" value="1" min="1" max="20" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1" id="pax-display">1 Person</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Personalize Your Trip (Optional)</label>
+                    <div id="personalization-options" class="space-y-2 bg-gray-50 p-4 rounded-xl"></div>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-xl">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Estimated Total:</span>
+                        <span class="text-2xl font-bold text-orange-500" id="booking-price-display"></span>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-[#1a4d41] text-white font-bold py-4 rounded-lg text-lg">Add to Cart 🛒</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">✕</button>
+        <div class="bg-[#1a4d41] px-6 py-8 text-center">
+            <h2 class="text-2xl font-bold text-white">✈️ Avalmeo's Travel</h2>
+            <p class="text-white/80 text-sm mt-1">Sign in to your account</p>
+        </div>
+        <div class="flex border-b">
+            <button id="login-tab" onclick="showAuthTab('login')" class="flex-1 px-6 py-3 text-sm font-medium bg-[#1a4d41] text-white">Log In</button>
+            <button id="signup-tab" onclick="showAuthTab('signup')" class="flex-1 px-6 py-3 text-sm font-medium bg-gray-100 text-gray-600">Sign Up</button>
+        </div>
+        <form id="login-form" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="login-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="login-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="••••••••">
+            </div>
+            <button type="submit" onclick="handleLogin(event)" class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg">Log In</button>
+        </form>
+        <form id="signup-form" class="p-6 space-y-4 hidden">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="signup-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="John Doe">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="signup-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone (Philippines)</label>
+                <input type="tel" id="signup-phone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="09123456789">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="signup-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Min 6 chars">
+            </div>
+            <button type="submit" onclick="handleSignup(event)" class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg">Create Account</button>
+        </form>
+    </div>
+</div>`;
+    console.log('Loaded modals fallback');
+    componentLoadState.modals = true;
+    checkComponentsReady();
+}
+
+// Initialize site
 async function initSite() {
     await Promise.all([
         loadComponent('navbar-placeholder', 'components/Navbar.html'),
@@ -16,41 +278,91 @@ async function initSite() {
         loadComponent('destinations-placeholder', 'components/Destinations.html'),
         loadComponent('packages-placeholder', 'components/Packages.html'),
         loadComponent('tips-placeholder', 'components/Tips.html'),
-        loadComponent('footer-placeholder', 'components/Footer.html')
+        loadComponent('footer-placeholder', 'components/Footer.html'),
+        loadComponent('modals-placeholder', 'components/Modals.html')
     ]);
+    
+    // Components are now loaded via checkComponentsReady()
+}
 
+// Listen for componentsLoaded event
+document.addEventListener('componentsLoaded', function() {
+    // Run all initialization that depends on components
     setupNavigation();
     setupHeroSlider();
     setupSearch();
     setupCurrency();
     setupFormLogic();
-    if (typeof initMap === "function") initMap();
-
-    setTimeout(setupAnimations, 100); 
-}
+    setupDateRestrictions();
+    
+    // Initialize systems that depend on DOM elements
+    if (typeof AuthUIManager !== 'undefined') {
+        AuthUIManager.init();
+    }
+    
+    if (typeof updateAuthUI === 'function') {
+        updateAuthUI();
+    }
+    
+    if (typeof initChatSystem === 'function') {
+        initChatSystem();
+    } else if (typeof initChatWidget === 'function') {
+        initChatWidget();
+    }
+    
+    if (typeof initCartSystem === 'function') {
+        initCartSystem();
+    }
+    
+    if (typeof updateCartCount === 'function') {
+        updateCartCount();
+    }
+    
+    if (typeof updateFloatingCart === 'function') {
+        updateFloatingCart();
+    }
+    
+    if (typeof initMap === 'function') {
+        try {
+            // Small delay to ensure container is visible
+            setTimeout(() => {
+                console.log('Calling initMap with delay');
+                initMap();
+            }, 100);
+        } catch (e) {
+            console.error('Error initializing map:', e);
+        }
+    }
+    
+    // Initialize animation observer for scroll animations
+    setTimeout(() => {
+        setupAnimations();
+        // Also trigger visible class for any sections already in view
+        document.querySelectorAll('section[id], .animate-on-scroll').forEach(section => {
+            const rect = section.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                section.classList.add('visible');
+            }
+        });
+    }, 100);
+});
 
 window.addEventListener('DOMContentLoaded', initSite);
 
 // --- 3. FORM LOGIC ---
+
+// --- 3. FORM LOGIC ---
 function setupFormLogic() {
     document.addEventListener('submit', function(e) {
-        if (e.target && (e.target.id === 'inquiry-form' || e.target.id === 'booking-form')) {
-            e.preventDefault();   
+        if (e.target && e.target.id === 'inquiry-form') {
+            e.preventDefault();
             // Handle Contact Form
-            if (e.target.id === 'inquiry-form') {
-                const formContainer = document.getElementById('contact-form-container');
-                const successMsg = document.getElementById('contact-success-content');
-                if(formContainer) formContainer.classList.add('hidden');
-                if(successMsg) successMsg.classList.remove('hidden');
-            }
-            // Handle Booking Modal
-            if (e.target.id === 'booking-form') {
-                const modalForm = document.getElementById('modal-form-content');
-                const modalSuccess = document.getElementById('modal-success-content');
-                if(modalForm) modalForm.classList.add('hidden');
-                if(modalSuccess) modalSuccess.classList.remove('hidden');
-            }
+            const formContainer = document.getElementById('contact-form-container');
+            const successMsg = document.getElementById('contact-success-content');
+            if(formContainer) formContainer.classList.add('hidden');
+            if(successMsg) successMsg.classList.remove('hidden');
         }
+        // Note: booking-form is handled by individual page scripts
     });
 }
 
@@ -67,8 +379,17 @@ function setupAnimations() {
         rootMargin: "0px 0px -50px 0px" 
     });
 
-    targets.forEach(t => observer.observe(t));
+    targets.forEach(t => {
+        // Immediately add visible class if already in viewport
+        const rect = t.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+            t.classList.add('visible');
+        } else {
+            observer.observe(t);
+        }
+    });
 }
+
 // --- 5. CURRENCY TOGGLE ---
 let currentCurrency = 'PHP'; 
 const exchangeRate = 59.25;
@@ -78,11 +399,9 @@ function setupCurrency() {
     if(!btn) return;
     
     btn.addEventListener('click', () => {
-        // 1. Toggle the state
         currentCurrency = currentCurrency === 'PHP' ? 'USD' : 'PHP';
         btn.innerText = currentCurrency === 'PHP' ? 'PHP ₱' : 'USD $';
         
-        // 2. Update existing static prices
         document.querySelectorAll('.price-value').forEach(el => {
             const usd = parseFloat(el.getAttribute('data-usd'));
             el.innerText = currentCurrency === 'PHP' 
@@ -90,14 +409,16 @@ function setupCurrency() {
                 : `$${usd}`;
         });
 
-        // 3. Re-render the Activity Grid if it is currently open
-        const activeCityTitle = document.getElementById('selected-city-name').innerText;
-        if (activeCityTitle && activeCityTitle.includes("Activities in")) {
-            const cityName = activeCityTitle.replace('Activities in ', '');
-            window.showActivities(cityName);
+        const activeCityTitle = document.getElementById('selected-city-name');
+        if (activeCityTitle && activeCityTitle.innerText.includes("Activities in")) {
+            const cityName = activeCityTitle.innerText.replace('Activities in ', '');
+            if (typeof window.showActivities === "function") {
+                window.showActivities(cityName);
+            }
         }
     });
 }
+
 // --- 6. SEARCH LOGIC ---
 function setupSearch() {
     const searchInput = document.getElementById('destination-search');
@@ -112,7 +433,6 @@ function setupSearch() {
             return;
         }
 
-        // Filter cities from cityData
         const matches = Object.keys(cityData).filter(city => 
             city.toLowerCase().includes(val)
         );
@@ -130,7 +450,6 @@ function setupSearch() {
         }
     });
 
-    // Close suggestion box when clicking outside
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !suggestionBox.contains(e.target)) {
             suggestionBox.classList.add('hidden');
@@ -139,6 +458,11 @@ function setupSearch() {
 }
 
 window.selectSearch = function(city) {
+    window.location.href = `cityDestination.html?city=${encodeURIComponent(city)}`;
+};
+
+// Navigate to city (preserves user session)
+window.navigateToCity = function(city) {
     window.location.href = `cityDestination.html?city=${encodeURIComponent(city)}`;
 };
 
@@ -178,7 +502,6 @@ function setupHeroSlider() {
         });
     });
 
-    // Auto-rotate every 5 seconds
     setInterval(() => {
         let nextIndex = (currentIndex + 1) % thumbnails.length;
         changeHeroImage(nextIndex);
@@ -189,14 +512,11 @@ function setupHeroSlider() {
 function setupNavigation() {
     const menuBtn = document.getElementById('menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
-    const nav = document.querySelector('nav');
     const navLinks = document.querySelectorAll("nav ul li a");
     const sections = document.querySelectorAll("section[id]");
 
-    // Select the three lines inside the button for animation
     const lines = menuBtn ? menuBtn.querySelectorAll('span') : [];
 
-    // Function to close the menu and reset the icon
     const closeMenu = () => {
         if (mobileMenu) mobileMenu.classList.add('translate-x-full');
         if (lines.length >= 3) {
@@ -213,7 +533,6 @@ function setupNavigation() {
             if (isOpened) {
                 closeMenu();
             } else {
-                // Open menu and turn hamburger into X
                 mobileMenu.classList.remove('translate-x-full');
                 if (lines.length >= 3) {
                     lines[0].classList.add('rotate-45', 'translate-y-2');
@@ -224,45 +543,37 @@ function setupNavigation() {
         };
     }
 
-    // Auto-close menu when any link is clicked
     const links = mobileMenu ? mobileMenu.querySelectorAll('a') : [];
     links.forEach(link => {
         link.onclick = () => closeMenu();
     });
 
-    // Navbar Background Change on Scroll
     window.addEventListener('scroll', () => {
-    const activeLinks = document.querySelectorAll("nav ul li a");
-    const allSections = document.querySelectorAll("section[id]");
-    const navbar = document.querySelector('nav');
+        const navbar = document.querySelector('nav');
+        if (!navbar) return;
 
-    if (!navbar) return;
+        if (window.scrollY > 50) {
+            navbar.classList.add('bg-white', 'shadow-md', 'py-3');
+            navbar.classList.remove('bg-white/95');
+        } else {
+            navbar.classList.remove('bg-white', 'shadow-md');
+            navbar.classList.add('bg-white/95');
+        }
 
-    // Background Change
-    if (window.scrollY > 50) {
-        navbar.classList.add('bg-white', 'shadow-md', 'py-3');
-        navbar.classList.remove('bg-white/95');
-    } else {
-        navbar.classList.remove('bg-white', 'shadow-md');
-        navbar.classList.add('bg-white/95');
-    }
+        let current = "";
+        const isAtBottom = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 10;
+        if (isAtBottom) {
+            current = sections[sections.length - 1].getAttribute("id");
+        } else {
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute("id");
+                }
+            });
+        }
 
-    // Active Link Highlighting
-    let current = "";
-    const isAtBottom = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 10;
-    if (isAtBottom) {
-        current = sections[sections.length - 1].getAttribute("id");
-    } else {
-        sections.forEach((section) => {
-            const sectionTop = section.offsetTop;
-            if (pageYOffset >= sectionTop - 150) {
-                current = section.getAttribute("id");
-            }
-        });
-    }
-
-    // Apply Highlighting
-    navLinks.forEach((link) => {
+        navLinks.forEach((link) => {
             link.classList.remove('text-orange-500', 'font-bold', 'border-b-2', 'border-orange-500');
             const href = link.getAttribute("href");
             if (href && href.includes(current) && current !== "") {
@@ -273,20 +584,14 @@ function setupNavigation() {
 }
 
 // --- 9. ACTIVITY DISPLAY ---
-function formatPrice(priceStr) {
-    if (!priceStr) return "";
-    let numericValue = parseFloat(priceStr.toString().replace(/[^\d.]/g, ''));
-
-    // Handle conversion logic
-    if (currentCurrency === 'PHP') {
-        if (priceStr.toString().includes('₱')) return priceStr;
-        let converted = Math.round(numericValue * exchangeRate);
-        return `₱${converted.toLocaleString()}`;
-    } else {
-        if (priceStr.toString().includes('US$')) return priceStr;
-        let converted = (numericValue / exchangeRate).toFixed(2);
-        return `US$ ${converted}`;
-    }
+// Use cart.js's formatPrice if available, otherwise define it here
+if (typeof window.formatPrice === 'undefined') {
+    window.formatPrice = function(price, currency = 'PHP') {
+        if (currency === 'USD') {
+            return `US$ ${price.toFixed(2)}`;
+        }
+        return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    };
 }
 
 window.showActivities = function(cityName) {
@@ -299,7 +604,6 @@ window.showActivities = function(cityName) {
     title.innerText = `Activities in ${cityName}`;
     grid.innerHTML = ""; 
 
-    // 1. Render Activity Cards
     cityData[cityName].forEach(act => {
         grid.innerHTML += `
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -317,7 +621,6 @@ window.showActivities = function(cityName) {
         `;
     });
 
-    // 2. Render the Green "Best Value" Package Card
     const pkg = packageData[cityName];
     if (pkg) {
         grid.innerHTML += `
@@ -329,7 +632,7 @@ window.showActivities = function(cityName) {
                 </div>
                 <div class="mt-6">
                     <div class="text-2xl font-black text-orange-400">${formatPrice(pkg.price)}</div>
-                    <button onclick="openModal()" class="w-full mt-3 bg-white text-[#1a4d41] font-bold py-3 rounded-lg hover:bg-orange-500 hover:text-white transition transform active:scale-95">
+                    <button onclick="openBookingModal('${cityName}')" class="w-full mt-3 bg-white text-[#1a4d41] font-bold py-3 rounded-lg hover:bg-orange-500 hover:text-white transition transform active:scale-95">
                         Book Full Package
                     </button>
                 </div>
@@ -346,10 +649,15 @@ window.closeActivities = function() {
 
 // --- 10. MAP INITIALIZATION ---
 function initMap() {
+    console.log('initMap called');
     const mapContainer = document.getElementById('map');
-    if (!mapContainer) return;
-
-    // Leaflet Map
+    console.log('Map container:', mapContainer);
+    if (!mapContainer) {
+        console.warn('Map container not found');
+        return;
+    }
+    
+    console.log('Initializing Leaflet map');
     const map = L.map('map', {
         scrollWheelZoom: false 
     }).setView([12.8797, 121.7740], 6);
@@ -358,7 +666,6 @@ function initMap() {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Marker for the Philippines
     L.marker([12.8797, 121.7740]).addTo(map)
         .bindPopup("Welcome to the Philippines!")
         .openPopup();
@@ -374,12 +681,13 @@ window.openModal = function() {
 };
 
 window.closeModal = function() {
+    console.log('closeModal called');
     const modal = document.getElementById('booking-modal');
     if (modal) {
+        console.log('Found modal, removing hidden class');
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto'; 
 
-        // --- RESET THE MODAL CONTENT ---
         setTimeout(() => {
             const formContent = document.getElementById('modal-form-content');
             const successContent = document.getElementById('modal-success-content');
@@ -391,3 +699,357 @@ window.closeModal = function() {
         }, 300);
     }
 };
+
+// --- 12. DATE RESTRICTION (ENHANCED) ---
+function setupDateRestrictions() {
+    const dateInputs = document.querySelectorAll('input[type="date"], .date-picker');
+    
+    dateInputs.forEach(dateInput => {
+        if (!dateInput) return;
+        
+        const today = new Date();
+        const minDate = today.toISOString().split('T')[0];
+        
+        // Block past dates
+        dateInput.setAttribute('min', minDate);
+        
+        // Set max date (2 years from now)
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() + 2);
+        dateInput.setAttribute('max', maxDate.toISOString().split('T')[0]);
+        
+        // Add validation on change
+        dateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < todayDate) {
+                showNotification('Please select a valid future date', 'error');
+                this.value = '';
+                return false;
+            }
+            
+            // Check if date is more than 2 years in advance
+            const maxFutureDate = new Date();
+            maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 2);
+            if (selectedDate > maxFutureDate) {
+                showNotification('Please select a date within 2 years', 'error');
+                this.value = '';
+                return false;
+            }
+            
+            return true;
+        });
+    });
+}
+
+// --- 13. AUTH UI FUNCTIONS ---
+function initAuthUI() {
+    // Auth UI is now managed by AuthUIManager in auth-handlers.js
+    // This function is kept for compatibility
+}
+
+function updateAuthUI() {
+    // Delegated to AuthUIManager
+    if (typeof AuthUIManager !== 'undefined') {
+        AuthUIManager.updateAuthUI();
+    }
+}
+
+// --- 14. AUTH MODAL FUNCTIONS ---
+window.openLoginModal = function() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        showAuthTab('login');
+    }
+};
+
+window.openSignupModal = function() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        showAuthTab('signup');
+    }
+};
+
+window.closeAuthModal = function() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.showAuthTab = function(tab) {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const loginTab = document.getElementById('login-tab');
+    const signupTab = document.getElementById('signup-tab');
+    
+    if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+        loginTab.classList.add('bg-[#1a4d41]', 'text-white');
+        loginTab.classList.remove('bg-gray-100', 'text-gray-600');
+        signupTab.classList.add('bg-gray-100', 'text-gray-600');
+        signupTab.classList.remove('bg-[#1a4d41]', 'text-white');
+    } else {
+        loginForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+        signupTab.classList.add('bg-[#1a4d41]', 'text-white');
+        signupTab.classList.remove('bg-gray-100', 'text-gray-600');
+        loginTab.classList.add('bg-gray-100', 'text-gray-600');
+        loginTab.classList.remove('bg-[#1a4d41]', 'text-white');
+    }
+};
+
+// --- 15. BOOKING MODAL WITH PAX & PERSONALIZATION ---
+window.openBookingModal = function(cityName) {
+    console.log('openBookingModal called with city:', cityName);
+    const modal = document.getElementById('booking-modal');
+    const pkg = packageData[cityName];
+    
+    console.log('Modal element:', modal);
+    console.log('Package data:', pkg);
+    
+    if (modal && pkg) {
+        console.log('Opening booking modal for', cityName);
+        document.getElementById('booking-city-name').textContent = cityName;
+        document.getElementById('booking-package-name').textContent = pkg.title;
+        document.getElementById('booking-package-price').textContent = pkg.price;
+        
+        // Reset form
+        const form = document.getElementById('booking-form');
+        if (form) form.reset();
+        
+        // Setup date validation
+        setupDateValidation();
+        
+        // Setup pax change listener
+        setupPaxListener();
+        
+        // Setup personalization
+        setupPersonalization();
+        
+        // Calculate initial total price
+        // Use the package price directly as base for initial calculation
+        if (typeof window.calculateBookingTotal === 'function') {
+            const priceDisplay = document.getElementById('booking-price-display');
+            if (priceDisplay && pkg) {
+                // Calculate initial price: base × pax × (1 + sum of selected options)
+                // At this point, no personalization is selected, so multiplier = 1
+                const basePrice = parsePrice(pkg.price);
+                const initialPrice = basePrice * 1; // 1 pax by default, no personalization
+                priceDisplay.textContent = formatPrice(initialPrice.toString());
+            }
+        } else {
+            // Fallback: calculate directly if function not yet defined
+            const priceDisplay = document.getElementById('booking-price-display');
+            if (priceDisplay && pkg) {
+                const basePrice = parsePrice(pkg.price);
+                priceDisplay.textContent = formatPrice(basePrice.toString());
+            }
+        }
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+// Date validation - prevent past dates
+function setupDateValidation() {
+    const dateInput = document.getElementById('booking-date');
+    if (!dateInput) return;
+    
+    // Get today's date in local timezone
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const minDate = `${year}-${month}-${day}`;
+    
+    // Set min date to today
+    dateInput.setAttribute('min', minDate);
+    
+    // Clear any invalid value
+    if (dateInput.value && dateInput.value < minDate) {
+        dateInput.value = '';
+    }
+    
+    // Add validation on change
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        
+        if (selectedDate < todayDate) {
+            showNotification('Please select a valid future date', 'error');
+            this.value = '';
+        }
+    });
+}
+
+function setupPaxListener() {
+    const paxInput = document.getElementById('booking-pax');
+    const paxDisplay = document.getElementById('pax-display');
+    const priceDisplay = document.getElementById('booking-price-display');
+    
+    function calculateTotalPrice() {
+        const pax = parseInt(paxInput?.value) || 1;
+        const basePrice = parsePrice(document.getElementById('booking-package-price')?.textContent);
+        
+        // Get selected personalization options
+        const selectedOptions = document.querySelectorAll('input[name="personalization"]:checked');
+        const selectedIds = Array.from(selectedOptions).map(cb => cb.value);
+        
+        // Calculate with additive multipliers
+        let multiplier = 1;
+        selectedIds.forEach(id => {
+            const option = getPersonalizationOptions().find(o => o.id === id);
+            if (option) {
+                multiplier += (option.priceMultiplier - 1);
+            }
+        });
+        
+        return basePrice * pax * multiplier;
+    }
+    
+    if (paxInput && paxDisplay) {
+        paxInput.addEventListener('input', () => {
+            const pax = parseInt(paxInput.value) || 1;
+            paxDisplay.textContent = `${pax} ${pax === 1 ? 'Person' : 'Persons'}`;
+            
+            if (priceDisplay) {
+                priceDisplay.textContent = formatPrice(calculateTotalPrice().toString());
+            }
+        });
+    }
+    
+    // Expose for use by personalization change handler
+    window.calculateBookingTotal = calculateTotalPrice;
+}
+
+function setupPersonalization() {
+    const container = document.getElementById('personalization-options');
+    if (!container) return;
+    
+    const options = getPersonalizationOptions();
+    container.innerHTML = options.map(opt => `
+        <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+            <input type="checkbox" name="personalization" value="${opt.id}" 
+                class="w-4 h-4 text-[#1a4d41] rounded focus:ring-[#1a4d41]" onchange="recalculatePrice()">
+            <span class="text-lg">${opt.icon}</span>
+            <span class="text-sm text-gray-700">${opt.name}</span>
+            <span class="text-xs text-orange-500 ml-auto">+${((opt.priceMultiplier - 1) * 100).toFixed(0)}%</span>
+        </label>
+    `).join('');
+}
+
+// Global function to recalculate price when personalization changes
+window.recalculatePrice = function() {
+    const total = window.calculateBookingTotal();
+    if (total !== null) {
+        const priceDisplay = document.getElementById('booking-price-display');
+        if (priceDisplay) {
+            priceDisplay.textContent = formatPrice(total.toString());
+        }
+    }
+};
+
+// Handle booking form submission
+document.addEventListener('submit', function(e) {
+    if (e.target && e.target.id === 'booking-form') {
+        e.preventDefault();
+        
+        const cityName = document.getElementById('booking-city-name').textContent;
+        const pkg = packageData[cityName];
+        const pax = parseInt(document.getElementById('booking-pax').value) || 1;
+        const date = document.getElementById('booking-date').value;
+        
+        // Get selected personalization
+        const personalization = Array.from(document.querySelectorAll('input[name="personalization"]:checked'))
+            .map(cb => cb.value);
+        
+        if (!date) {
+            showNotification('Please select a travel date', 'error');
+            return;
+        }
+        
+        // Add to cart
+        console.log('Booking form submit - pkg.price:', pkg.price);
+        const cartItem = addToCart(
+            { ...pkg, city: cityName, id: cityName, originalCurrency: 'PHP' },
+            pax,
+            date,
+            personalization
+        );
+        
+        showNotification('Added to cart successfully!', 'success');
+        closeModal();
+        
+        // Show floating cart
+        setTimeout(() => {
+            toggleFloatingCart();
+        }, 500);
+    }
+});
+
+// --- 16. FLOATING CART ---
+function initFloatingCart() {
+    updateFloatingCart();
+}
+
+window.toggleFloatingCart = function() {
+    const floatingCart = document.getElementById('floating-cart');
+    if (floatingCart) {
+        floatingCart.classList.toggle('hidden');
+    }
+};
+
+window.checkoutFromCart = function() {
+    checkout();
+};
+
+window.removeFromCartItem = function(itemId) {
+    removeFromCart(itemId);
+    showNotification('Item removed from cart', 'success');
+};
+
+// --- 17. CHAT WIDGET ---
+function initChatWidget() {
+    renderQuickReplies();
+}
+
+window.toggleChat = function() {
+    const chatWidget = document.getElementById('chat-widget');
+    const chatBtn = document.getElementById('chat-toggle-btn');
+    
+    if (chatWidget) {
+        chatWidget.classList.toggle('hidden');
+        if (!chatWidget.classList.contains('hidden')) {
+            loadChatMessages();
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) chatInput.focus();
+        }
+    }
+    
+    if (chatBtn) {
+        chatBtn.classList.toggle('hidden');
+    }
+};
+
+// --- 18. HELPER FUNCTIONS ---
+function parsePrice(priceStr) {
+    if (!priceStr) return 0;
+    const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return 'No date';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-PH', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Initialize on load

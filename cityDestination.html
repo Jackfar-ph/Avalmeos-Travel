@@ -3,17 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Destination | Avalmeo</title>
+    <title>City Destination | Avalmeo's Travel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="data.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
 
-    <a href="index.html" class="fixed top-6 left-6 z-[60] bg-white/20 hover:bg-white/40 backdrop-blur-md text-white px-4 py-2 rounded-full font-bold transition">← Back</a>
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+        <div class="max-w-[1440px] mx-auto px-8 md:px-12 py-5 flex items-center justify-between">
+            <a href="index.html" class="flex items-center min-w-fit">
+                <h1 class="font-header font-900 text-2xl lg:text-3xl text-[#1a4d41] tracking-tighter">AVALMEO'S</h1>
+            </a>
+            
+            <div class="flex items-center gap-4">
+                <!-- Auth Buttons -->
+                <div id="auth-buttons" class="hidden md:flex items-center gap-2">
+                    <button onclick="openLoginModal()" class="px-4 py-2 text-[#1a4d41] font-medium hover:text-orange-500 transition">Log In</button>
+                    <button onclick="openSignupModal()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg font-medium hover:bg-opacity-90 transition">Sign Up</button>
+                </div>
+                
+                <!-- User Menu -->
+                <div id="user-menu" class="hidden md:flex items-center gap-3">
+                    <button onclick="toggleFloatingCart()" class="relative p-2 text-[#1a4d41] hover:text-orange-500 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span id="cart-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    <div class="relative" id="user-dropdown">
+                        <button onclick="toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                            <span id="user-display-name" class="font-medium text-[#1a4d41]">User</span>
+                            <svg class="w-4 h-4 transition-transform" id="dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 hidden z-50">
+                            <button onclick="openAdminDashboard()" id="admin-link" class="hidden w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Admin Dashboard</button>
+                            <hr class="my-2">
+                            <button onclick="logoutUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cart Button (Mobile) -->
+                <button onclick="toggleFloatingCart()" class="md:hidden relative p-2 text-[#1a4d41]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count-mobile" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-    <div class="relative h-[400px] w-full flex items-end">
+    <!-- Back Button -->
+    <a href="index.html" class="fixed top-24 left-6 z-[60] bg-white/20 hover:bg-white/40 backdrop-blur-md text-[#1a4d41] px-4 py-2 rounded-full font-bold transition">← Back</a>
+
+    <div class="relative h-[400px] w-full flex items-end mt-16">
         <img id="pkg-banner" src="" class="absolute inset-0 w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
         <div class="relative max-w-7xl mx-auto px-8 pb-12 text-white w-full">
@@ -23,190 +71,789 @@
     </div>
 
     <main class="max-w-7xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-12">
-    <div class="lg:col-span-2">
-        <h2 class="text-2xl font-bold mb-4 text-[#1a4d41]">About this Package</h2>
-        <p id="pkg-desc" class="text-gray-600 leading-relaxed mb-8"></p>
-        
-        <section id="photo-carousel-container" class="mt-12 mb-12 animate-on-scroll overflow-hidden">
-            <h3 class="text-2xl font-bold mb-6 text-[#1a4d41]">Destination Gallery</h3>
-            <div id="photo-carousel" class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x"></div>
-        </section>
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl font-bold mb-4 text-[#1a4d41]">About this Package</h2>
+            <p id="pkg-desc" class="text-gray-600 leading-relaxed mb-8"></p>
+            
+            <section id="photo-carousel-container" class="mt-12 mb-12 animate-on-scroll overflow-hidden">
+                <h3 class="text-2xl font-bold mb-6 text-[#1a4d41]">Destination Gallery</h3>
+                <div id="photo-carousel" class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x"></div>
+            </section>
 
-        <h3 class="text-xl font-bold mb-6 text-[#1a4d41]">Activities Included</h3>
-        <div id="activity-list" class="flex flex-col gap-4"></div>
-    </div>
-
-    <div class="lg:col-span-1">
-    <div class="sticky top-10 space-y-6">
-        <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100">
-            <h4 class="font-bold text-[#1a4d41] mb-4 flex items-center gap-2">
-                📍 Explore Other Cities
-            </h4>
-            <div id="other-cities-nav" class="space-y-3">
-                </div>
-        </div>
-        <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-            <p class="text-gray-400 text-sm">Price starts at</p>
-            <div id="pkg-price" class="text-4xl font-black text-[#1a4d41] mb-6"></div>
-            <button onclick="openModal()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg shadow-orange-200">Book This Package</button>
+            <h3 class="text-xl font-bold mb-6 text-[#1a4d41]">Activities Included</h3>
+            <div id="activity-list" class="flex flex-col gap-4"></div>
         </div>
 
-        <div class="bg-[#1a4d41] text-white p-6 rounded-3xl shadow-xl">
-            <h4 class="font-bold text-lg mb-4 border-b border-white/20 pb-2 text-orange-400 uppercase tracking-widest text-xs">Local Guide</h4>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between text-sm">
-                    <span class="opacity-70">Current Weather</span>
-                    <span class="font-bold">29°C Sunny ☀️</span>
+        <div class="lg:col-span-1">
+            <div class="sticky top-24 space-y-6">
+                <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100">
+                    <h4 class="font-bold text-[#1a4d41] mb-4 flex items-center gap-2">📍 Explore Other Cities</h4>
+                    <div id="other-cities-nav" class="space-y-3"></div>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="opacity-70">Language</span>
-                    <span id="local-lang" class="font-bold">Filipino / English</span>
+                
+                <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+                    <p class="text-gray-400 text-sm">Price starts at</p>
+                    <div id="pkg-price" class="text-4xl font-black text-[#1a4d41] mb-6"></div>
+                    <button onclick="openBookingModalFromCity()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg shadow-orange-200">Book This Package</button>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="opacity-70">Local Time</span>
-                    <span id="local-time" class="font-bold text-orange-400">--:--</span>
+
+                <div class="bg-[#1a4d41] text-white p-6 rounded-3xl shadow-xl">
+                    <h4 class="font-bold text-lg mb-4 border-b border-white/20 pb-2 text-orange-400 uppercase tracking-widest text-xs">Local Guide</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="opacity-70">Current Weather</span>
+                            <span class="font-bold">29°C Sunny ☀️</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="opacity-70">Language</span>
+                            <span id="local-lang" class="font-bold">Filipino / English</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="opacity-70">Local Time</span>
+                            <span id="local-time" class="font-bold text-orange-400">--:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-orange-50 p-6 rounded-3xl border border-orange-100">
+                    <h4 class="text-[#1a4d41] font-bold text-sm mb-2">💡 Quick Tip</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed">Pack light, breathable cotton clothes. Don't forget an umbrella—the Philippine sun is as strong as its sudden rain!</p>
                 </div>
             </div>
         </div>
+    </main>
 
-        <div class="bg-orange-50 p-6 rounded-3xl border border-orange-100">
-            <h4 class="text-[#1a4d41] font-bold text-sm mb-2">💡 Quick Tip</h4>
-            <p class="text-xs text-gray-600 leading-relaxed">
-                Pack light, breathable cotton clothes. Don't forget an umbrella—the Philippine sun is as strong as its sudden rain!
-            </p>
+    <!-- Modals -->
+    <div id="modals-placeholder">
+        <!-- Auth Modal -->
+        <div id="auth-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div class="bg-[#1a4d41] px-6 py-8 text-center">
+                    <h2 class="text-2xl font-bold text-white">✈️ Avalmeo's Travel</h2>
+                    <p class="text-white/80 text-sm mt-1">Sign in to your account</p>
+                </div>
+                <div class="flex border-b">
+                    <button id="login-tab" onclick="showAuthTab('login')" class="flex-1 px-6 py-3 text-sm font-medium bg-[#1a4d41] text-white">Log In</button>
+                    <button id="signup-tab" onclick="showAuthTab('signup')" class="flex-1 px-6 py-3 text-sm font-medium bg-gray-100 text-gray-600">Sign Up</button>
+                </div>
+                <form id="login-form" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="login-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="login-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <button type="submit" onclick="handleLogin(event)" class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition">Log In</button>
+                    <p class="text-xs text-center text-gray-500">Demo admin: admin@avalmeos.com / admin123</p>
+                </form>
+                <form id="signup-form" class="p-6 space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="signup-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="signup-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone (Philippines)</label>
+                        <input type="tel" id="signup-phone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="09123456789" maxlength="13">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signup-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="Min 6 chars, 1 uppercase, 1 number">
+                    </div>
+                    <button type="submit" onclick="handleSignup(event)" class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition">Create Account</button>
+                </form>
+            </div>
         </div>
-    </div></div>
-</main>
-
-    
-
-    <div id="booking-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-black">✕</button>
-            <h2 class="text-2xl font-bold text-[#1a4d41] mb-2">Book Your Trip</h2>
-            <p class="text-gray-500 text-sm mb-6">Enter your details and our agent will contact you.</p>
-            <form id="inquiry-form" class="space-y-4">
-                <input type="text" placeholder="Full Name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]">
-                <input type="email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]">
-                <input type="tel" placeholder="Phone Number" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]">
-                <textarea placeholder="Special Requests" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1a4d41]"></textarea>
-                <button type="submit" class="w-full bg-[#1a4d41] text-white py-4 rounded-xl font-bold hover:bg-black transition">Confirm Inquiry</button>
-            </form>
+        
+        <!-- Booking Modal -->
+        <div id="booking-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div id="modal-form-content">
+                    <div class="bg-[#1a4d41] px-6 py-6">
+                        <h2 class="text-xl font-bold text-white">Book Your Package</h2>
+                        <p class="text-white/80 text-sm mt-1" id="booking-city-name"></p>
+                    </div>
+                    <form id="booking-form" class="p-6 space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-[#1a4d41]" id="booking-package-name"></h3>
+                                    <p class="text-sm text-gray-500">Best Value Package</p>
+                                </div>
+                                <div class="text-2xl font-bold text-orange-500" id="booking-package-price"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date</label>
+                                <input type="date" id="booking-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Number of Pax</label>
+                                <input type="number" id="booking-pax" value="1" min="1" max="20" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1" id="pax-display">1 Person</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Personalize Your Trip (Optional)</label>
+                            <div id="personalization-options" class="space-y-2 bg-gray-50 p-4 rounded-xl"></div>
+                            <p class="text-xs text-gray-500 mt-2">Leave all options unchecked to book without additional activities</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-xl">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">Estimated Total:</span>
+                                <span class="text-2xl font-bold text-orange-500" id="booking-price-display"></span>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-[#1a4d41] text-white font-bold py-4 rounded-lg hover:bg-opacity-90 transition text-lg">Add to Cart 🛒</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Cart -->
+        <div id="floating-cart" class="fixed bottom-4 right-4 w-96 max-w-[calc(100vw-2rem)] z-40 hidden">
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+                <div class="bg-[#1a4d41] px-4 py-3 flex items-center justify-between">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span>🛒</span> Your Cart
+                        <span id="cart-count" class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                    </h3>
+                    <button onclick="toggleFloatingCart()" class="text-white/80 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="cart-items-container" class="max-h-80 overflow-y-auto p-4">
+                    <p class="text-center text-gray-500 py-8">Your cart is empty</p>
+                </div>
+                <div id="cart-total" class="p-4 border-t bg-gray-50"></div>
+                <div class="p-4 border-t">
+                    <button onclick="checkoutFromCart()" class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition">Checkout Now</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- JavaScript Files -->
+    <script src="data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/auth-handlers.js"></script>
+
     <script>
-       function loadPackageDetails() {
+        let currentCity = '';
+        
+        // Fallback functions if not loaded from cart.js
+        if (typeof window.getPersonalizationOptions === 'undefined') {
+            window.getPersonalizationOptions = function() {
+                return [
+                    { id: 'hotel', name: 'Hotel Accommodation', icon: '🏨', priceMultiplier: 1.5 },
+                    { id: 'transport', name: 'Private Transport', icon: '🚗', priceMultiplier: 1.3 },
+                    { id: 'guide', name: 'Tour Guide', icon: '👨‍🏫', priceMultiplier: 1.2 },
+                    { id: 'meals', name: 'All Meals Included', icon: '🍽️', priceMultiplier: 1.4 },
+                    { id: 'insurance', name: 'Travel Insurance', icon: '🛡️', priceMultiplier: 1.1 },
+                    { id: 'photography', name: 'Professional Photography', icon: '📸', priceMultiplier: 1.25 },
+                    { id: 'souvenir', name: 'Souvenir Package', icon: '🎁', priceMultiplier: 1.15 },
+                    { id: 'wifi', name: 'Portable WiFi', icon: '📶', priceMultiplier: 1.05 }
+                ];
+            };
+        }
+        
+        if (typeof window.parsePrice === 'undefined') {
+            window.parsePrice = function(priceStr) {
+                if (!priceStr) return 0;
+                const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
+                return parseFloat(cleaned) || 0;
+            };
+        }
+        
+        if (typeof window.formatPrice === 'undefined') {
+            window.formatPrice = function(price, currency = 'PHP') {
+                if (currency === 'USD') {
+                    return `US$ ${price.toFixed(2)}`;
+                }
+                return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            };
+        }
+        
+        // === AUTH FUNCTIONS - Delegated to AuthUIManager in auth-handlers.js ===
+        // Auth UI is now managed by AuthUIManager
+        // Functions are exposed globally via auth-handlers.js
+        // Auth UI initialization is handled by componentsLoaded event in auth-handlers.js
+        
+        // Modal functions
+        window.openLoginModal = function() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                showAuthTab('login');
+            }
+        };
+        
+        window.openSignupModal = function() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                showAuthTab('signup');
+            }
+        };
+        
+        window.closeAuthModal = function() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+        
+        window.showAuthTab = function(tab) {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const loginTab = document.getElementById('login-tab');
+            const signupTab = document.getElementById('signup-tab');
+            
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                loginTab.classList.add('bg-[#1a4d41]', 'text-white');
+                loginTab.classList.remove('bg-gray-100', 'text-gray-600');
+                signupTab.classList.add('bg-gray-100', 'text-gray-600');
+                signupTab.classList.remove('bg-[#1a4d41]', 'text-white');
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                signupTab.classList.add('bg-[#1a4d41]', 'text-white');
+                signupTab.classList.remove('bg-gray-100', 'text-gray-600');
+                loginTab.classList.add('bg-gray-100', 'text-gray-600');
+                loginTab.classList.remove('bg-[#1a4d41]', 'text-white');
+            }
+        };
+        
+        // === FALLBACK CART FUNCTIONS (if cart.js not loaded) ===
+        if (typeof window.getPersonalizationOptions === 'undefined') {
+            window.getPersonalizationOptions = function() {
+                return [
+                    { id: 'hotel', name: 'Hotel Accommodation', icon: '🏨', priceMultiplier: 1.5 },
+                    { id: 'transport', name: 'Private Transport', icon: '🚗', priceMultiplier: 1.3 },
+                    { id: 'guide', name: 'Tour Guide', icon: '👨‍🏫', priceMultiplier: 1.2 },
+                    { id: 'meals', name: 'All Meals Included', icon: '🍽️', priceMultiplier: 1.4 },
+                    { id: 'insurance', name: 'Travel Insurance', icon: '🛡️', priceMultiplier: 1.1 },
+                    { id: 'photography', name: 'Professional Photography', icon: '📸', priceMultiplier: 1.25 },
+                    { id: 'souvenir', name: 'Souvenir Package', icon: '🎁', priceMultiplier: 1.15 },
+                    { id: 'wifi', name: 'Portable WiFi', icon: '📶', priceMultiplier: 1.05 }
+                ];
+            };
+        }
+        
+        if (typeof window.parsePrice === 'undefined') {
+            window.parsePrice = function(priceStr) {
+                if (!priceStr) return 0;
+                const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
+                return parseFloat(cleaned) || 0;
+            };
+        }
+        
+        if (typeof window.formatPrice === 'undefined') {
+            window.formatPrice = function(price, currency = 'PHP') {
+                if (currency === 'USD') {
+                    return `US$ ${price.toFixed(2)}`;
+                }
+                return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            };
+        }
+        
+        if (typeof window.addToCart === 'undefined') {
+            window.addToCart = function(packageData, paxSize, travelDate, personalization = []) {
+                console.log('Fallback addToCart called:', packageData);
+                const cart = window.getCart ? window.getCart() : { items: [], total: 0 };
+                cart.items.push({
+                    id: 'item_' + Date.now(),
+                    packageTitle: packageData.title,
+                    city: packageData.city,
+                    paxSize: paxSize,
+                    totalPrice: 0
+                });
+                if (typeof window.updateCartCount === 'function') {
+                    window.updateCartCount();
+                }
+                alert('Added to cart: ' + (packageData.title || 'Item'));
+            };
+        }
+        
+        if (typeof window.removeFromCart === 'undefined') {
+            window.removeFromCart = function(itemId) {
+                console.log('Fallback removeFromCart called:', itemId);
+            };
+        }
+        
+        if (typeof window.getCart === 'undefined') {
+            window.getCart = function() {
+                return { items: [], total: 0 };
+            };
+        }
+        
+        if (typeof window.clearCart === 'undefined') {
+            window.clearCart = function() {
+                console.log('Fallback clearCart called');
+            };
+        }
+        
+        if (typeof window.toggleFloatingCart === 'undefined') {
+            window.toggleFloatingCart = function() {
+                console.log('Fallback toggleFloatingCart called');
+                const cart = document.getElementById('floating-cart');
+                if (cart) cart.classList.toggle('hidden');
+            };
+        }
+        
+        if (typeof window.checkoutFromCart === 'undefined') {
+            window.checkoutFromCart = function() {
+                alert('Please log in to checkout');
+            };
+        }
+        
+        if (typeof window.showNotification === 'undefined') {
+            window.showNotification = function(message, type) {
+                alert(message);
+            };
+        }
+        
+        // Fallback for initCartSystem
+        if (typeof window.initCartSystem === 'undefined') {
+            window.initCartSystem = function() {
+                console.log('Initializing cart system (fallback)');
+                if (typeof window.updateCartCount === 'function') {
+                    window.updateCartCount();
+                }
+                if (typeof window.updateFloatingCart === 'function') {
+                    window.updateFloatingCart();
+                }
+            };
+        }
+        
+        // === CITY NAVIGATION (NO AUTOMATIC LOGOUT) ===
+        window.navigateToCity = function(cityName) {
+            window.location.href = 'cityDestination.html?city=' + encodeURIComponent(cityName);
+        };
+        
+        function loadPackageDetails() {
             const params = new URLSearchParams(window.location.search);
-            const cityParam = decodeURIComponent(params.get('city') || "Cebu City");
-
-            // Access data directly using the city name as the key
-            const pkg = packageData[cityParam];
-            const activities = cityData[cityParam];
-
+            currentCity = decodeURIComponent(params.get('city') || 'Cebu City');
+            
+            const pkg = packageData[currentCity];
+            const activities = cityData[currentCity];
+            
             if (!pkg) {
-                document.getElementById('pkg-title').innerText = "Package not found";
+                document.getElementById('pkg-title').innerText = 'Package not found';
                 return;
             }
-
-            // Set Banner Image
+            
             const bannerImg = document.getElementById('pkg-banner');
-            if (pkg.img) {
-                bannerImg.src = pkg.img;
-            }
-
-            // Update Text Content
+            if (pkg.img) bannerImg.src = pkg.img;
+            
             document.getElementById('pkg-title').innerText = pkg.title;
-            document.getElementById('pkg-subtitle').innerText = cityParam;
+            document.getElementById('pkg-subtitle').innerText = currentCity;
             document.getElementById('pkg-desc').innerText = pkg.details;
             document.getElementById('pkg-price').innerText = pkg.price;
-
-            // --- RENDER GALLERY ---
+            
+            // Gallery
             const carousel = document.getElementById('photo-carousel');
-            const photos = cityPhotos[cityParam] || [];
-
+            const photos = cityPhotos[currentCity] || [];
+            
             if (photos.length > 0) {
-                // Keep it simple: just flex and gap
-                carousel.className = "flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x";
-                
+                carousel.className = 'flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x';
                 carousel.innerHTML = photos.map(imgSrc => `
                     <div class="flex-shrink-0 w-72 h-48 rounded-2xl overflow-hidden shadow-md snap-start card-zoom-container">
-                        <img src="${imgSrc}" 
-                            onerror="this.src='Picture/Cebu City.jpg'" 
-                            class="card-zoom-image w-full h-full object-cover">
+                        <img src="${imgSrc}" onerror="this.src='Picture/Cebu City.jpg'" class="card-zoom-image w-full h-full object-cover">
                     </div>
                 `).join('');
             } else {
-                // Hide the container if no photos
                 document.getElementById('photo-carousel-container').classList.add('hidden');
             }
-
-            // Render Activity List
+            
+            // Activities with booking checkboxes
             if (activities) {
                 const list = document.getElementById('activity-list');
-                list.innerHTML = activities.map(act => `
+                list.innerHTML = activities.map((act, index) => `
                     <div class="animate-on-scroll card-zoom-container flex items-center gap-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
                         <div class="overflow-hidden rounded-xl w-32 h-24 flex-shrink-0">
                             <img src="${act.img}" class="card-zoom-image w-full h-full object-cover">
                         </div>
-                        <div class="hover-lift-text">
+                        <div class="hover-lift-text flex-1">
                             <h4 class="font-bold text-[#1a4d41] text-lg">${act.title}</h4>
                             <p class="text-sm text-orange-500 font-bold">★ ${act.rating}</p>
                             <p class="text-gray-600 font-bold mt-1">${act.price}</p>
                         </div>
+                        <div class="flex flex-col items-center gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="book-activity-${index}" class="w-5 h-5 rounded border-gray-300 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="toggleActivityBooking('${act.title.replace(/'/g, "\\'")}', this.checked, ${index})">
+                                <span class="text-sm font-medium text-[#1a4d41]">Book</span>
+                            </label>
+                            <button onclick="bookActivity('${act.title.replace(/'/g, "\\'")}', ${index})" class="px-3 py-1 text-xs bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90 transition opacity-0" id="book-btn-${index}">
+                                Add to Cart
+                            </button>
+                        </div>
                     </div>
                 `).join('');
-
-                // --- RENDER SIDEBAR DESTINATIONS ---
+                
+                // Other cities nav - with automatic logout on click
                 const navContainer = document.getElementById('other-cities-nav');
-                const allCities = Object.keys(packageData); // Gets all city names from data.js
-
+                const allCities = Object.keys(packageData);
+                
                 navContainer.innerHTML = allCities
-                    .filter(city => city !== cityParam) // Don't show the city they are already viewing
+                    .filter(city => city !== currentCity)
                     .map(city => `
-                        <a href="cityDestination.html?city=${encodeURIComponent(city)}" 
-                        class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition group">
-                            <img src="${packageData[city].img}" 
-                                class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition">
+                        <div onclick="navigateToCity('${city}')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition cursor-pointer group">
+                            <img src="${packageData[city].img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition">
                             <div>
                                 <p class="text-sm font-bold text-[#1a4d41] group-hover:text-orange-500">${city}</p>
                                 <p class="text-[10px] text-gray-400 uppercase font-bold">${packageData[city].price}</p>
                             </div>
-                        </a>
+                        </div>
                     `).join('');
-
-                // --- RE-TRIGGER ANIMATIONS ---
-                if (typeof setupAnimations === "function") {
-                    setupAnimations(); 
-                } else {
-                    document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                        el.classList.add('visible');
-                    });
+                
+                // Trigger animations
+                document.querySelectorAll('.animate-on-scroll').forEach(el => el.classList.add('visible'));
+            }
+            
+            // Initialize UI
+            updateAuthUI();
+            initCartSystem();
+        }
+        
+        // === BOOKING CHECKBOX FUNCTIONS ===
+        const selectedActivities = {};
+        
+        window.toggleActivityBooking = function(activityTitle, isChecked, index) {
+            const bookBtn = document.getElementById('book-btn-' + index);
+            
+            if (isChecked) {
+                selectedActivities[activityTitle] = true;
+                if (bookBtn) bookBtn.classList.remove('opacity-0');
+            } else {
+                delete selectedActivities[activityTitle];
+                if (bookBtn) bookBtn.classList.add('opacity-0');
+            }
+            
+            updateSelectedActivitiesDisplay();
+        };
+        
+        window.bookActivity = function(activityTitle, index) {
+            const checkbox = document.getElementById('book-activity-' + index);
+            if (checkbox && checkbox.checked) {
+                // Find activity data
+                const activities = cityData[currentCity];
+                const activity = activities.find(a => a.title === activityTitle);
+                
+                if (activity) {
+                    // Add to cart as individual activity
+                    window.addToCart({
+                        title: activity.title,
+                        city: currentCity,
+                        img: activity.img,
+                        price: activity.price,
+                        originalCurrency: 'USD'
+                    }, 1, new Date().toISOString().split('T')[0], []);
+                    
+                    showNotification('Activity "' + activityTitle + '" added to cart!', 'success');
+                    
+                    // Uncheck after adding
+                    checkbox.checked = false;
+                    const bookBtn = document.getElementById('book-btn-' + index);
+                    if (bookBtn) bookBtn.classList.add('opacity-0');
+                    delete selectedActivities[activityTitle];
+                    updateSelectedActivitiesDisplay();
                 }
             }
+        };
+        
+        function updateSelectedActivitiesDisplay() {
+            const selectedCount = Object.keys(selectedActivities).length;
+            const selectedNames = Object.keys(selectedActivities).join(', ');
         }
+        
         function updateTime() {
             const options = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true };
             const timeString = new Intl.DateTimeFormat('en-US', options).format(new Date());
             const timeEl = document.getElementById('local-time');
             if(timeEl) timeEl.innerText = timeString;
         }
-
-        // Update clock every minute
+        
         setInterval(updateTime, 60000);
-        updateTime(); // Initial call
-
-        function openModal() { document.getElementById('booking-modal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('booking-modal').classList.add('hidden'); }
-
-        document.getElementById('inquiry-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert("Thank you for your inquiry! An Avalmeo's travel agent will contact you via email within 24 hours.");
-            closeModal();
-            e.target.reset();
+        updateTime();
+        
+        // Booking Modal
+        function openBookingModalFromCity() {
+            console.log('openBookingModalFromCity called');
+            console.log('currentCity:', currentCity);
+            const modal = document.getElementById('booking-modal');
+            const pkg = packageData[currentCity];
+            console.log('Modal element:', modal);
+            console.log('Package data:', pkg);
+            
+            if (!modal || !pkg) {
+                console.error('Modal or package not found!');
+                return;
+            }
+            
+            document.getElementById('booking-city-name').textContent = currentCity;
+            document.getElementById('booking-package-name').textContent = pkg.title;
+            document.getElementById('booking-package-price').textContent = pkg.price;
+            
+            // Setup date validation
+            setupDateValidation();
+            
+            setupPaxListener();
+            setupPersonalization();
+            
+            // Calculate initial total price
+            // Use the package price directly as base for initial calculation
+            if (typeof window.calculateCityBookingTotal === 'function') {
+                const priceDisplay = document.getElementById('booking-price-display');
+                if (priceDisplay && pkg) {
+                    // Calculate initial price: base × pax × (1 + sum of selected options)
+                    // At this point, no personalization is selected, so multiplier = 1
+                    const basePrice = parsePrice(pkg.price);
+                    const initialPrice = basePrice * 1; // 1 pax by default, no personalization
+                    priceDisplay.textContent = formatPrice(initialPrice.toString());
+                }
+            } else {
+                // Fallback: calculate directly if function not yet defined
+                const priceDisplay = document.getElementById('booking-price-display');
+                if (priceDisplay && pkg) {
+                    const basePrice = parsePrice(pkg.price);
+                    priceDisplay.textContent = formatPrice(basePrice.toString());
+                }
+            }
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Date validation - prevent past dates
+        function setupDateValidation() {
+            const dateInput = document.getElementById('booking-date');
+            if (!dateInput) return;
+            
+            // Get today's date in local timezone
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const minDate = `${year}-${month}-${day}`;
+            
+            // Set min date to today
+            dateInput.setAttribute('min', minDate);
+            
+            // Clear any invalid value
+            if (dateInput.value && dateInput.value < minDate) {
+                dateInput.value = '';
+            }
+            
+            // Add validation on change
+            dateInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                
+                if (selectedDate < todayDate) {
+                    showNotification('Please select a valid future date', 'error');
+                    this.value = '';
+                }
+            });
+        }
+        
+        window.openBookingModalFromCity = openBookingModalFromCity;
+        
+        // Expose openBookingModal as alias for openBookingModalFromCity
+        window.openBookingModal = openBookingModalFromCity;
+        
+        function setupPaxListener() {
+            const paxInput = document.getElementById('booking-pax');
+            const paxDisplay = document.getElementById('pax-display');
+            const priceDisplay = document.getElementById('booking-price-display');
+            
+            function calculateTotalPrice() {
+                const pax = parseInt(paxInput?.value) || 1;
+                const basePrice = parsePrice(document.getElementById('booking-package-price')?.textContent);
+                
+                // Get selected personalization options (radio buttons)
+                const selectedRadio = document.querySelector('input[name="personalization"]:checked');
+                const selectedId = selectedRadio?.value;
+                
+                // Calculate with additive multipliers
+                let multiplier = 1;
+                if (selectedId) {
+                    const option = getPersonalizationOptions().find(o => o.id === selectedId);
+                    if (option) {
+                        multiplier = option.priceMultiplier;
+                    }
+                }
+                
+                return basePrice * pax * multiplier;
+            }
+            
+            if (paxInput && paxDisplay) {
+                paxInput.addEventListener('input', () => {
+                    const pax = parseInt(paxInput.value) || 1;
+                    paxDisplay.textContent = `${pax} ${pax === 1 ? 'Person' : 'Persons'}`;
+                    
+                    if (priceDisplay) {
+                        priceDisplay.textContent = formatPrice(calculateTotalPrice().toString());
+                    }
+                });
+            }
+            
+            // Expose for use by personalization change handler
+            window.calculateCityBookingTotal = calculateTotalPrice;
+        }
+        
+        function setupPersonalization() {
+            const container = document.getElementById('personalization-options');
+            if (!container) return;
+            
+            const options = getPersonalizationOptions();
+            
+            // Build options HTML with "None" option first
+            let optionsHtml = `
+                <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer bg-orange-50 border border-orange-200">
+                    <input type="radio" name="personalization" value="" checked class="w-4 h-4 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="recalculateCityPrice()">
+                    <span class="text-lg">🚫</span>
+                    <span class="text-sm text-gray-700 font-medium">None - Book Without Activities</span>
+                    <span class="text-xs text-green-600 ml-auto font-bold">No Extra Cost</span>
+                </label>
+            `;
+            
+            optionsHtml += options.map(opt => `
+                <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="radio" name="personalization" value="${opt.id}" class="w-4 h-4 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="recalculateCityPrice()">
+                    <span class="text-lg">${opt.icon}</span>
+                    <span class="text-sm text-gray-700">${opt.name}</span>
+                    <span class="text-xs text-orange-500 ml-auto">+${((opt.priceMultiplier - 1) * 100).toFixed(0)}%</span>
+                </label>
+            `).join('');
+            
+            container.innerHTML = optionsHtml;
+        }
+        
+        // Global function to recalculate price when personalization changes
+        window.recalculateCityPrice = function() {
+            if (typeof window.calculateCityBookingTotal === 'function') {
+                const priceDisplay = document.getElementById('booking-price-display');
+                if (priceDisplay) {
+                    priceDisplay.textContent = formatPrice(window.calculateCityBookingTotal().toString());
+                }
+            }
+        };
+        
+        // Booking form submission
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'booking-form') {
+                e.preventDefault();
+                
+                const pkg = packageData[currentCity];
+                const pax = parseInt(document.getElementById('booking-pax').value) || 1;
+                const date = document.getElementById('booking-date').value;
+                // Get selected radio value (filter out empty string for "None" option)
+                const selectedRadio = document.querySelector('input[name="personalization"]:checked');
+                const personalization = selectedRadio && selectedRadio.value ? [selectedRadio.value] : [];
+                
+                if (!date) {
+                    showNotification('Please select a travel date', 'error');
+                    return;
+                }
+                
+                window.addToCart({ ...pkg, city: currentCity, id: currentCity, originalCurrency: 'PHP' }, pax, date, personalization);
+                showNotification(personalization.length === 0 
+                    ? 'Package added to cart without extra activities!' 
+                    : 'Added to cart successfully!', 'success');
+                closeModal();
+                
+                setTimeout(() => { toggleFloatingCart(); }, 500);
+            }
         });
         
-        window.onload = loadPackageDetails;
+        // Date restrictions
+        function setupDateRestrictions() {
+            const dateInput = document.getElementById('booking-date');
+            if (!dateInput) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
+            
+            const nextYear = new Date();
+            nextYear.setFullYear(nextYear.getFullYear() + 2);
+            dateInput.setAttribute('max', nextYear.toISOString().split('T')[0]);
+        }
+        
+        // Modal functions
+        window.openModal = function() { document.getElementById('booking-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+        window.closeModal = function() { 
+            console.log('closeModal called');
+            const modal = document.getElementById('booking-modal');
+            if (modal) {
+                console.log('Found modal, adding hidden class');
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        window.onload = function() {
+            console.log('onload triggered');
+            loadPackageDetails();
+            setupDateRestrictions();
+            
+            console.log('Checking updateAuthUI:', typeof updateAuthUI);
+            // Ensure auth functions are available
+            if (typeof updateAuthUI === 'function') {
+                console.log('Calling updateAuthUI');
+                updateAuthUI();
+            }
+            
+            // Initialize cart system (modals are inline, not async loaded)
+            console.log('Checking updateCartCount:', typeof updateCartCount);
+            console.log('Checking updateFloatingCart:', typeof updateFloatingCart);
+            
+            if (typeof updateCartCount === 'function') {
+                console.log('Calling updateCartCount');
+                updateCartCount();
+            }
+            if (typeof updateFloatingCart === 'function') {
+                console.log('Calling updateFloatingCart');
+                updateFloatingCart();
+            }
+            
+            // Check if floating cart elements exist
+            console.log('Floating cart element:', document.getElementById('floating-cart'));
+            console.log('Cart items container:', document.getElementById('cart-items-container'));
+            
+            // Dispatch componentsLoaded event for consistency with index.html
+            setTimeout(() => {
+                console.log('Dispatching componentsLoaded event');
+                document.dispatchEvent(new CustomEvent('componentsLoaded'));
+            }, 100);
+        };
     </script>
 </body>
 </html>

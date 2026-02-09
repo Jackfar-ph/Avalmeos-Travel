@@ -26,6 +26,7 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
 }
+
 /* --- Scroll Entrance Animation --- */
 section, .animate-on-scroll {
     opacity: 0;
@@ -61,24 +62,50 @@ section.visible, .animate-on-scroll.visible {
     transform: translateY(-8px);
 }
 
-/* --- Revised Scroll Entrance Animation with Navbar Fix --- */
+/* --- Scroll Entrance Animation --- */
 section[id], 
 .animate-on-scroll {
     opacity: 0;
-    transform: translateY(40px);
-    transition: all 0.9s cubic-bezier(0.17, 0.55, 0.55, 1);
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
 }
 
 section.visible, 
 .animate-on-scroll.visible {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Make sections visible immediately on page load for better UX */
+section[id]:not(#home),
+.animate-on-scroll:not(.always-animate) {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 /* Ensure navbar and header are always visible */
 nav, #navbar-placeholder, header {
     opacity: 1 !important;
     transform: none !important;
     visibility: visible !important;
+}
+
+/* Placeholder divs need min-height to prevent layout shift */
+#hero-placeholder,
+#destinations-placeholder,
+#packages-placeholder,
+#tips-placeholder,
+#footer-placeholder {
+    min-height: 100px;
 }
 html {
     scroll-behavior: smooth;
@@ -99,4 +126,424 @@ html {
 #photo-carousel::after {
     content: '';
     padding-right: 8%;
+}
+
+/* --- Scrollbar Hide --- */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* --- Notification Styles --- */
+#notification-container {
+    pointer-events: none;
+}
+
+#notification-container > div {
+    pointer-events: auto;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* --- Floating Cart Styles --- */
+#floating-cart {
+    animation: slideIn 0.3s ease-out;
+}
+
+.cart-item {
+    transition: all 0.2s ease;
+}
+
+.cart-item:hover {
+    transform: translateX(-4px);
+}
+
+/* --- Chat Widget Styles --- */
+#chat-widget {
+    animation: slideIn 0.3s ease-out;
+}
+
+#chat-messages {
+    scroll-behavior: smooth;
+}
+
+.chat-message {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* --- Auth Modal Styles --- */
+#auth-modal {
+    animation: fadeIn 0.2s ease-out;
+}
+
+#auth-modal input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 77, 65, 0.2);
+}
+
+/* --- Booking Modal Styles --- */
+#booking-modal {
+    animation: fadeIn 0.2s ease-out;
+}
+
+#booking-form input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+/* --- Custom Checkbox Styles --- */
+input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: #1a4d41;
+}
+
+/* --- Loading States --- */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #ddd;
+    border-top-color: #1a4d41;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- Hover Effects --- */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Button Hover Effects --- */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* --- Link Hover Effects --- */
+a {
+    transition: color 0.2s ease;
+}
+
+/* --- Card Styles --- */
+.card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Input Styles --- */
+input, textarea, select {
+    transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    transform: translateY(-1px);
+}
+
+/* --- Badge Styles --- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* --- Shadow Customization --- */
+.shadow-soft {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-medium {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-strong {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Backdrop Blur --- */
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md {
+    backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-lg {
+    backdrop-filter: blur(16px);
+}
+
+/* --- Mobile Menu --- */
+#mobile-menu {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#mobile-menu.translate-x-full {
+    transform: translateX(100%);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .card-zoom-container:hover .card-zoom-image {
+        transform: none;
+    }
+    
+    .hover-lift:hover {
+        transform: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* --- Admin Styles --- */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    background: #f9fafb;
+}
+
+.admin-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-table tr:hover td {
+    background: #f9fafb;
+}
+
+/* --- Status Colors --- */
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-confirmed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-completed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* --- Price Display --- */
+.price-display {
+    font-weight: 700;
+    color: #1a4d41;
+}
+
+.price-display.secondary {
+    color: #ea580c;
+}
+
+/* --- Form Validation Styles --- */
+input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+input.valid {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+/* --- Loading Skeleton --- */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* --- Tooltip --- */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: #1f2937;
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Dropdown Animation --- */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 12rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* --- Map Styles --- */
+#map {
+    min-height: 350px !important;
+    height: 350px !important;
+    width: 100% !important;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+    border-radius: 1rem;
+    border: 2px solid #1a4d41;
+}
+
+/* Leaflet map fix */
+.leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 350px;
+    border-radius: 1rem;
+}
+
+/* Map placeholder styling when Leaflet fails to load */
+#map:empty::before {
+    content: '🗺️ Philippines Map';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 1.5rem;
+    color: #1a4d41;
+    font-weight: bold;
+}
+
+/* --- Toast Notifications --- */
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast.success {
+    border-left: 4px solid #22c55e;
+}
+
+.toast.error {
+    border-left: 4px solid #ef4444;
+}
+
+.toast.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.toast.info {
+    border-left: 4px solid #3b82f6;
+}
+
+.toast.info {
+    border-left: 4px solid #3b82f6;
 }
