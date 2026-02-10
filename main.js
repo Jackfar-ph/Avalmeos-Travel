@@ -1,90 +1,10 @@
-// --- 1. COMPONENT LOADER ---
-// Fallback functions if not loaded from cart.js
-if (typeof window.getPersonalizationOptions === 'undefined') {
-    window.getPersonalizationOptions = function() {
-        return [
-            { id: 'hotel', name: 'Hotel Accommodation', icon: '🏨', priceMultiplier: 1.5 },
-            { id: 'transport', name: 'Private Transport', icon: '🚗', priceMultiplier: 1.3 },
-            { id: 'guide', name: 'Tour Guide', icon: '👨‍🏫', priceMultiplier: 1.2 },
-            { id: 'meals', name: 'All Meals Included', icon: '🍽️', priceMultiplier: 1.4 },
-            { id: 'insurance', name: 'Travel Insurance', icon: '🛡️', priceMultiplier: 1.1 },
-            { id: 'photography', name: 'Professional Photography', icon: '📸', priceMultiplier: 1.25 },
-            { id: 'souvenir', name: 'Souvenir Package', icon: '🎁', priceMultiplier: 1.15 },
-            { id: 'wifi', name: 'Portable WiFi', icon: '📶', priceMultiplier: 1.05 }
-        ];
-    };
-}
+// --- 1. SHARED UTILITIES ---
+// Load centralized utilities to eliminate code duplication
+// Shared utilities are loaded via script tag in index.html before main.js
 
-if (typeof window.parsePrice === 'undefined') {
-    window.parsePrice = function(priceStr) {
-        if (!priceStr) return 0;
-        const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
-        return parseFloat(cleaned) || 0;
-    };
-}
+// Fallback functions are now provided by js/utils/shared-utils.js
 
-if (typeof window.formatPrice === 'undefined') {
-    window.formatPrice = function(price, currency = 'PHP') {
-        if (currency === 'USD') {
-            return `US$ ${price.toFixed(2)}`;
-        }
-        return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    };
-}
-
-if (typeof window.addToCart === 'undefined') {
-    window.addToCart = function(packageData, paxSize, travelDate, personalization = []) {
-        console.log('Fallback addToCart called:', packageData);
-        alert('Added to cart: ' + (packageData.title || 'Item'));
-    };
-}
-
-if (typeof window.removeFromCart === 'undefined') {
-    window.removeFromCart = function(itemId) {
-        console.log('Fallback removeFromCart called:', itemId);
-    };
-}
-
-if (typeof window.getCart === 'undefined') {
-    window.getCart = function() {
-        return { items: [], total: 0 };
-    };
-}
-
-if (typeof window.clearCart === 'undefined') {
-    window.clearCart = function() {
-        console.log('Fallback clearCart called');
-    };
-}
-
-if (typeof window.checkoutFromCart === 'undefined') {
-    window.checkoutFromCart = function() {
-        alert('Please log in to checkout');
-    };
-}
-
-if (typeof window.initCartSystem === 'undefined') {
-    window.initCartSystem = function() {
-        console.log('Initializing cart system (fallback)');
-        if (typeof window.updateCartCount === 'function') {
-            window.updateCartCount();
-        }
-        if (typeof window.updateFloatingCart === 'function') {
-            window.updateFloatingCart();
-        }
-    };
-}
-
-async function loadComponent(elementId, filePath) {
-    const container = document.getElementById(elementId);
-    if (!container) return;
-    try {
-        const response = await fetch(filePath);
-        container.innerHTML = await response.text();
-    } catch (err) { console.error(`Error loading ${filePath}:`, err); }
-}
-
-// --- 2. INITIALIZATION ---
+// --- 2. COMPONENT LOADER ---
 
 // Component loading promise tracker
 const componentLoadState = {
@@ -134,17 +54,14 @@ function checkComponentsReady() {
 async function loadComponent(elementId, filePath) {
     const container = document.getElementById(elementId);
     if (!container) {
-        console.warn('Container not found:', elementId);
         return;
     }
-    console.log('Loading component:', elementId, 'from', filePath);
     try {
         const response = await fetch(filePath);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         container.innerHTML = await response.text();
-        console.log('Loaded component:', elementId);
         
         // Trigger animations for newly loaded content
         const targets = container.querySelectorAll('section[id], .animate-on-scroll');
@@ -350,8 +267,6 @@ document.addEventListener('componentsLoaded', function() {
 window.addEventListener('DOMContentLoaded', initSite);
 
 // --- 3. FORM LOGIC ---
-
-// --- 3. FORM LOGIC ---
 function setupFormLogic() {
     document.addEventListener('submit', function(e) {
         if (e.target && e.target.id === 'inquiry-form') {
@@ -391,24 +306,40 @@ function setupAnimations() {
 }
 
 // --- 5. CURRENCY TOGGLE ---
-let currentCurrency = 'PHP'; 
+// Global currency state
+window.currentCurrency = 'PHP'; // Default to PHP
 const exchangeRate = 59.25;
 
 function setupCurrency() {
     const btn = document.getElementById('currency-toggle');
     if(!btn) return;
     
+    // Initialize button text based on current state
+    btn.innerText = window.currentCurrency === 'PHP' ? 'PHP ₱' : 'USD $';
+    
     btn.addEventListener('click', () => {
-        currentCurrency = currentCurrency === 'PHP' ? 'USD' : 'PHP';
-        btn.innerText = currentCurrency === 'PHP' ? 'PHP ₱' : 'USD $';
+        window.currentCurrency = window.currentCurrency === 'PHP' ? 'USD' : 'PHP';
+        btn.innerText = window.currentCurrency === 'PHP' ? 'PHP ₱' : 'USD $';
         
+        // Update all price displays
         document.querySelectorAll('.price-value').forEach(el => {
-            const usd = parseFloat(el.getAttribute('data-usd'));
-            el.innerText = currentCurrency === 'PHP' 
-                ? `₱${(usd * exchangeRate).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}` 
-                : `$${usd}`;
+            const phpValue = parseFloat(el.getAttribute('data-php'));
+            if (!isNaN(phpValue)) {
+                if (window.currentCurrency === 'PHP') {
+                    el.innerText = '₱' + phpValue.toLocaleString();
+                } else {
+                    const usdValue = phpValue / exchangeRate;
+                    el.innerText = '$' + usdValue.toFixed(2);
+                }
+            }
         });
-
+        
+        // Update floating cart if open
+        if (typeof window.updateFloatingCart === 'function') {
+            window.updateFloatingCart();
+        }
+        
+        // Refresh activities display if on city page
         const activeCityTitle = document.getElementById('selected-city-name');
         if (activeCityTitle && activeCityTitle.innerText.includes("Activities in")) {
             const cityName = activeCityTitle.innerText.replace('Activities in ', '');
@@ -416,7 +347,17 @@ function setupCurrency() {
                 window.showActivities(cityName);
             }
         }
+        
+        // Save preference to localStorage
+        localStorage.setItem('preferredCurrency', window.currentCurrency);
     });
+    
+    // Load saved preference
+    const savedCurrency = localStorage.getItem('preferredCurrency');
+    if (savedCurrency && (savedCurrency === 'PHP' || savedCurrency === 'USD')) {
+        window.currentCurrency = savedCurrency;
+        btn.innerText = window.currentCurrency === 'PHP' ? 'PHP ₱' : 'USD $';
+    }
 }
 
 // --- 6. SEARCH LOGIC ---
@@ -584,16 +525,6 @@ function setupNavigation() {
 }
 
 // --- 9. ACTIVITY DISPLAY ---
-// Use cart.js's formatPrice if available, otherwise define it here
-if (typeof window.formatPrice === 'undefined') {
-    window.formatPrice = function(price, currency = 'PHP') {
-        if (currency === 'USD') {
-            return `US$ ${price.toFixed(2)}`;
-        }
-        return `₱${price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    };
-}
-
 window.showActivities = function(cityName) {
     const display = document.getElementById('activities-display');
     const grid = document.getElementById('activities-grid');
@@ -605,6 +536,10 @@ window.showActivities = function(cityName) {
     grid.innerHTML = ""; 
 
     cityData[cityName].forEach(act => {
+        const displayPrice = window.currentCurrency === 'USD' 
+            ? '$' + (act.price / exchangeRate).toFixed(2)
+            : '₱' + act.price.toLocaleString();
+        
         grid.innerHTML += `
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <div class="relative overflow-hidden rounded-xl aspect-video bg-gray-200">
@@ -615,7 +550,7 @@ window.showActivities = function(cityName) {
                     <div class="flex items-center gap-1 text-sm text-gray-500 mt-1">
                         <span class="text-orange-500">★ ${act.rating}</span> • 100K+ booked
                     </div>
-                    <div class="mt-2 text-xl font-bold text-orange-600">From ${formatPrice(act.price)}</div>
+                    <div class="mt-2 text-xl font-bold text-orange-600">From ${displayPrice}</div>
                 </div>
             </div>
         `;
@@ -623,6 +558,10 @@ window.showActivities = function(cityName) {
 
     const pkg = packageData[cityName];
     if (pkg) {
+        const pkgDisplayPrice = window.currentCurrency === 'USD'
+            ? '$' + (pkg.price / exchangeRate).toFixed(2)
+            : '₱' + pkg.price.toLocaleString();
+            
         grid.innerHTML += `
             <div class="bg-[#1a4d41] text-white p-6 rounded-xl flex flex-col justify-between shadow-lg border-2 border-orange-500">
                 <div>
@@ -631,7 +570,7 @@ window.showActivities = function(cityName) {
                     <p class="text-xs opacity-80 mt-2 leading-relaxed">${pkg.details}</p>
                 </div>
                 <div class="mt-6">
-                    <div class="text-2xl font-black text-orange-400">${formatPrice(pkg.price)}</div>
+                    <div class="text-2xl font-black text-orange-400">${pkgDisplayPrice}</div>
                     <button onclick="openBookingModal('${cityName}')" class="w-full mt-3 bg-white text-[#1a4d41] font-bold py-3 rounded-lg hover:bg-orange-500 hover:text-white transition transform active:scale-95">
                         Book Full Package
                     </button>
@@ -806,15 +745,10 @@ window.showAuthTab = function(tab) {
 
 // --- 15. BOOKING MODAL WITH PAX & PERSONALIZATION ---
 window.openBookingModal = function(cityName) {
-    console.log('openBookingModal called with city:', cityName);
     const modal = document.getElementById('booking-modal');
     const pkg = packageData[cityName];
     
-    console.log('Modal element:', modal);
-    console.log('Package data:', pkg);
-    
     if (modal && pkg) {
-        console.log('Opening booking modal for', cityName);
         document.getElementById('booking-city-name').textContent = cityName;
         document.getElementById('booking-package-name').textContent = pkg.title;
         document.getElementById('booking-package-price').textContent = pkg.price;
@@ -833,22 +767,12 @@ window.openBookingModal = function(cityName) {
         setupPersonalization();
         
         // Calculate initial total price
-        // Use the package price directly as base for initial calculation
         if (typeof window.calculateBookingTotal === 'function') {
             const priceDisplay = document.getElementById('booking-price-display');
             if (priceDisplay && pkg) {
-                // Calculate initial price: base × pax × (1 + sum of selected options)
-                // At this point, no personalization is selected, so multiplier = 1
                 const basePrice = parsePrice(pkg.price);
-                const initialPrice = basePrice * 1; // 1 pax by default, no personalization
-                priceDisplay.textContent = formatPrice(initialPrice.toString());
-            }
-        } else {
-            // Fallback: calculate directly if function not yet defined
-            const priceDisplay = document.getElementById('booking-price-display');
-            if (priceDisplay && pkg) {
-                const basePrice = parsePrice(pkg.price);
-                priceDisplay.textContent = formatPrice(basePrice.toString());
+                const initialPrice = basePrice * 1;
+                priceDisplay.textContent = formatPrice(initialPrice);
             }
         }
         
@@ -862,22 +786,18 @@ function setupDateValidation() {
     const dateInput = document.getElementById('booking-date');
     if (!dateInput) return;
     
-    // Get today's date in local timezone
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const minDate = `${year}-${month}-${day}`;
     
-    // Set min date to today
     dateInput.setAttribute('min', minDate);
     
-    // Clear any invalid value
     if (dateInput.value && dateInput.value < minDate) {
         dateInput.value = '';
     }
     
-    // Add validation on change
     dateInput.addEventListener('change', function() {
         const selectedDate = new Date(this.value);
         const todayDate = new Date();
@@ -899,11 +819,9 @@ function setupPaxListener() {
         const pax = parseInt(paxInput?.value) || 1;
         const basePrice = parsePrice(document.getElementById('booking-package-price')?.textContent);
         
-        // Get selected personalization options
         const selectedOptions = document.querySelectorAll('input[name="personalization"]:checked');
         const selectedIds = Array.from(selectedOptions).map(cb => cb.value);
         
-        // Calculate with additive multipliers
         let multiplier = 1;
         selectedIds.forEach(id => {
             const option = getPersonalizationOptions().find(o => o.id === id);
@@ -921,12 +839,11 @@ function setupPaxListener() {
             paxDisplay.textContent = `${pax} ${pax === 1 ? 'Person' : 'Persons'}`;
             
             if (priceDisplay) {
-                priceDisplay.textContent = formatPrice(calculateTotalPrice().toString());
+                priceDisplay.textContent = formatPrice(calculateTotalPrice());
             }
         });
     }
     
-    // Expose for use by personalization change handler
     window.calculateBookingTotal = calculateTotalPrice;
 }
 
@@ -946,13 +863,12 @@ function setupPersonalization() {
     `).join('');
 }
 
-// Global function to recalculate price when personalization changes
 window.recalculatePrice = function() {
     const total = window.calculateBookingTotal();
     if (total !== null) {
         const priceDisplay = document.getElementById('booking-price-display');
         if (priceDisplay) {
-            priceDisplay.textContent = formatPrice(total.toString());
+            priceDisplay.textContent = formatPrice(total);
         }
     }
 };
@@ -960,6 +876,10 @@ window.recalculatePrice = function() {
 // Handle booking form submission
 document.addEventListener('submit', function(e) {
     if (e.target && e.target.id === 'booking-form') {
+        if (window.location.pathname.includes('cityDestination')) {
+            return;
+        }
+        
         e.preventDefault();
         
         const cityName = document.getElementById('booking-city-name').textContent;
@@ -967,7 +887,6 @@ document.addEventListener('submit', function(e) {
         const pax = parseInt(document.getElementById('booking-pax').value) || 1;
         const date = document.getElementById('booking-date').value;
         
-        // Get selected personalization
         const personalization = Array.from(document.querySelectorAll('input[name="personalization"]:checked'))
             .map(cb => cb.value);
         
@@ -976,9 +895,7 @@ document.addEventListener('submit', function(e) {
             return;
         }
         
-        // Add to cart
-        console.log('Booking form submit - pkg.price:', pkg.price);
-        const cartItem = addToCart(
+        const cartItem = window.addToCart(
             { ...pkg, city: cityName, id: cityName, originalCurrency: 'PHP' },
             pax,
             date,
@@ -988,7 +905,6 @@ document.addEventListener('submit', function(e) {
         showNotification('Added to cart successfully!', 'success');
         closeModal();
         
-        // Show floating cart
         setTimeout(() => {
             toggleFloatingCart();
         }, 500);
@@ -1040,16 +956,13 @@ window.toggleChat = function() {
 };
 
 // --- 18. HELPER FUNCTIONS ---
-function parsePrice(priceStr) {
-    if (!priceStr) return 0;
-    const cleaned = priceStr.toString().replace(/[^\d.]/g, '');
-    return parseFloat(cleaned) || 0;
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return 'No date';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-PH', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-// Initialize on load
+// Use shared-utils.js versions when available
+window.formatPrice = function(price, currency = 'PHP') {
+    if (currency === 'USD') {
+        return `$${price.toFixed(2)}`;
+    }
+    return `₱${price.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    })}`;
+};
