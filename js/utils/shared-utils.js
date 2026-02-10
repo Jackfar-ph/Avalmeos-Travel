@@ -42,7 +42,7 @@ function parsePrice(priceStr) {
  */
 function formatPrice(price, currency = 'PHP') {
     if (currency === 'USD') {
-        return `${price.toFixed(2)}`;
+        return `$${price.toFixed(2)}`;
     }
     // PHP formatting with peso sign and commas
     return `₱${price.toLocaleString(undefined, {

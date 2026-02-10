@@ -323,7 +323,7 @@
             document.getElementById('pkg-title').innerText = pkg.title;
             document.getElementById('pkg-subtitle').innerText = currentCity;
             document.getElementById('pkg-desc').innerText = pkg.details;
-            document.getElementById('pkg-price').innerText = pkg.price;
+            document.getElementById('pkg-price').innerText = formatPrice(pkg.price);
             
             // Gallery
             const carousel = document.getElementById('photo-carousel');
@@ -351,7 +351,7 @@
                         <div class="hover-lift-text flex-1">
                             <h4 class="font-bold text-[#1a4d41] text-lg">${act.title}</h4>
                             <p class="text-sm text-orange-500 font-bold">★ ${act.rating}</p>
-                            <p class="text-gray-600 font-bold mt-1">${act.price}</p>
+                            <p class="text-gray-600 font-bold mt-1">${formatPrice(act.price)}</p>
                         </div>
                         <div class="flex flex-col items-center gap-2">
                             <label class="flex items-center gap-2 cursor-pointer">
@@ -376,7 +376,7 @@
                             <img src="${packageData[city].img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition">
                             <div>
                                 <p class="text-sm font-bold text-[#1a4d41] group-hover:text-orange-500">${city}</p>
-                                <p class="text-[10px] text-gray-400 uppercase font-bold">${packageData[city].price}</p>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold">${formatPrice(packageData[city].price)}</p>
                             </div>
                         </div>
                     `).join('');
@@ -467,7 +467,7 @@
             
             document.getElementById('booking-city-name').textContent = currentCity;
             document.getElementById('booking-package-name').textContent = pkg.title;
-            document.getElementById('booking-package-price').textContent = pkg.price;
+            document.getElementById('booking-package-price').textContent = formatPrice(pkg.price);
             
             // Setup date validation
             setupDateValidation();
@@ -689,36 +689,79 @@
             }
         }
         
+        
+        // Function to update all prices on currency toggle
+        function updateAllPricesOnCurrencyChange() {
+            // Update package price
+            const pkgPriceEl = document.getElementById('pkg-price');
+            if (pkgPriceEl && packageData[currentCity]) {
+                pkgPriceEl.innerText = formatPrice(packageData[currentCity].price);
+            }
+            
+            // Update activity prices
+            document.querySelectorAll('#activity-list .text-gray-600.font-bold').forEach((el, index) => {
+                const activities = cityData[currentCity];
+                if (activities && activities[index]) {
+                    el.innerText = formatPrice(activities[index].price);
+                }
+            });
+            
+            // Update other cities nav prices
+            document.querySelectorAll('#other-cities-nav .text-\[10px\]').forEach(el => {
+                const cityName = el.previousElementSibling?.textContent;
+                if (cityName && packageData[cityName]) {
+                    el.innerText = formatPrice(packageData[cityName].price);
+                }
+            });
+            
+            // Update booking modal price if open
+            const bookingModal = document.getElementById('booking-modal');
+            if (bookingModal && !bookingModal.classList.contains('hidden')) {
+                const pkg = packageData[currentCity];
+                if (pkg) {
+                    document.getElementById('booking-package-price').textContent = formatPrice(pkg.price);
+                    // Recalculate total if needed
+                    if (typeof window.calculateCityBookingTotal === 'function') {
+                        const priceDisplay = document.getElementById('booking-price-display');
+                        if (priceDisplay) {
+                            priceDisplay.textContent = formatPrice(window.calculateCityBookingTotal());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Listen for currency changes from main.js
+        window.addEventListener('currencyChanged', updateAllPricesOnCurrencyChange);
+        
         window.onload = function() {
             console.log('onload triggered');
             loadPackageDetails();
             setupDateRestrictions();
             
+            // Initialize currency if not set
+            if (typeof window.currentCurrency === 'undefined') {
+                window.currentCurrency = 'PHP';
+            }
+            
             console.log('Checking updateAuthUI:', typeof updateAuthUI);
-            // Ensure auth functions are available
             if (typeof updateAuthUI === 'function') {
-                console.log('Calling updateAuthUI');
                 updateAuthUI();
             }
             
-            // Initialize cart system (modals are inline, not async loaded)
             console.log('Checking updateCartCount:', typeof updateCartCount);
             console.log('Checking updateFloatingCart:', typeof updateFloatingCart);
             
             if (typeof updateCartCount === 'function') {
-                console.log('Calling updateCartCount');
                 updateCartCount();
             }
             if (typeof updateFloatingCart === 'function') {
-                console.log('Calling updateFloatingCart');
                 updateFloatingCart();
             }
             
-            // Check if floating cart elements exist
             console.log('Floating cart element:', document.getElementById('floating-cart'));
             console.log('Cart items container:', document.getElementById('cart-items-container'));
             
-            // Dispatch componentsLoaded event for consistency with index.html
             setTimeout(() => {
                 console.log('Dispatching componentsLoaded event');
                 document.dispatchEvent(new CustomEvent('componentsLoaded'));
