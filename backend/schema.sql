@@ -306,6 +306,19 @@ CREATE POLICY "Admins can manage packages" ON packages FOR ALL USING (
 CREATE TRIGGER update_packages_updated_at BEFORE UPDATE ON packages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
+-- SEED DATA FOR DESTINATIONS
+-- =====================================================
+
+INSERT INTO destinations (name, slug, description, short_description, location, region, country, hero_image, highlights, best_time_to_visit, average_rating, total_reviews, is_featured, is_active) VALUES
+('Cebu City', 'cebu-city', 'Cebu City, known as the Queen City of the South, is a vibrant metropolitan destination offering a perfect blend of urban sophistication and natural beauty. Home to historical landmarks, pristine beaches, and world-class resorts.', 'The Queen City of the South with beaches and history', 'Cebu City', 'Visayas', 'Philippines', 'Picture/Cebu City.webp', '["Magellan\'s Cross", "Basilica del Santo Niño", "Fort San Pedro", "Sialdara Hills", "Oslob Whalesharks", "Kawasan Falls"]', 'November to February', 4.5, 1250, true, true),
+('Manila', 'manila', 'The capital city of the Philippines, Manila is a bustling metropolis where modern skyscrapers stand alongside historical Spanish-era buildings. Experience the rich cultural heritage of the nation.', 'The capital with rich historical heritage', 'Manila', 'Luzon', 'Philippines', 'Picture/Manila.webp', '["Intramuros", "Rizal Park", "San Agustin Church", "Fort Santiago", "Mall of Asia", "National Museum"]', 'December to February', 4.3, 2100, true, true),
+('Baguio', 'baguio', 'Baguio City, the Summer Capital of the Philippines, is a mountain resort city known for its cool climate, pine forests, and vibrant flower gardens. A popular getaway from the tropical heat.', 'Mountain resort city with cool climate', 'Baguio City', 'Cordillera Administrative Region', 'Philippines', 'Picture/Baguio.webp', '["Mines View Park", "Burnham Park", "Wright Park", "The Mansion", "Session Road", "Strawberry Fields"]', 'March to May', 4.6, 1800, true, true),
+('Davao City', 'davao-city', 'Davao City is the largest city in the Philippines by land area, offering diverse attractions from exotic wildlife to pristine beaches. Home to the famous Philippine Eagle and delicious durian.', 'Largest city with exotic wildlife and beaches', 'Davao City', 'Mindanao', 'Philippines', 'Picture/Davao.webp', '["Philippine Eagle Center", "Mount Apo", "Eden Nature Park", "Samal Island", "Durian Capital", "Malagos Garden Resort"]', 'December to February', 4.4, 950, true, true),
+('Puerto Princesa', 'puerto-princesa', 'Puerto Princesa is the gateway to the world-renowned Underground River and stunning limestone cliffs. This coastal city offers world-class diving, pristine beaches, and incredible biodiversity.', 'Gateway to the Underground River', 'Puerto Princesa', 'Palawan', 'Philippines', 'Picture/Puerto Princesa.webp', '["Underground River", "Honda Bay", "Baker\'s Hill", "Mitra Ranch", "Iwahig Prison", "Nacpan Beach"]', 'November to April', 4.7, 1650, true, true),
+('Iloilo', 'iloilo', 'Iloilo Province is a treasure trove of Spanish colonial heritage, pristine islands, and delicious cuisine. Home to the world-famous Dinagyang Festival and the stunning Gigantes Islands.', 'Heritage sites and stunning islands', 'Iloilo City', 'Visayas', 'Philippines', 'Picture/Iloilo.webp', '["Miag-ao Church", "Gigantes Islands", "Bonbon-Bonbon Church", "Culasi Church", "Trekking to Tarugusan", "Heritage Houses"]', 'November to April', 4.5, 780, true, true)
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
 -- SEED DATA FOR SAMPLE PACKAGES
 -- =====================================================
 

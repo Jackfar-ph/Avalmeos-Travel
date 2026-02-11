@@ -1,0 +1,71 @@
+<!-- Activities View Component -->
+<div id="admin-activities-tab" class="admin-tab" style="display: none;">
+    <h2 class="text-2xl font-bold mb-6">Activities Management</h2>
+    <div class="overflow-x-auto bg-white rounded-xl shadow-sm mb-6">
+        <table class="w-full min-w-[450px] md:min-w-[550px] lg:min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Activity</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Destination</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Price</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Rating</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="admin-activities-table" class="divide-y divide-gray-100">
+                <!-- Activities rendered here -->
+                <tr>
+                    <td class="px-4 py-3 text-sm font-medium">City Tour</td>
+                    <td class="px-4 py-3 text-sm">Cebu City</td>
+                    <td class="px-4 py-3 text-sm">₱1,500</td>
+                    <td class="px-4 py-3 text-sm">⭐ 4.8</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                    <td class="px-4 py-3">
+                        <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                        <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3 text-sm font-medium">Beach Hopping</td>
+                    <td class="px-4 py-3 text-sm">Cebu City</td>
+                    <td class="px-4 py-3 text-sm">₱2,000</td>
+                    <td class="px-4 py-3 text-sm">⭐ 4.9</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                    <td class="px-4 py-3">
+                        <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                        <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3 text-sm font-medium">Mines View Park</td>
+                    <td class="px-4 py-3 text-sm">Baguio</td>
+                    <td class="px-4 py-3 text-sm">₱500</td>
+                    <td class="px-4 py-3 text-sm">⭐ 4.7</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                    <td class="px-4 py-3">
+                        <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                        <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-3 text-sm font-medium">Underground River</td>
+                    <td class="px-4 py-3 text-sm">Puerto Princesa</td>
+                    <td class="px-4 py-3 text-sm">₱3,500</td>
+                    <td class="px-4 py-3 text-sm">⭐ 5.0</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                    <td class="px-4 py-3">
+                        <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                        <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="flex justify-center">
+        <button onclick="showActivityModal()" class="px-6 py-3 bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90 flex items-center gap-2 text-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add New Activity
+        </button>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-<section id="destinations" class="py-24 px-[8%]">
+<section id="destinations-section" class="py-24 px-[8%]">
     <div class="flex justify-between items-end mb-12">
         <div>
             <h2 class="font-header text-4xl lg:text-5xl text-[#1a4d41] uppercase">Philippines' must-visit cities</h2>
@@ -6,41 +6,126 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-        <div onclick="navigateToCity('Cebu City')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Cebu City.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase tracking-widest opacity-80">Visayas</p><h3 class="font-bold text-lg">Cebu City</h3></div>              
-            </div>
-
-        <div onclick="navigateToCity('Manila')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Old Manila.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase opacity-80">Luzon</p><h3 class="font-bold text-lg">Manila</h3></div>
-        </div>
-
-        <div onclick="navigateToCity('Baguio')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Baguio.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase opacity-80">Luzon</p><h3 class="font-bold text-lg">Baguio</h3></div>
-        </div>
-
-        <div onclick="navigateToCity('Davao City')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Davao.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase opacity-80">Mindanao</p><h3 class="font-bold text-lg">Davao</h3></div>
-        </div>
-
-        <div onclick="navigateToCity('Puerto Princesa')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Puerto Princesa.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase opacity-80">Palawan</p><h3 class="font-bold text-lg">Puerto Princesa</h3></div>
-        </div>
-
-        <div onclick="navigateToCity('Iloilo')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg">
-            <img src="Picture/Iloilo.jpg" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 text-white"><p class="text-xs uppercase opacity-80">Visayas</p><h3 class="font-bold text-lg">Iloilo</h3></div>
+    <!-- Dynamic Destinations Container -->
+    <div id="destinations-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <!-- Destinations will be loaded dynamically from the API -->
+        <div class="col-span-full text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d41] mx-auto"></div>
+            <p class="mt-4 text-gray-500">Loading destinations...</p>
         </div>
     </div>
 </section>
+
+<script>
+// Initialize destinations when home page data is ready
+document.addEventListener('homePageDataReady', function() {
+    console.log('[Destinations] homePageDataReady event received');
+    if (typeof window.homePageDataService !== 'undefined') {
+        window.homePageDataService.renderDestinations();
+    }
+});
+
+// Fallback: Load destinations directly if service not available or not initialized
+async function loadDestinationsFallback() {
+    const container = document.getElementById('destinations-container');
+    if (!container) {
+        console.warn('[Destinations] Container not found');
+        return;
+    }
+    
+    console.log('[Destinations] Fallback function called');
+    
+    // Check if service is available and initialized
+    if (typeof window.homePageDataService !== 'undefined' && 
+        window.homePageDataService.dataSources && 
+        window.homePageDataService.dataSources.destinations && 
+        window.homePageDataService.dataSources.destinations.length > 0) {
+        console.log('[Destinations] Using service data');
+        window.homePageDataService.renderDestinations();
+        return;
+    }
+    
+    // If service exists but has no data, try to load via service
+    if (typeof window.homePageDataService !== 'undefined') {
+        try {
+            console.log('[Destinations] Loading via service...');
+            await window.homePageDataService.loadDestinations();
+            window.homePageDataService.renderDestinations();
+            return;
+        } catch (e) {
+            console.warn('[Destinations] Service load failed, using direct API:', e);
+        }
+    }
+    
+    // Direct API fallback
+    try {
+        console.log('[Destinations] Loading via direct API...');
+        const response = await fetch('/api/destinations?is_active=true');
+        console.log('[Destinations] API response status:', response.status);
+        const data = await response.json();
+        console.log('[Destinations] API response:', data);
+        
+        if (data.success && data.data) {
+            renderDestinationsStatic(data.data);
+            console.log(`[Destinations] Loaded ${data.data.length} destinations via direct API`);
+        } else if (data.data && data.data.length === 0) {
+            console.log('[Destinations] No destinations found in database. Run backend/seed-data.sql to populate.');
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No destinations found. <a href="admin.html" class="text-[#1a4d41] underline">Add destinations in admin panel</a> or run seed data.</div>';
+        } else {
+            throw new Error(data.message || 'Failed to load destinations');
+        }
+    } catch (error) {
+        console.error('[Destinations] Error loading destinations:', error);
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">Unable to load destinations: ' + error.message + '</div>';
+    }
+}
+
+function renderDestinationsStatic(destinations) {
+    const container = document.getElementById('destinations-container');
+    if (!container) return;
+    
+    if (!destinations || destinations.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No destinations found. Add destinations in the admin panel.</div>';
+        return;
+    }
+    
+    container.innerHTML = destinations.map(dest => `
+        <div onclick="navigateToCity('${dest.name}')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg hover:shadow-xl transition-all">
+            <img src="${dest.hero_image || 'Picture/placeholder.jpg'}" 
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                 onerror="this.src='Picture/placeholder.jpg'"
+                 alt="${dest.name}">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div class="absolute bottom-5 left-5 text-white">
+                <p class="text-xs uppercase tracking-widest opacity-80">${dest.region || 'Philippines'}</p>
+                <h3 class="font-bold text-lg">${dest.name}</h3>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Initialize on page load with multiple fallback attempts
+function initDestinations() {
+    console.log('[Destinations] initDestinations called, readyState:', document.readyState);
+    console.log('[Destinations] homePageDataService exists:', typeof window.homePageDataService !== 'undefined');
+    // First attempt immediately if DOM already loaded
+    if (document.readyState !== 'loading') {
+        console.log('[Destinations] DOM already loaded, calling fallback in 100ms');
+        setTimeout(loadDestinationsFallback, 100);
+    } else {
+        console.log('[Destinations] DOM not loaded, waiting for DOMContentLoaded');
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadDestinationsFallback, 200);
+        });
+    }
+    
+    // Also try after a longer delay in case earlier attempts failed
+    setTimeout(loadDestinationsFallback, 1500);
+}
+
+// Call initDestinations when script loads
+console.log('[Destinations] Script loaded, calling initDestinations...');
+initDestinations();
+
+initDestinations();
+</script>

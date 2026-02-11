@@ -28,7 +28,7 @@
                 <div id="user-menu" class="hidden md:flex items-center gap-3">
                     <button onclick="toggleFloatingCart()" class="relative p-2 text-[#1a4d41] hover:text-orange-500 transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 114 0 2 2 0 01-4 0z"></path>
                         </svg>
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
                     </button>
@@ -50,7 +50,7 @@
                 <!-- Cart Button (Mobile) -->
                 <button onclick="toggleFloatingCart()" class="md:hidden relative p-2 text-[#1a4d41]">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 0 000-4zm-8 2a2 2 0 114 0 2 2 0 01-4 0z"></path>
                     </svg>
                     <span id="cart-count-mobile" class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
                 </button>
@@ -307,13 +307,54 @@
         
         function loadPackageDetails() {
             const params = new URLSearchParams(window.location.search);
-            currentCity = decodeURIComponent(params.get('city') || 'Cebu City');
+            let cityParam = decodeURIComponent(params.get('city') || 'Cebu City');
+            
+            console.log('[CityPage] Raw city param:', params.get('city'));
+            console.log('[CityPage] Decoded city param:', cityParam);
+            
+            // Normalize city name
+            const cityWithoutSpaces = cityParam.replace(/\s+/g, '');
+            const cityLowerCase = cityParam.toLowerCase();
+            const cityWithoutSpacesLower = cityWithoutSpaces.toLowerCase();
+            
+            // Find matching city in data.js
+            let matchingCity = null;
+            const allCities = Object.keys(packageData);
+            console.log('[CityPage] Available cities:', allCities);
+            
+            // First try exact match
+            if (packageData[cityParam]) {
+                matchingCity = cityParam;
+                console.log('[CityPage] Exact match found:', matchingCity);
+            }
+            // Try without spaces
+            else if (packageData[cityWithoutSpaces]) {
+                matchingCity = cityWithoutSpaces;
+                console.log('[CityPage] Match without spaces:', matchingCity);
+            }
+            // Try partial match (city name contains city name)
+            else {
+                for (const city of allCities) {
+                    if (cityParam.toLowerCase().includes(city.toLowerCase()) || 
+                        city.toLowerCase().includes(cityParam.toLowerCase()) ||
+                        cityWithoutSpacesLower.includes(city.toLowerCase()) ||
+                        city.toLowerCase().includes(cityWithoutSpacesLower)) {
+                        matchingCity = city;
+                        console.log('[CityPage] Partial match found:', matchingCity);
+                        break;
+                    }
+                }
+            }
+            
+            currentCity = matchingCity || cityParam;
+            console.log('[CityPage] Final currentCity:', currentCity);
             
             const pkg = packageData[currentCity];
             const activities = cityData[currentCity];
             
             if (!pkg) {
-                document.getElementById('pkg-title').innerText = 'Package not found';
+                document.getElementById('pkg-title').innerText = 'Package not found for: ' + cityParam;
+                console.error('[CityPage] City not found. Tried:', cityParam, cityWithoutSpaces);
                 return;
             }
             

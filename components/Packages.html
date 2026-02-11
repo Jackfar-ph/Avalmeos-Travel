@@ -1,102 +1,393 @@
-<section id="packages" class="py-24 bg-white px-[8%]">
-   <div class="flex justify-between items-end mb-12">
-    <div>
-        <h2 class="font-header text-4xl lg:text-5xl text-[#1a4d41] uppercase">Featured Tour Packages</h2>
-        <p class="text-gray-500 mt-2">All-inclusive deals: Accommodation, Transfers, and Tours.</p>
-    </div>
-    <button class="hidden md:block text-[#1a4d41] font-bold border-2 border-[#1a4d41] px-6 py-2 rounded-full hover:bg-[#1a4d41] hover:text-white transition">View All Deals</button>
-</div>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-    <div onclick="showActivities('Cebu City')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N All-In</div>
-            <img src="Picture/Cebu City.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+<section id="packages-section" class="py-24 bg-white px-[8%]">
+    <div class="flex justify-between items-end mb-12">
+        <div>
+            <h2 class="font-header text-4xl lg:text-5xl text-[#1a4d41] uppercase">Featured Tour Packages</h2>
+            <p class="text-gray-500 mt-2">All-inclusive deals: Accommodation, Transfers, and Tours.</p>
         </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Cebu City Package Tour</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="8497">₱8,497</span>
+        <button class="hidden md:block text-[#1a4d41] font-bold border-2 border-[#1a4d41] px-6 py-2 rounded-full hover:bg-[#1a4d41] hover:text-white transition">View All Deals</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <div onclick="openActivitiesModal('Cebu City', 'Cebu City Package Tour', 8497, 'Picture/Cebu City.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N All-In</div>
+                <img src="Picture/Cebu City.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Cebu City Package Tour</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="8497">₱8,497</span>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="openActivitiesModal('Manila', 'Old Manila Heritage Tour', 2399, 'Picture/Old Manila.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">2D1N Heritage</div>
+                <img src="Picture/Old Manila.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Old Manila Heritage Tour</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="2399">₱2,399</span>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="openActivitiesModal('Baguio', 'Baguio City Package', 5898, 'Picture/Baguio.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N Escape</div>
+                <img src="Picture/Baguio.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Baguio City Package</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="5898">₱5,898</span>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="openActivitiesModal('Davao City', 'Davao Highland Tour', 4198, 'Picture/Davao.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Full Day</div>
+                <img src="Picture/Davao.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Davao Highland Tour</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="4198">₱4,198</span>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="openActivitiesModal('Puerto Princesa', 'Puerto Princesa Package', 7198, 'Picture/Puerto Princesa.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N Nature</div>
+                <img src="Picture/Puerto Princesa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Puerto Princesa Package</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="7198">₱7,198</span>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="openActivitiesModal('Iloilo', 'Iloilo City & Gigantes', 6498, 'Picture/Iloilo.jpg')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+            <div class="relative overflow-hidden aspect-[4/5]">
+                <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">4D3N Island Hopping</div>
+                <img src="Picture/Iloilo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-base leading-tight">Iloilo City & Gigantes</h3>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400">Starts at</span>
+                    <span class="price-value text-lg font-black text-[#1a4d41]" data-php="6498">₱6,498</span>
+                </div>
             </div>
         </div>
     </div>
-
-    <div onclick="showActivities('Manila')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">2D1N Heritage</div>
-            <img src="Picture/Old Manila.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-        </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Old Manila Heritage Tour</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="2399">₱2,399</span>
-            </div>
-        </div>
-    </div>
-
-    <div onclick="showActivities('Baguio')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N Escape</div>
-            <img src="Picture/Baguio.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-        </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Baguio City Package</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="5898">₱5,898</span>
-            </div>
-        </div>
-    </div>
-
-    <div onclick="showActivities('Davao City')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Full Day</div>
-            <img src="Picture/Davao.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-        </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Davao Highland Tour</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="4198">₱4,198</span>
-            </div>
-        </div>
-    </div>
-
-    <div onclick="showActivities('Puerto Princesa')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">3D2N Nature</div>
-            <img src="Picture/Puerto Princesa.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-        </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Puerto Princesa Package</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="7198">₱7,198</span>
-            </div>
-        </div>
-    </div>
-
-    <div onclick="showActivities('Iloilo')" class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-        <div class="relative overflow-hidden aspect-[4/5]">
-            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">4D3N Island Hopping</div>
-            <img src="Picture/Iloilo.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-        </div>
-        <div class="p-4">
-            <h3 class="font-bold text-base leading-tight">Iloilo City & Gigantes</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">Starts at</span>
-                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="6498">₱6,498</span>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="activities-display" class="hidden mt-12 p-10 bg-gray-50 rounded-3xl border-2 border-[#1a4d41]/10 shadow-inner">
-    <div class="flex justify-between items-center mb-8">
-        <h3 id="selected-city-name" class="font-header text-3xl text-[#1a4d41] uppercase font-bold"></h3>
-        <button onclick="closeActivities()" class="text-gray-400 hover:text-red-500 font-bold border-2 border-gray-100 rounded-full px-4 py-1">✕ Close</button>
-    </div>
-    <div id="activities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"></div>
-</div>
 </section>
+
+<!-- Activities Modal -->
+<div id="activities-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeActivitiesModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div class="bg-[#1a4d41] px-6 py-4 flex items-center justify-between">
+            <h3 id="activities-modal-title" class="text-xl font-bold text-white"></h3>
+            <button onclick="closeActivitiesModal()" class="text-white/80 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="activities-modal-content" class="p-6">
+            <div id="activities-modal-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            
+            <!-- Book Full Package Button -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <button onclick="bookFullPackage()" class="w-full bg-orange-500 text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition text-lg">
+                    📦 Book Full Package
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store current package data for booking
+let currentPackageData = {
+    city: '',
+    title: '',
+    price: 0,
+    img: ''
+};
+
+// Open activities modal for a city
+function openActivitiesModal(cityName, packageTitle, price, image) {
+    const modal = document.getElementById('activities-modal');
+    const title = document.getElementById('activities-modal-title');
+    const grid = document.getElementById('activities-modal-grid');
+    
+    if (!modal || !title || !grid) return;
+    
+    // Store package data for booking
+    currentPackageData = {
+        city: cityName,
+        title: packageTitle,
+        price: price,
+        img: image
+    };
+    
+    title.textContent = cityName + ' Activities';
+    
+    // Check if cityData exists
+    if (typeof cityData === 'undefined') {
+        console.warn('cityData not loaded');
+        grid.innerHTML = '<p class="text-center text-gray-500 py-8">Loading activities...</p>';
+    } else {
+        const activities = cityData[cityName];
+        if (!activities || activities.length === 0) {
+            grid.innerHTML = '<p class="text-center text-gray-500 py-8">No activities available for ' + cityName + '</p>';
+        } else {
+            // Clear existing content and build safely using DOM to prevent XSS
+            grid.innerHTML = '';
+            
+            activities.forEach(act => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bg-gray-50 p-4 rounded-xl hover:shadow-md transition';
+                
+                const innerDiv = document.createElement('div');
+                innerDiv.className = 'flex items-center gap-3 mb-3';
+                
+                const img = document.createElement('img');
+                img.src = act.img;
+                img.onerror = function() { this.src = 'Picture/placeholder.jpg'; };
+                img.className = 'w-16 h-12 rounded-lg object-cover';
+                
+                const infoDiv = document.createElement('div');
+                
+                const h4 = document.createElement('h4');
+                h4.className = 'font-bold text-[#1a4d41] text-sm';
+                h4.textContent = act.title || '';  // textContent prevents XSS
+                
+                const ratingP = document.createElement('p');
+                ratingP.className = 'text-xs text-orange-500 font-bold';
+                ratingP.textContent = '★ ' + (act.rating || '');
+                
+                infoDiv.appendChild(h4);
+                infoDiv.appendChild(ratingP);
+                innerDiv.appendChild(img);
+                innerDiv.appendChild(infoDiv);
+                
+                const descP = document.createElement('p');
+                descP.className = 'text-xs text-gray-600 mb-3 line-clamp-2';
+                descP.textContent = act.desc || '';  // textContent prevents XSS
+                
+                const priceDiv = document.createElement('div');
+                priceDiv.className = 'flex justify-between items-center';
+                
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'font-bold text-[#1a4d41]';
+                priceSpan.textContent = formatPrice(act.price);
+                
+                priceDiv.appendChild(priceSpan);
+                
+                itemDiv.appendChild(innerDiv);
+                itemDiv.appendChild(descP);
+                itemDiv.appendChild(priceDiv);
+                
+                grid.appendChild(itemDiv);
+            });
+        }
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Close activities modal
+function closeActivitiesModal() {
+    const modal = document.getElementById('activities-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        currentPackageData = { city: '', title: '', price: 0, img: '' };
+    }
+}
+
+// Book full package - add to cart
+function bookFullPackage() {
+    if (!currentPackageData.title) return;
+    
+    // Get today's date + 7 days as default travel date
+    const travelDate = new Date();
+    travelDate.setDate(travelDate.getDate() + 7);
+    const dateStr = travelDate.toISOString().split('T')[0];
+    
+    // Create package data object for cart
+    const packageData = {
+        id: 'pkg_' + currentPackageData.city.toLowerCase().replace(/\s+/g, '_'),
+        title: currentPackageData.title,
+        city: currentPackageData.city,
+        img: currentPackageData.img,
+        price: currentPackageData.price,
+        originalCurrency: 'PHP'
+    };
+    
+    // Add to cart with default pax = 1, travel date, no personalization
+    if (typeof window.addToCart === 'function') {
+        window.addToCart(packageData, 1, dateStr, []);
+        showNotification('Package added to cart!', 'success');
+    } else if (typeof addToCart === 'function') {
+        addToCart(packageData, 1, dateStr, []);
+        showNotification('Package added to cart!', 'success');
+    } else {
+        // Fallback: add directly to localStorage
+        const cartItem = {
+            id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 9),
+            packageId: packageData.id,
+            packageTitle: packageData.title,
+            city: packageData.city,
+            img: packageData.img,
+            basePrice: packageData.price,
+            paxSize: 1,
+            travelDate: dateStr,
+            personalization: [],
+            totalPrice: packageData.price,
+            originalCurrency: 'PHP',
+            addedAt: new Date().toISOString()
+        };
+        
+        const cartStr = localStorage.getItem('avalmeos_cart');
+        const cart = cartStr ? JSON.parse(cartStr) : { items: [], total: 0 };
+        cart.items.push(cartItem);
+        
+        // Calculate total
+        cart.total = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        
+        localStorage.setItem('avalmeos_cart', JSON.stringify(cart));
+        
+        // Update UI
+        updateCartCount();
+        updateFloatingCart();
+        
+        showNotification('Package added to cart!', 'success');
+    }
+    
+    closeActivitiesModal();
+}
+
+// Show notification
+function showNotification(message, type) {
+    const container = document.getElementById('notification-container');
+    if (!container) {
+        alert(message);
+        return;
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+    notification.textContent = message;
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Update cart count
+function updateCartCount() {
+    const countEl = document.getElementById('cart-count');
+    const countElFloating = document.getElementById('cart-count-floating');
+    const cartStr = localStorage.getItem('avalmeos_cart');
+    
+    if (cartStr) {
+        const cart = JSON.parse(cartStr);
+        const count = cart.items.length;
+        
+        if (countEl) {
+            countEl.textContent = count;
+            countEl.classList.toggle('hidden', count === 0);
+        }
+        if (countElFloating) {
+            countElFloating.textContent = count;
+            countElFloating.classList.toggle('hidden', count === 0);
+        }
+    } else {
+        if (countEl) countEl.classList.add('hidden');
+        if (countElFloating) countElFloating.classList.add('hidden');
+    }
+}
+
+// Update floating cart
+function updateFloatingCart() {
+    const container = document.getElementById('cart-items-container');
+    const totalEl = document.getElementById('cart-total');
+    const cartStr = localStorage.getItem('avalmeos_cart');
+    
+    if (!container) return;
+    
+    if (cartStr) {
+        const cart = JSON.parse(cartStr);
+        
+        if (cart.items.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty</p>';
+            if (totalEl) totalEl.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = cart.items.map(item => `
+            <div class="flex items-center gap-3 py-3 border-b">
+                <img src="${item.img || 'Picture/placeholder.jpg'}" class="w-12 h-12 rounded-lg object-cover">
+                <div class="flex-1">
+                    <h4 class="font-bold text-sm">${item.packageTitle}</h4>
+                    <p class="text-xs text-gray-500">${item.city} | ${item.paxSize} pax</p>
+                    <p class="text-xs text-orange-500 font-bold">${formatPrice(item.totalPrice)}</p>
+                </div>
+                <button onclick="removeFromCart('${item.id}')" class="text-red-500 text-xs">✕</button>
+            </div>
+        `).join('');
+        
+        if (totalEl) {
+            totalEl.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-bold">Total</span>
+                    <span class="text-xl font-bold text-orange-500">${formatPrice(cart.total)}</span>
+                </div>
+            `;
+        }
+    } else {
+        container.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty</p>';
+        if (totalEl) totalEl.innerHTML = '';
+    }
+}
+
+// Remove from cart
+function removeFromCart(itemId) {
+    const cartStr = localStorage.getItem('avalmeos_cart');
+    if (cartStr) {
+        const cart = JSON.parse(cartStr);
+        cart.items = cart.items.filter(item => item.id !== itemId);
+        cart.total = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        localStorage.setItem('avalmeos_cart', JSON.stringify(cart));
+        updateCartCount();
+        updateFloatingCart();
+    }
+}
+
+// Initialize component load state
+if (typeof window.componentLoadState !== 'undefined') {
+    window.componentLoadState.packages = true;
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeActivitiesModal();
+    }
+});
+</script>

@@ -1,0 +1,102 @@
+<!-- Inquiry Reply Modal -->
+<div id="inquiry-reply-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b flex justify-between items-center bg-[#1a4d41] text-white">
+            <div>
+                <h3 class="text-xl font-bold">Reply to Inquiry</h3>
+                <p class="text-sm opacity-80 mt-1" id="inquiry-reply-to"></p>
+            </div>
+            <button onclick="closeInquiryReplyModal()" class="text-white/80 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Original Message -->
+        <div class="p-6 bg-gray-50 border-b">
+            <div class="text-sm text-gray-600 mb-2">Original Message:</div>
+            <div id="inquiry-original-message" class="bg-white p-4 rounded-lg border text-gray-700 text-sm"></div>
+        </div>
+        
+        <!-- Reply Form -->
+        <form id="inquiry-reply-form" onsubmit="submitInquiryReply(event)">
+            <div class="p-6 space-y-4">
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="inquiry-reply-status" name="status" class="w-full p-3 border rounded-xl">
+                        <option value="in_progress">In Progress</option>
+                        <option value="responded">Responded</option>
+                    </select>
+                </div>
+                
+                <!-- Reply Message -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Reply</label>
+                    <textarea 
+                        id="inquiry-reply-message" 
+                        name="response" 
+                        rows="6" 
+                        required
+                        placeholder="Type your reply message here..."
+                        class="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                    ></textarea>
+                </div>
+                
+                <!-- Send Email Option -->
+                <div class="flex items-center gap-3">
+                    <input 
+                        type="checkbox" 
+                        id="inquiry-send-email" 
+                        name="sendReplyEmail" 
+                        checked
+                        class="w-5 h-5 text-[#1a4d41] rounded focus:ring-[#1a4d41]"
+                    >
+                    <label for="inquiry-send-email" class="text-sm text-gray-700">
+                        Send reply email to customer
+                    </label>
+                </div>
+                
+                <!-- Error/Success Message -->
+                <div id="inquiry-reply-status-message" class="hidden p-3 rounded-lg text-sm"></div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-6 border-t flex justify-end gap-3">
+                <button 
+                    type="button" 
+                    onclick="closeInquiryReplyModal()"
+                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    id="inquiry-reply-submit"
+                    class="px-6 py-2 bg-[#1a4d41] text-white rounded-lg hover:bg-[#153d32] transition flex items-center gap-2"
+                >
+                    <span>Send Reply</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Escape key handler -->
+<script>
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeInquiryReplyModal();
+    }
+});
+
+// Backdrop click handler
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('inquiry-reply-modal');
+    if (modal && e.target === modal) {
+        closeInquiryReplyModal();
+    }
+});
+</script>

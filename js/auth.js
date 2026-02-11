@@ -195,6 +195,13 @@ function logoutUser() {
     window.location.reload();
 }
 
+// Admin logout - clears admin-specific tokens
+function logoutFromAdmin() {
+    localStorage.removeItem('avalmeos_token');
+    localStorage.removeItem('avalmeos_user');
+    window.location.reload();
+}
+
 // Get current user
 function getCurrentUser() {
     return AuthState.getCurrentUser();

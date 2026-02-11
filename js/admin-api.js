@@ -143,6 +143,10 @@ class AdminApiService {
     return this.request('/admin/packages');
   }
 
+  async getPackageById(packageId) {
+    return this.request(`/packages/${packageId}`);
+  }
+
   async createPackage(data) {
     return this.request('/admin/packages', {
       method: 'POST',
@@ -222,6 +226,14 @@ class AdminApiService {
 
   async getAnalytics(period = '30days') {
     return this.request(`/admin/analytics?period=${period}`);
+  }
+
+  async getRecentBookings(limit = 10) {
+    return this.request(`/admin/bookings/recent?limit=${limit}`);
+  }
+
+  async getDashboardStats() {
+    return this.request('/admin/dashboard/stats');
   }
 }
 

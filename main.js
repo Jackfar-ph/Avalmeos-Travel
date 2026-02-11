@@ -52,16 +52,20 @@ function checkComponentsReady() {
 
 // Modified component loader that tracks loading state
 async function loadComponent(elementId, filePath) {
+    console.log('[ComponentLoader] Loading:', elementId, 'from', filePath);
     const container = document.getElementById(elementId);
     if (!container) {
+        console.warn('[ComponentLoader] Container not found:', elementId);
         return;
     }
     try {
         const response = await fetch(filePath);
+        console.log('[ComponentLoader] Response status:', response.status, 'for', filePath);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         container.innerHTML = await response.text();
+        console.log('[ComponentLoader] Loaded:', elementId);
         
         // Trigger animations for newly loaded content
         const targets = container.querySelectorAll('section[id], .animate-on-scroll');
@@ -204,6 +208,8 @@ async function initSite() {
 
 // Listen for componentsLoaded event
 document.addEventListener('componentsLoaded', function() {
+    console.log('[Main] componentsLoaded event fired');
+    
     // Run all initialization that depends on components
     setupNavigation();
     setupHeroSlider();
@@ -211,6 +217,9 @@ document.addEventListener('componentsLoaded', function() {
     setupCurrency();
     setupFormLogic();
     setupDateRestrictions();
+    
+    // Initialize destinations section (moved from inline script in Destinations.html)
+    initDestinationsSection();
     
     // Initialize systems that depend on DOM elements
     if (typeof AuthUIManager !== 'undefined') {
@@ -271,14 +280,50 @@ function setupFormLogic() {
     document.addEventListener('submit', function(e) {
         if (e.target && e.target.id === 'inquiry-form') {
             e.preventDefault();
-            // Handle Contact Form
-            const formContainer = document.getElementById('contact-form-container');
-            const successMsg = document.getElementById('contact-success-content');
-            if(formContainer) formContainer.classList.add('hidden');
-            if(successMsg) successMsg.classList.remove('hidden');
+            handleInquirySubmit(e.target);
         }
         // Note: booking-form is handled by individual page scripts
     });
+}
+
+// Handle inquiry form submission
+async function handleInquirySubmit(form) {
+    const formData = new FormData(form);
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message')
+    };
+    
+    console.log('[Inquiry] Submitting:', data);
+    
+    try {
+        const response = await fetch('/api/inquiries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        console.log('[Inquiry] Response:', result);
+        
+        if (response.ok) {
+            // Show success message
+            const formContainer = document.getElementById('contact-form-container');
+            const successMsg = document.getElementById('contact-success-content');
+            if (formContainer) formContainer.classList.add('hidden');
+            if (successMsg) successMsg.classList.remove('hidden');
+            
+            // Reset form
+            form.reset();
+        } else {
+            alert('Failed to send message: ' + (result.message || 'Please try again'));
+        }
+    } catch (error) {
+        console.error('[Inquiry] Error:', error);
+        alert('Failed to send message. Please check your connection and try again.');
+    }
 }
 
 // --- 4. ANIMATIONS ---
@@ -303,6 +348,96 @@ function setupAnimations() {
             observer.observe(t);
         }
     });
+}
+
+// --- DESTINATIONS SECTION ---
+function initDestinationsSection() {
+    console.log('[Destinations] initDestinationsSection called');
+    
+    const container = document.getElementById('destinations-container');
+    if (!container) {
+        console.warn('[Destinations] Container not found');
+        return;
+    }
+    
+    console.log('[Destinations] Container found, checking homePageDataService...');
+    console.log('[Destinations] homePageDataService exists:', typeof window.homePageDataService !== 'undefined');
+    
+    // Check if service is available and has data
+    if (typeof window.homePageDataService !== 'undefined' && 
+        window.homePageDataService.dataSources && 
+        window.homePageDataService.dataSources.destinations && 
+        window.homePageDataService.dataSources.destinations.length > 0) {
+        console.log('[Destinations] Using service data - rendering now');
+        window.homePageDataService.renderDestinations();
+        return;
+    }
+    
+    // If service exists but has no data, try to load via service
+    if (typeof window.homePageDataService !== 'undefined') {
+        console.log('[Destinations] Service exists but no data, loading via service...');
+        window.homePageDataService.loadDestinations().then(() => {
+            window.homePageDataService.renderDestinations();
+        }).catch(e => {
+            console.warn('[Destinations] Service load failed, using direct API:', e);
+            loadDestinationsViaAPI();
+        });
+        return;
+    }
+    
+    // Direct API fallback
+    console.log('[Destinations] No service, using direct API');
+    loadDestinationsViaAPI();
+}
+
+function loadDestinationsViaAPI() {
+    console.log('[Destinations] Loading via direct API...');
+    const container = document.getElementById('destinations-container');
+    if (!container) return;
+    
+    fetch('/api/destinations?is_active=true')
+        .then(response => {
+            console.log('[Destinations] API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('[Destinations] API response:', data);
+            if (data.success && data.data) {
+                renderDestinationsStatic(data.data);
+                console.log(`[Destinations] Loaded ${data.data.length} destinations via direct API`);
+            } else if (data.data && data.data.length === 0) {
+                console.log('[Destinations] No destinations found in database');
+                container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No destinations found. <a href="admin.html" class="text-[#1a4d41] underline">Add destinations in admin panel</a> or run seed data.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('[Destinations] Error loading destinations:', error);
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">Unable to load destinations: ' + error.message + '</div>';
+        });
+}
+
+function renderDestinationsStatic(destinations) {
+    const container = document.getElementById('destinations-container');
+    if (!container) return;
+    
+    if (!destinations || destinations.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No destinations found. Add destinations in the admin panel.</div>';
+        return;
+    }
+    
+    container.innerHTML = destinations.map(dest => `
+        <div onclick="navigateToCity('${encodeURIComponent(dest.name)}')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg hover:shadow-xl transition-all">
+            <img src="${dest.hero_image || 'Picture/placeholder.jpg'}" 
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                 onerror="this.src='Picture/placeholder.jpg'"
+                 alt="${dest.name}">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div class="absolute bottom-5 left-5 text-white">
+                <p class="text-xs uppercase tracking-widest opacity-80">${dest.region || 'Philippines'}</p>
+                <h3 class="font-bold text-lg">${dest.name}</h3>
+            </div>
+        </div>
+    `).join('');
 }
 
 // --- 5. CURRENCY TOGGLE ---
@@ -957,12 +1092,159 @@ window.toggleChat = function() {
 
 // --- 18. HELPER FUNCTIONS ---
 // Use shared-utils.js versions when available
+window.packageData = window.packageData || {};
+
 window.formatPrice = function(price, currency = 'PHP') {
     if (currency === 'USD') {
-        return `$${price.toFixed(2)}`;
+        return `${price.toFixed(2)}`;
     }
     return `₱${price.toLocaleString(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     })}`;
 };
+
+// --- 19. ACTIVITIES MODAL (from Packages.html) ---
+// Store package data for booking
+window.currentPackageData = {
+    city: '',
+    title: '',
+    price: 0,
+    img: ''
+};
+
+// Open activities modal for a city
+window.openActivitiesModal = function(cityName, packageTitle, price, image) {
+    const modal = document.getElementById('activities-modal');
+    const title = document.getElementById('activities-modal-title');
+    const grid = document.getElementById('activities-modal-grid');
+    
+    if (!modal || !title || !grid) {
+        console.warn('Activities modal elements not found');
+        return;
+    }
+    
+    // Store package data for booking
+    window.currentPackageData = {
+        city: cityName,
+        title: packageTitle,
+        price: price,
+        img: image
+    };
+    
+    title.textContent = cityName + ' Activities';
+    
+    // Check if cityData exists
+    if (typeof cityData === 'undefined') {
+        console.warn('cityData not loaded');
+        grid.innerHTML = '<p class="text-center text-gray-500 py-8">Loading activities...</p>';
+    } else {
+        const activities = cityData[cityName];
+        if (!activities || activities.length === 0) {
+            grid.innerHTML = '<p class="text-center text-gray-500 py-8">No activities available for ' + cityName + '</p>';
+        } else {
+            // Clear existing content and build safely using DOM to prevent XSS
+            grid.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const activityCard = document.createElement('div');
+                activityCard.className = 'bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all';
+                
+                const img = document.createElement('img');
+                img.src = activity.image;
+                img.alt = activity.name;
+                img.className = 'w-full h-48 object-cover';
+                
+                const content = document.createElement('div');
+                content.className = 'p-5';
+                
+                const h3 = document.createElement('h3');
+                h3.className = 'font-bold text-lg text-[#1a4d41] mb-2';
+                h3.textContent = activity.name;
+                
+                const p = document.createElement('p');
+                p.className = 'text-gray-600 text-sm mb-4';
+                p.textContent = activity.description;
+                
+                const bottom = document.createElement('div');
+                bottom.className = 'flex justify-between items-center';
+                
+                const price = document.createElement('span');
+                price.className = 'font-bold text-orange-500 text-lg';
+                price.textContent = '₱' + activity.price.toLocaleString();
+                
+                // Remove individual Book Now button - only "Book Full Package" button remains
+                bottom.appendChild(price);
+                
+                content.appendChild(h3);
+                content.appendChild(p);
+                content.appendChild(bottom);
+                
+                activityCard.appendChild(img);
+                activityCard.appendChild(content);
+                
+                grid.appendChild(activityCard);
+            });
+        }
+    }
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+};
+
+// Close activities modal
+window.closeActivitiesModal = function() {
+    const modal = document.getElementById('activities-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+};
+
+// Open booking modal
+window.openBookingModal = function(cityName, packageTitle, price, image) {
+    const modal = document.getElementById('booking-modal');
+    const cityNameEl = document.getElementById('booking-city-name');
+    const pkgNameEl = document.getElementById('booking-package-name');
+    const pkgPriceEl = document.getElementById('booking-package-price');
+    
+    if (!modal || !cityNameEl || !pkgNameEl || !pkgPriceEl) {
+        console.warn('Booking modal elements not found');
+        return;
+    }
+    
+    // Store data
+    window.packageData[cityName] = {
+        name: packageTitle,
+        originalPrice: price,
+        price: price,
+        description: '',
+        duration: '',
+        included: [],
+        excluded: [],
+        image: image
+    };
+    
+    cityNameEl.textContent = cityName;
+    pkgNameEl.textContent = packageTitle;
+    pkgPriceEl.textContent = '₱' + price.toLocaleString();
+    
+    // Reset form
+    document.getElementById('booking-date').value = '';
+    document.getElementById('booking-pax').value = '1';
+    
+    // Setup personalization
+    if (typeof setupPersonalization === 'function') {
+        setupPersonalization();
+    }
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+};
+
+// --- 20. ADMIN DASHBOARD NAVIGATION ---
+// Open admin dashboard
+window.openAdminDashboard = function() {
+    window.location.href = 'admin.html';
+};
+

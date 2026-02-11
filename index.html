@@ -38,6 +38,24 @@
     <!-- Chat System -->
     <script src="js/chat.js?v=5"></script>
     
+    <!-- Home Page Data Service (for real-time sync) -->
+    <script src="js/home-page-data.js"></script>
+    <script src="js/state-manager.js"></script>
+    <script src="js/realtime-sync.js"></script>
+    
+    <!-- Initialize home page data service -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the home page data service
+            if (window.homePageDataService) {
+                window.homePageDataService.init();
+                console.log('Home page data service initialized');
+            } else {
+                console.warn('homePageDataService not found');
+            }
+        });
+    </script>
+    
     <!-- Auth Handlers -->
     <script src="js/auth-handlers.js?v=5"></script>
     

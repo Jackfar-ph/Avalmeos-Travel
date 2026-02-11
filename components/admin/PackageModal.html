@@ -1,0 +1,91 @@
+<!-- Package Form Modal Component -->
+<div id="package-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="package-modal-title" class="text-xl font-bold">Add Package</h3>
+                <button onclick="closePackageModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="package-form" onsubmit="savePackage(event)">
+                <input type="hidden" id="package-id">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Package Name *</label>
+                        <input type="text" id="package-name" name="name" required class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., Cebu City Package">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                        <input type="text" id="package-slug" name="slug" required class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., cebu-city-package">
+                        <p class="text-xs text-gray-500 mt-1">Lowercase letters, numbers, and hyphens only</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Destination *</label>
+                        <select id="package-destination" name="destination_id" required class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Select destination</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+                        <textarea id="package-short-description" name="short_description" rows="2" class="w-full px-3 py-2 border rounded-lg" placeholder="Brief description for cards..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="package-description" name="description" rows="2" class="w-full px-3 py-2 border rounded-lg" placeholder="Full package description..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Price (PHP) *</label>
+                            <input type="number" id="package-price" name="price" required class="w-full px-3 py-2 border rounded-lg" min="0" placeholder="8500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days) *</label>
+                            <input type="number" id="package-duration" name="duration_days" required class="w-full px-3 py-2 border rounded-lg" min="1" value="3">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Min. Participants</label>
+                            <input type="number" id="package-min" name="min_participants" class="w-full px-3 py-2 border rounded-lg" min="1" value="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Max. Participants</label>
+                            <input type="number" id="package-max" name="max_participants" class="w-full px-3 py-2 border rounded-lg" min="1" value="10">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                        <input type="text" id="package-image" name="image_url" class="w-full px-3 py-2 border rounded-lg" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Activities (one per line)</label>
+                        <textarea id="package-activities" name="activities" rows="2" class="w-full px-3 py-2 border rounded-lg" placeholder="City Tour&#10;Food Trip&#10;Beach Visit"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Inclusions</label>
+                        <input type="text" id="package-inclusions" name="inclusions" class="w-full px-3 py-2 border rounded-lg" placeholder="Hotel, Breakfast, Transfers">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Exclusions</label>
+                        <input type="text" id="package-exclusions" name="exclusions" class="w-full px-3 py-2 border rounded-lg" placeholder="Airfare, Personal expenses">
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="package-featured" name="is_featured">
+                            <label for="package-featured" class="text-sm text-gray-700">Featured</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="package-status" name="is_active" checked>
+                            <label for="package-status" class="text-sm text-gray-700">Active</label>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90">Save</button>
+                        <button type="button" onclick="closePackageModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

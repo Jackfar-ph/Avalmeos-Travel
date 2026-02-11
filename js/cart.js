@@ -394,7 +394,7 @@ function formatDate(dateStr) {
 }
 
 // Checkout
-function checkout() {
+async function checkout() {
     const user = getCurrentUser();
     if (!user) {
         showNotification('Please log in to proceed with checkout', 'error');
@@ -407,32 +407,88 @@ function checkout() {
         return;
     }
     
-    // Save booking
-    const bookings = getBookings();
-    const booking = {
-        id: 'booking_' + Date.now(),
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.name,
-        items: cart.items,
-        total: cart.total,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        paymentStatus: 'unpaid'
+    // Get user profile for guest info
+    const guest_name = user.name || user.email.split('@')[0];
+    const guest_email = user.email;
+    const guest_phone = user.phone || '';
+    
+    // Convert cart items to activities format
+    const activities = cart.items.map(item => ({
+        activity_id: item.packageId || item.id,
+        participants: item.paxSize || 1,
+        activity_date: item.travelDate || new Date().toISOString().split('T')[0],
+        activity_time: '10:00',
+        price_per_person: item.basePrice || item.price
+    }));
+    
+    // Create booking object for API
+    const bookingData = {
+        guest_name,
+        guest_email,
+        guest_phone,
+        activities,
+        special_requests: ''
     };
     
-    bookings.push(booking);
-    saveBookings(bookings);
+    try {
+        // Save to backend API
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('avalmeos_token')}`
+            },
+            body: JSON.stringify(bookingData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Booking saved:', result);
+            showNotification('Booking submitted successfully!', 'success');
+        } else {
+            const error = await response.json();
+            console.warn('API booking failed:', error);
+            // Fallback to localStorage
+            const bookings = getBookings();
+            bookings.push({
+                id: 'booking_' + Date.now(),
+                booking_reference: 'AVL' + Date.now().toString(36).toUpperCase(),
+                guest_name,
+                guest_email,
+                guest_phone,
+                activities,
+                total_amount: cart.total,
+                final_amount: cart.total,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            });
+            saveBookings(bookings);
+            showNotification('Booking saved locally', 'success');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        // Fallback to localStorage
+        const bookings = getBookings();
+        bookings.push({
+            id: 'booking_' + Date.now(),
+            booking_reference: 'AVL' + Date.now().toString(36).toUpperCase(),
+            guest_name,
+            guest_email,
+            guest_phone,
+            activities,
+            total_amount: cart.total,
+            final_amount: cart.total,
+            status: 'pending',
+            created_at: new Date().toISOString()
+        });
+        saveBookings(bookings);
+        showNotification('Booking saved locally', 'success');
+    }
     
     // Clear cart
     clearCart();
     
-    // Send confirmation
-    sendEmailNotification(user.email, 'booking_confirmation', booking);
-    
-    showNotification('Booking submitted successfully! We\'ll contact you soon.', 'success');
-    
-    return booking;
+    return true;
 }
 
 // Checkout from floating cart
@@ -454,6 +510,7 @@ window.updateCartCount = updateCartCount;
 window.clearCart = clearCart;
 window.toggleFloatingCart = toggleFloatingCart;
 window.checkoutFromCart = checkoutFromCart;
+window.checkout = checkout;
 window.parsePrice = typeof window.parsePrice === 'function' ? window.parsePrice : parsePrice;
 window.formatPrice = typeof window.formatPrice === 'function' ? window.formatPrice : formatPrice;
 window.formatDate = typeof window.formatDate === 'function' ? window.formatDate : formatDate;

@@ -12,20 +12,23 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+yarn.lock
 
 # Build output
 dist/
 build/
 .next/
-.nuxt/
+.nxt/
 .cache/
 
 # =============================================================================
 # BACKEND
 # =============================================================================
-# Backend dependencies (if running separately)
+# Backend dependencies
 backend/node_modules/
 backend/package-lock.json
+backend/yarn.lock
 
 # Environment files - NEVER commit sensitive data
 backend/.env
@@ -33,6 +36,9 @@ backend/.env.local
 backend/.env.*.local
 backend/.env.production
 backend/.env.development
+backend/.env.real
+backend/.env.live
+backend/.env.prod
 
 # Logs
 backend/logs/
@@ -42,6 +48,8 @@ backend/debug/
 # Test coverage
 backend/coverage/
 backend/.nyc_output/
+backend/tests/*.js
+!backend/tests/connectivity-verification.js
 
 # =============================================================================
 # IDE AND EDITOR
@@ -173,7 +181,6 @@ uploads/
 *.crt
 *.p12
 *.pfx
-!.gitignore
 credentials.json
 secrets.json
 service-account*.json
@@ -181,12 +188,6 @@ service-account*.json
 # Private keys
 *.private
 *.secret
-
-# Environment overrides (these should be in repo as .env.example only)
-.env.real
-.env.live
-.env.prod
-.env.production.local
 
 # =============================================================================
 # DEVELOPMENT ARTIFACTS
@@ -206,6 +207,26 @@ site/
 
 # Statistics
 *.stats.json
+
+# =============================================================================
+# TEST FILES
+# =============================================================================
+# Jest
+jest.config.js
+*.test.js
+*.spec.js
+!tests/**/*.test.js
+!tests/**/*.spec.js
+
+# Vitest
+*.vitest.config.js
+
+# =============================================================================
+# PLANS AND NOTES
+# =============================================================================
+# Plans folder (development notes)
+plans/
+*.md.bak
 
 # =============================================================================
 # EXCEPTIONS (FILES THAT SHOULD BE TRACKED)
@@ -242,3 +263,16 @@ site/
 !backend/schema.sql
 !backend/packages-table.sql
 !backend/seed.sql
+!backend/seed-data-only.sql
+
+# API Documentation (keep these)
+!docs/API_CONTRACTS.md
+!docs/SYNCHRONIZATION_LOGIC.md
+!docs/VERIFICATION_REPORT.md
+!docs/REALTIME_SYNC_TESTING_GUIDE.md
+
+# =============================================================================
+# WINDOWS SPECIFIC
+# =============================================================================
+$RECYCLE.BIN/
+System Volume Information/

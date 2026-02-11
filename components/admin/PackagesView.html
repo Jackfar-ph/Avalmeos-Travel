@@ -1,0 +1,129 @@
+<!-- Packages View Component -->
+<div id="admin-packages-tab" class="admin-tab" style="display: none;">
+    <h2 class="text-xl md:text-2xl font-bold mb-4">Packages Management</h2>
+    
+    <!-- Filter and Actions Bar -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="p-4 border-b flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex gap-2 flex-wrap">
+                <select id="package-filter-destination" onchange="filterPackages()" class="px-3 py-2 border rounded-lg text-sm">
+                    <option value="">All Destinations</option>
+                    <option value="Cebu City">Cebu City</option>
+                    <option value="Manila">Manila</option>
+                    <option value="Baguio">Baguio</option>
+                    <option value="Davao City">Davao City</option>
+                    <option value="Puerto Princesa">Puerto Princesa</option>
+                    <option value="Iloilo">Iloilo</option>
+                </select>
+                <select id="package-filter-status" onchange="filterPackages()" class="px-3 py-2 border rounded-lg text-sm">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="package-search" onkeyup="searchPackages()" placeholder="Search packages..." class="px-3 py-2 border rounded-lg text-sm">
+                <button onclick="showPackageModal()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg text-sm hover:bg-opacity-90 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Add Package
+                </button>
+            </div>
+        </div>
+        
+        <!-- Packages Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[700px] lg:min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Package</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Destination</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Price</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Duration</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-packages-table" class="divide-y divide-gray-100">
+                    <!-- Packages rendered here -->
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Cebu City Package Tour</td>
+                        <td class="px-4 py-3 text-sm">Cebu City</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱8,500</td>
+                        <td class="px-4 py-3 text-sm">3 Days</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_001')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_001')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Old Manila Heritage Tour</td>
+                        <td class="px-4 py-3 text-sm">Manila</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱2,400</td>
+                        <td class="px-4 py-3 text-sm">1 Day</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_002')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_002')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Baguio City Package</td>
+                        <td class="px-4 py-3 text-sm">Baguio</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱5,900</td>
+                        <td class="px-4 py-3 text-sm">3 Days</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_003')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_003')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Davao Highland Tour</td>
+                        <td class="px-4 py-3 text-sm">Davao City</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱4,200</td>
+                        <td class="px-4 py-3 text-sm">1 Day</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_004')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_004')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Puerto Princesa Package</td>
+                        <td class="px-4 py-3 text-sm">Puerto Princesa</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱7,200</td>
+                        <td class="px-4 py-3 text-sm">3 Days</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_005')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_005')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium">Iloilo City & Gigantes</td>
+                        <td class="px-4 py-3 text-sm">Iloilo</td>
+                        <td class="px-4 py-3 text-sm font-bold text-orange-500">₱6,500</td>
+                        <td class="px-4 py-3 text-sm">4 Days</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3">
+                            <button onclick="editPackage('pkg_006')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button onclick="showDeletePackageModal('pkg_006')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="packages-empty-state" class="hidden p-8 text-center">
+            <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <p class="text-gray-500">No packages found</p>
+            <button onclick="showPackageModal()" class="mt-4 px-4 py-2 bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90">
+                Add Your First Package
+            </button>
+        </div>
+    </div>
+</div>

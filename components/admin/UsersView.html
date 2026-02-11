@@ -1,0 +1,70 @@
+<!-- Users View Component -->
+<div id="admin-users-tab" class="admin-tab" style="display: none;">
+    <h2 class="text-2xl font-bold mb-6">User Management</h2>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[450px] md:min-w-[550px] lg:min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">User</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Role</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Joined</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-users-table" class="divide-y divide-gray-100">
+                    <!-- Users rendered here -->
+                    <tr>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-[#1a4d41] text-white flex items-center justify-center font-bold">A</div>
+                                <span class="font-medium">Admin User</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">admin@avalmeo.com</td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">Admin</span></td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3 text-sm text-gray-500">2024-01-15</td>
+                        <td class="px-4 py-3">
+                            <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">J</div>
+                                <span class="font-medium">John Doe</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">john@example.com</td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">User</span></td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3 text-sm text-gray-500">2024-02-20</td>
+                        <td class="px-4 py-3">
+                            <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Suspend</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">J</div>
+                                <span class="font-medium">Jane Smith</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">jane@example.com</td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">User</span></td>
+                        <td class="px-4 py-3 text-sm"><span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span></td>
+                        <td class="px-4 py-3 text-sm text-gray-500">2024-03-10</td>
+                        <td class="px-4 py-3">
+                            <button class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+                            <button class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">Suspend</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

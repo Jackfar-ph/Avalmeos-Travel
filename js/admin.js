@@ -669,12 +669,15 @@ function editPackage(packageId) {
     document.getElementById('package-description').value = pkg.description || '';
     document.getElementById('package-price').value = pkg.price || '';
     document.getElementById('package-duration').value = pkg.duration || 1;
-    document.getElementById('package-type').value = pkg.type || 'all-inclusive';
+    const packageTypeEl = document.getElementById('package-type');
+    if (packageTypeEl) packageTypeEl.value = pkg.type || 'all-inclusive';
     document.getElementById('package-image').value = pkg.image || '';
     document.getElementById('package-inclusions').value = pkg.inclusions || '';
     document.getElementById('package-exclusions').value = pkg.exclusions || '';
-    document.getElementById('package-featured').checked = pkg.featured || false;
-    document.getElementById('package-status').checked = pkg.status === 'active';
+    const featuredEl = document.getElementById('package-featured');
+    if (featuredEl) featuredEl.checked = pkg.featured || false;
+    const statusEl = document.getElementById('package-status');
+    if (statusEl) statusEl.checked = pkg.status === 'active';
     
     // Format activities array to textarea (one per line)
     const activitiesTextarea = document.getElementById('package-activities');

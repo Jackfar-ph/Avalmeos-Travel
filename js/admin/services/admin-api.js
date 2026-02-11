@@ -57,30 +57,51 @@ class AdminApiService {
         }
     }
 
-    /**
-     * Get admin dashboard statistics
-     * @returns {Promise<Object>} Stats data
-     */
+    // =====================
+    // DASHBOARD STATS
+    // =====================
+
+    async getDashboardStats() {
+        return this.request('/admin/dashboard/stats');
+    }
+
+    async getRecentBookings(limit = 5) {
+        return this.request(`/admin/bookings/recent?limit=${limit}`);
+    }
+
+    // =====================
+    // ANALYTICS
+    // =====================
+
+    async getAnalytics(timeRange = '30d') {
+        return this.request(`/admin/analytics?timeRange=${timeRange}`);
+    }
+
+    async getBookingTrends(days = 30) {
+        return this.request(`/admin/analytics/booking-trends?days=${days}`);
+    }
+
+    async getTopDestinations(limit = 5) {
+        return this.request(`/admin/analytics/top-destinations?limit=${limit}`);
+    }
+
+    async getRevenueStats() {
+        return this.request('/admin/analytics/revenue');
+    }
+
+    // =====================
+    // STATS & BOOKINGS
+    // =====================
+
     async getStats() {
         return this.request('/admin/stats');
     }
 
-    /**
-     * Get all bookings for admin
-     * @param {Object} params - Query parameters
-     * @returns {Promise<Object>} Bookings data
-     */
     async getBookings(params = {}) {
         const queryString = new URLSearchParams(params).toString();
         return this.request(`/admin/bookings${queryString ? '?' + queryString : ''}`);
     }
 
-    /**
-     * Update booking status
-     * @param {string} bookingId - Booking ID
-     * @param {string} status - New status
-     * @returns {Promise<Object>} Updated booking
-     */
     async updateBookingStatus(bookingId, status) {
         return this.request(`/admin/bookings/${bookingId}`, {
             method: 'PATCH',
@@ -88,20 +109,14 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Get all inquiries for admin
-     * @returns {Promise<Object>} Inquiries data
-     */
+    // =====================
+    // INQUIRIES
+    // =====================
+
     async getInquiries() {
         return this.request('/admin/inquiries');
     }
 
-    /**
-     * Update inquiry status
-     * @param {string} inquiryId - Inquiry ID
-     * @param {Object} data - Update data (status, response)
-     * @returns {Promise<Object>} Updated inquiry
-     */
     async updateInquiry(inquiryId, data) {
         return this.request(`/admin/inquiries/${inquiryId}`, {
             method: 'PATCH',
@@ -109,19 +124,14 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Get all destinations for admin
-     * @returns {Promise<Object>} Destinations data
-     */
+    // =====================
+    // DESTINATIONS
+    // =====================
+
     async getDestinations() {
-        return this.request('/admin/destinations');
+        return this.request('/admin/destinations/all');
     }
 
-    /**
-     * Create new destination
-     * @param {Object} destinationData - Destination data
-     * @returns {Promise<Object>} Created destination
-     */
     async createDestination(destinationData) {
         return this.request('/admin/destinations', {
             method: 'POST',
@@ -129,12 +139,6 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Update destination
-     * @param {string} destinationId - Destination ID
-     * @param {Object} destinationData - Updated data
-     * @returns {Promise<Object>} Updated destination
-     */
     async updateDestination(destinationId, destinationData) {
         return this.request(`/admin/destinations/${destinationId}`, {
             method: 'PUT',
@@ -142,30 +146,32 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Delete destination
-     * @param {string} destinationId - Destination ID
-     * @returns {Promise<Object>} Response
-     */
     async deleteDestination(destinationId) {
         return this.request(`/admin/destinations/${destinationId}`, {
             method: 'DELETE'
         });
     }
 
-    /**
-     * Get all activities for admin
-     * @returns {Promise<Object>} Activities data
-     */
-    async getActivities() {
-        return this.request('/admin/activities');
+    async deactivateDestination(id) {
+        return this.request(`/admin/destinations/${id}/deactivate`, {
+            method: 'PATCH'
+        });
     }
 
-    /**
-     * Create new activity
-     * @param {Object} activityData - Activity data
-     * @returns {Promise<Object>} Created activity
-     */
+    async activateDestination(id) {
+        return this.request(`/admin/destinations/${id}/activate`, {
+            method: 'PATCH'
+        });
+    }
+
+    // =====================
+    // ACTIVITIES
+    // =====================
+
+    async getActivities() {
+        return this.request('/admin/activities/all');
+    }
+
     async createActivity(activityData) {
         return this.request('/admin/activities', {
             method: 'POST',
@@ -173,12 +179,6 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Update activity
-     * @param {string} activityId - Activity ID
-     * @param {Object} activityData - Updated data
-     * @returns {Promise<Object>} Updated activity
-     */
     async updateActivity(activityId, activityData) {
         return this.request(`/admin/activities/${activityId}`, {
             method: 'PUT',
@@ -186,30 +186,36 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Delete activity
-     * @param {string} activityId - Activity ID
-     * @returns {Promise<Object>} Response
-     */
     async deleteActivity(activityId) {
         return this.request(`/admin/activities/${activityId}`, {
             method: 'DELETE'
         });
     }
 
-    /**
-     * Get all packages for admin
-     * @returns {Promise<Object>} Packages data
-     */
-    async getPackages() {
-        return this.request('/admin/packages');
+    async deactivateActivity(id) {
+        return this.request(`/admin/activities/${id}/deactivate`, {
+            method: 'PATCH'
+        });
     }
 
-    /**
-     * Create new package
-     * @param {Object} packageData - Package data
-     * @returns {Promise<Object>} Created package
-     */
+    async activateActivity(id) {
+        return this.request(`/admin/activities/${id}/activate`, {
+            method: 'PATCH'
+        });
+    }
+
+    // =====================
+    // PACKAGES
+    // =====================
+
+    async getPackages() {
+        return this.request('/admin/packages/all');
+    }
+
+    async getPackageById(packageId) {
+        return this.request(`/packages/${packageId}`);
+    }
+
     async createPackage(packageData) {
         return this.request('/admin/packages', {
             method: 'POST',
@@ -217,12 +223,6 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Update package
-     * @param {string} packageId - Package ID
-     * @param {Object} packageData - Updated data
-     * @returns {Promise<Object>} Updated package
-     */
     async updatePackage(packageId, packageData) {
         return this.request(`/admin/packages/${packageId}`, {
             method: 'PUT',
@@ -230,31 +230,32 @@ class AdminApiService {
         });
     }
 
-    /**
-     * Delete package
-     * @param {string} packageId - Package ID
-     * @returns {Promise<Object>} Response
-     */
     async deletePackage(packageId) {
         return this.request(`/admin/packages/${packageId}`, {
             method: 'DELETE'
         });
     }
 
-    /**
-     * Get all users for admin
-     * @returns {Promise<Object>} Users data
-     */
+    async deactivatePackage(id) {
+        return this.request(`/admin/packages/${id}/deactivate`, {
+            method: 'PATCH'
+        });
+    }
+
+    async activatePackage(id) {
+        return this.request(`/admin/packages/${id}/activate`, {
+            method: 'PATCH'
+        });
+    }
+
+    // =====================
+    // USERS
+    // =====================
+
     async getUsers() {
         return this.request('/admin/users');
     }
 
-    /**
-     * Update user status
-     * @param {string} userId - User ID
-     * @param {Object} userData - Updated data
-     * @returns {Promise<Object>} Updated user
-     */
     async updateUser(userId, userData) {
         return this.request(`/admin/users/${userId}`, {
             method: 'PUT',

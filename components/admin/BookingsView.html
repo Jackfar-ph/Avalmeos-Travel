@@ -1,0 +1,39 @@
+<!-- Bookings View Component -->
+<div id="admin-bookings-tab" class="admin-tab" style="display: none;">
+    <h2 class="text-xl md:text-2xl font-bold mb-4">Bookings Management</h2>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4 border-b flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex gap-2">
+                <select id="booking-filter-status" onchange="filterBookings()" class="px-3 py-2 border rounded-lg text-sm">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <button onclick="exportBookings()" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
+                Export CSV
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[550px] md:min-w-[700px] lg:min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Booking #</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Customer</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Item</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Total</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-bookings-table" class="divide-y divide-gray-100">
+                    <!-- Bookings rendered here -->
+                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Loading bookings...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
