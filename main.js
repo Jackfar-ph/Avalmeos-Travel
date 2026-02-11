@@ -1151,8 +1151,8 @@ window.openActivitiesModal = function(cityName, packageTitle, price, image) {
                 activityCard.className = 'bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all';
                 
                 const img = document.createElement('img');
-                img.src = activity.image;
-                img.alt = activity.name;
+                img.src = activity.img;
+                img.alt = activity.title;
                 img.className = 'w-full h-48 object-cover';
                 
                 const content = document.createElement('div');
@@ -1160,11 +1160,11 @@ window.openActivitiesModal = function(cityName, packageTitle, price, image) {
                 
                 const h3 = document.createElement('h3');
                 h3.className = 'font-bold text-lg text-[#1a4d41] mb-2';
-                h3.textContent = activity.name;
+                h3.textContent = activity.title;
                 
                 const p = document.createElement('p');
                 p.className = 'text-gray-600 text-sm mb-4';
-                p.textContent = activity.description;
+                p.textContent = activity.rating ? `★ ${activity.rating} rating` : '';
                 
                 const bottom = document.createElement('div');
                 bottom.className = 'flex justify-between items-center';

@@ -187,7 +187,7 @@ function openActivitiesModal(cityName, packageTitle, price, image) {
                 
                 const descP = document.createElement('p');
                 descP.className = 'text-xs text-gray-600 mb-3 line-clamp-2';
-                descP.textContent = act.desc || '';  // textContent prevents XSS
+                descP.textContent = act.rating ? '★ ' + act.rating + ' rating' : '';  // textContent prevents XSS
                 
                 const priceDiv = document.createElement('div');
                 priceDiv.className = 'flex justify-between items-center';
