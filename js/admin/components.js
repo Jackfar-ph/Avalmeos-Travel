@@ -19,13 +19,15 @@ const AdminComponents = {
         'packages-view-placeholder': 'PackagesView.html',
         'users-view-placeholder': 'UsersView.html',
         'inquiries-view-placeholder': 'InquiriesView.html',
+        'chat-view-placeholder': 'ChatView.html',
         'analytics-view-placeholder': 'AnalyticsView.html',
         'booking-modal-placeholder': 'BookingModal.html',
         'destination-modal-placeholder': 'DestinationModal.html',
         'activity-modal-placeholder': 'ActivityModal.html',
         'package-modal-placeholder': 'PackageModal.html',
         'delete-package-modal-placeholder': 'DeletePackageModal.html',
-        'inquiry-reply-modal-placeholder': 'InquiryReplyModal.html'
+        'inquiry-reply-modal-placeholder': 'InquiryReplyModal.html',
+        'user-modal-placeholder': 'UserModal.html'
     },
     
     /**
@@ -34,27 +36,38 @@ const AdminComponents = {
     async loadComponent(placeholderId) {
         const placeholder = document.getElementById(placeholderId);
         if (!placeholder) {
-            console.warn(`Placeholder not found: ${placeholderId}`);
+            console.error(`[AdminComponents] ERROR: Placeholder not found: ${placeholderId}`);
             return null;
         }
         
         const componentFile = this.components[placeholderId];
         if (!componentFile) {
-            console.warn(`No component mapped for placeholder: ${placeholderId}`);
+            console.error(`[AdminComponents] ERROR: No component mapped for placeholder: ${placeholderId}`);
             return null;
         }
         
         try {
             const response = await fetch(`${this.basePath}${componentFile}`);
             if (!response.ok) {
-                throw new Error(`Failed to load component: ${response.status}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             const html = await response.text();
             placeholder.innerHTML = html;
-            console.log(`Loaded component: ${componentFile} -> ${placeholderId}`);
+            console.log(`[AdminComponents] Loaded: ${componentFile} -> ${placeholderId}`);
             return html;
         } catch (error) {
-            console.error(`Error loading component ${componentFile}:`, error);
+            console.error(`[AdminComponents] ERROR loading ${componentFile}:`, error);
+            // Show error message in placeholder
+            placeholder.innerHTML = `
+                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h3 class="text-red-700 font-bold">Failed to load component</h3>
+                    <p class="text-red-600">${componentFile}</p>
+                    <p class="text-sm text-red-500">${error.message}</p>
+                    <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-red-600 text-white rounded">
+                        Retry
+                    </button>
+                </div>
+            `;
             return null;
         }
     },
@@ -63,15 +76,26 @@ const AdminComponents = {
      * Load all admin components
      */
     async loadAll() {
-        console.log('Loading admin components...');
+        console.log('[AdminComponents] Starting to load all components...');
         const loadPromises = [];
+        const componentNames = [];
         
         for (const [placeholderId, componentFile] of Object.entries(this.components)) {
             loadPromises.push(this.loadComponent(placeholderId));
+            componentNames.push(componentFile);
         }
         
-        await Promise.all(loadPromises);
-        console.log('All admin components loaded');
+        console.log('[AdminComponents] Loading these components:', componentNames.join(', '));
+        
+        const results = await Promise.all(loadPromises);
+        const successCount = results.filter(r => r !== null).length;
+        const failCount = results.filter(r => r === null).length;
+        
+        console.log(`[AdminComponents] Load complete: ${successCount} succeeded, ${failCount} failed`);
+        
+        if (failCount > 0) {
+            console.warn('[AdminComponents] WARNING: Some components failed to load. Check errors above.');
+        }
     },
     
     /**
@@ -99,6 +123,7 @@ const AdminComponents = {
             this.loadComponent('packages-view-placeholder'),
             this.loadComponent('users-view-placeholder'),
             this.loadComponent('inquiries-view-placeholder'),
+            this.loadComponent('chat-view-placeholder'),
             this.loadComponent('analytics-view-placeholder')
         ]);
     },
@@ -114,7 +139,8 @@ const AdminComponents = {
             this.loadComponent('activity-modal-placeholder'),
             this.loadComponent('package-modal-placeholder'),
             this.loadComponent('delete-package-modal-placeholder'),
-            this.loadComponent('inquiry-reply-modal-placeholder')
+            this.loadComponent('inquiry-reply-modal-placeholder'),
+            this.loadComponent('user-modal-placeholder')
         ]);
     }
 };

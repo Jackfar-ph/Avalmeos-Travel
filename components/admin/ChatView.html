@@ -1,0 +1,63 @@
+<!-- Chat View Component -->
+<div id="admin-chat-tab" class="admin-tab" style="display: none;">
+    <h2 class="text-2xl font-bold mb-6">Chat Management</h2>
+    
+    <div class="flex h-[calc(100vh-200px)] gap-4">
+        <!-- Conversations List -->
+        <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+            <div class="p-4 border-b bg-[#1a4d41] text-white">
+                <h3 class="font-bold">Conversations</h3>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="filterChatConversations('active')" class="px-3 py-1 text-xs bg-white/20 hover:bg-white/30 rounded-full">Active</button>
+                    <button onclick="filterChatConversations('closed')" class="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-full">Closed</button>
+                    <button onclick="filterChatConversations('')" class="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-full">All</button>
+                </div>
+            </div>
+            <div id="chat-conversations-list" class="flex-1 overflow-y-auto">
+                <!-- Conversations loaded here -->
+                <div class="p-4 text-center text-gray-500">
+                    Loading conversations...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+            <div id="chat-header" class="p-4 border-b bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 id="chat-user-name" class="font-bold text-[#1a4d41]">Select a conversation</h3>
+                        <p id="chat-user-info" class="text-sm text-gray-500"></p>
+                    </div>
+                    <div id="chat-actions" class="hidden">
+                        <select id="chat-status-select" onchange="updateChatStatus()" class="text-sm border rounded-lg px-3 py-1">
+                            <option value="active">Active</option>
+                            <option value="closed">Closed</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages Area -->
+            <div id="chat-messages-area" class="flex-1 overflow-y-auto p-4 bg-gray-50">
+                <div class="h-full flex items-center justify-center text-gray-400">
+                    Select a conversation to view messages
+                </div>
+            </div>
+            
+            <!-- Reply Form -->
+            <div id="chat-reply-form" class="p-4 border-t bg-white hidden">
+                <div class="flex gap-2">
+                    <input type="text" id="chat-reply-input" 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent"
+                        placeholder="Type your reply..."
+                        onkeypress="handleChatReplyKeypress(event)">
+                    <button onclick="sendChatReply()" class="px-6 py-2 bg-[#1a4d41] text-white rounded-full hover:bg-[#153d32]">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

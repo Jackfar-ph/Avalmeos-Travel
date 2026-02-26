@@ -19,10 +19,10 @@ class AdminApiService {
         this.maxRetries = 2; // Retry failed requests max 2 times
         this.tokenRefreshThreshold = 5 * 60 * 1000; // Refresh if token expires within 5 minutes
         
-        // Token storage keys (compatible with admin-auth.js)
-        this.TOKEN_KEY = 'avalmeos_admin_token';
-        this.REFRESH_TOKEN_KEY = 'avalmeos_admin_refresh_token';
-        this.TOKEN_EXPIRY_KEY = 'avalmeos_admin_token_expiry';
+        // Token storage keys (must match admin-auth.js for compatibility)
+        this.TOKEN_KEY = 'supabase_admin_token';
+        this.REFRESH_TOKEN_KEY = 'supabase_admin_refresh_token';
+        this.TOKEN_EXPIRY_KEY = 'supabase_admin_token_expiry';
         
         // State management
         this.isRefreshing = false;
@@ -663,9 +663,16 @@ class AdminApiService {
     }
 
     async updateUserRole(userId, role) {
-        return this.request(`/admin/users/${userId}`, {
-            method: 'PATCH',
+        return this.request(`/admin/users/${userId}/role`, {
+            method: 'PUT',
             body: JSON.stringify({ role })
+        });
+    }
+
+    async updateUserStatus(userId, isActive) {
+        return this.request(`/admin/users/${userId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
         });
     }
 

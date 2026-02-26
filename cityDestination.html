@@ -317,6 +317,65 @@
             const cityLowerCase = cityParam.toLowerCase();
             const cityWithoutSpacesLower = cityWithoutSpaces.toLowerCase();
             
+            // Fetch packages from API
+            fetch('/api/packages')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data && data.data.length > 0) {
+                        const packages = data.data;
+                        
+                        // Find matching package by destination_name
+                        let matchingPkg = packages.find(pkg => {
+                            const destName = (pkg.destination_name || (pkg.destinations && pkg.destinations.name) || '').toLowerCase();
+                            return destName === cityLowerCase || 
+                                   destName === cityWithoutSpacesLower ||
+                                   cityLowerCase.includes(destName) ||
+                                   destName.includes(cityLowerCase);
+                        });
+                        
+                        if (matchingPkg) {
+                            displayPackage(matchingPkg, cityParam);
+                        } else {
+                            // Fall back to hardcoded data if no API package found
+                            loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+                        }
+                    } else {
+                        // Fall back to hardcoded data
+                        loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+                    }
+                })
+                .catch(err => {
+                    console.error('[CityPage] Error fetching packages:', err);
+                    // Fall back to hardcoded data
+                    loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+                });
+        }
+        
+        function displayPackage(pkg, cityParam) {
+            console.log('[CityPage] Displaying package from API:', pkg);
+            
+            const bannerImg = document.getElementById('pkg-banner');
+            if (pkg.hero_image) bannerImg.src = pkg.hero_image;
+            
+            document.getElementById('pkg-title').innerText = pkg.name;
+            document.getElementById('pkg-subtitle').innerText = pkg.destination_name || cityParam;
+            document.getElementById('pkg-desc').innerText = pkg.description || pkg.short_description || '';
+            document.getElementById('pkg-price').innerText = formatPrice(pkg.price);
+            
+            // Store package data for booking
+            window.packageData[cityParam] = {
+                name: pkg.name,
+                originalPrice: pkg.price,
+                price: pkg.price,
+                description: pkg.description || pkg.short_description,
+                duration: pkg.duration,
+                included: pkg.inclusions,
+                excluded: pkg.exclusions,
+                image: pkg.hero_image
+            };
+        }
+        
+        function loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower) {
             // Find matching city in data.js
             let matchingCity = null;
             const allCities = Object.keys(packageData);

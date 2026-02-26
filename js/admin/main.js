@@ -18,12 +18,47 @@ console.log('[Admin] main.js loaded');
  * Called after components are loaded
  */
 async function initAdminComponents() {
-    console.log('Initializing admin components...');
+    console.log('[Admin] Starting admin component initialization...');
+    
+    // Check if we're running from file:// protocol (common cause of issues)
+    if (window.location.protocol === 'file:') {
+        console.error('[Admin] ERROR: Admin panel must be accessed via HTTP server, not file://');
+        document.body.innerHTML = `
+            <div class="min-h-screen flex items-center justify-center bg-gray-100">
+                <div class="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
+                    <h1 class="text-2xl font-bold text-red-600 mb-4">Cannot Load Admin Panel</h1>
+                    <p class="text-gray-600 mb-4">
+                        The admin panel requires a web server to function properly.
+                    </p>
+                    <p class="text-sm text-gray-500 mb-4">
+                        Please start the backend server and access admin.html through:
+                        <code class="bg-gray-100 px-2 py-1 rounded">http://localhost:3000/admin.html</code>
+                    </p>
+                    <button onclick="window.location.href='index.html'" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg">
+                        Go to Home Page
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
     
     try {
         // Load all admin components
         await AdminComponents.loadAll();
-        console.log('Admin components loaded, initializing module...');
+        
+        // Verify critical components loaded
+        const activitiesPlaceholder = document.getElementById('activities-view-placeholder');
+        const packagesPlaceholder = document.getElementById('packages-view-placeholder');
+        
+        if (!activitiesPlaceholder || activitiesPlaceholder.innerHTML.trim() === '') {
+            console.error('[Admin] ERROR: Activities view failed to load');
+        }
+        if (!packagesPlaceholder || packagesPlaceholder.innerHTML.trim() === '') {
+            console.error('[Admin] ERROR: Packages view failed to load');
+        }
+        
+        console.log('[Admin] Admin components loaded, initializing module...');
         
         // Initialize the admin module
         AdminModule.init();
@@ -31,9 +66,9 @@ async function initAdminComponents() {
         // Setup admin login handlers and other UI functions
         setupAdminUI();
         
-        console.log('Admin initialization complete');
+        console.log('[Admin] Initialization complete - admin panel ready');
     } catch (error) {
-        console.error('Error initializing admin components:', error);
+        console.error('[Admin] Error initializing admin components:', error);
     }
 }
 
@@ -67,6 +102,10 @@ function setupAdminUI() {
     window.showDeletePackageModal = showDeletePackageModal;
     window.closeDeletePackageModal = closeDeletePackageModal;
     
+    // Destination population functions
+    window.populateActivityDestinations = populateActivityDestinations;
+    window.populatePackageDestinations = populatePackageDestinations;
+    
     // Tab loading functions
     window.loadDashboard = loadDashboard;
     window.loadBookings = loadBookings;
@@ -76,6 +115,12 @@ function setupAdminUI() {
     window.loadUsers = loadUsers;
     window.loadInquiries = loadInquiries;
     window.loadAnalytics = loadAnalytics;
+    window.initChatView = initChatView;
+    window.loadChatConversations = loadChatConversations;
+    window.selectChatConversation = selectChatConversation;
+    window.sendChatReply = sendChatReply;
+    window.filterChatConversations = filterChatConversations;
+    window.updateChatStatus = updateChatStatus;
     
     // CRUD functions
     window.editDestination = editDestination;
@@ -454,6 +499,55 @@ function showActivityModal() {
         document.getElementById('activity-modal-title').textContent = 'Add Activity';
         document.getElementById('activity-form').reset();
         document.getElementById('activity-id').value = '';
+        
+        // Populate destination dropdown
+        populateActivityDestinations();
+    }
+}
+
+/**
+ * Populate destination dropdown for Activity modal
+ */
+async function populateActivityDestinations() {
+    const select = document.getElementById('activity-destination');
+    if (!select) return;
+    
+    console.log('[Admin] Populating activity destinations...');
+    
+    // Default destinations as fallback
+    const defaultDestinations = ['Cebu City', 'Manila', 'Baguio', 'Davao City', 'Puerto Princesa', 'Iloilo', 'Palawan', 'Boracay', 'Siargao', 'El Nido'];
+    
+    try {
+        if (typeof AdminApiService !== 'undefined') {
+            const api = new AdminApiService();
+            const response = await api.getDestinations();
+            
+            if (response.success && response.data && response.data.length > 0) {
+                // Use API destinations
+                const destinations = response.data.map(d => d.name).sort();
+                select.innerHTML = `
+                    <option value="">Select destination</option>
+                    ${destinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+                `;
+                console.log('[Admin] Loaded', destinations.length, 'destinations from API');
+            } else {
+                // Fall back to default destinations
+                select.innerHTML = `
+                    <option value="">Select destination</option>
+                    ${defaultDestinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+                `;
+                console.log('[Admin] Using default destinations');
+            }
+        } else {
+            throw new Error('AdminApiService not available');
+        }
+    } catch (error) {
+        console.warn('[Admin] Failed to load destinations from API, using defaults:', error.message);
+        // Fall back to default destinations
+        select.innerHTML = `
+            <option value="">Select destination</option>
+            ${defaultDestinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+        `;
     }
 }
 
@@ -486,19 +580,26 @@ function saveActivity(event) {
         slug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
     
-    const destination_id = formData.get('destination_id') || document.getElementById('activity-destination')?.value;
+    const destinationName = formData.get('destination_id') || document.getElementById('activity-destination')?.value;
     const activity_type = formData.get('activity_type') || document.getElementById('activity-type')?.value;
     
     // Validate required fields
-    if (!name || !slug || !destination_id || !activity_type) {
-        alert('Please fill in all required fields: Name, Slug, Destination, and Activity Type');
+    if (!name || !slug || !activity_type) {
+        alert('Please fill in all required fields: Name, Slug, and Activity Type');
         return;
+    }
+    
+    // Get image URL and validate
+    let imageUrl = formData.get('image_url') || document.getElementById('activity-image')?.value || '';
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('Picture/')) {
+        imageUrl = ''; // Clear invalid URL
     }
     
     const activityData = {
         name: name,
         slug: slug,
-        destination_id: destination_id,
+        destination_id: null, // Optional UUID
+        destination_name: destinationName || null,
         description: formData.get('description') || document.getElementById('activity-description')?.value || '',
         short_description: formData.get('short_description') || document.getElementById('activity-short-description')?.value || '',
         activity_type: activity_type,
@@ -506,7 +607,7 @@ function saveActivity(event) {
         min_participants: parseInt(formData.get('min_participants') || document.getElementById('activity-min')?.value) || 1,
         max_participants: parseInt(formData.get('max_participants') || document.getElementById('activity-max')?.value) || 10,
         price: parseFloat(formData.get('price') || document.getElementById('activity-price')?.value) || 0,
-        image_url: formData.get('image_url') || document.getElementById('activity-image')?.value || 'Picture/default-activity.jpg',
+        image_url: imageUrl || null,
         is_featured: document.getElementById('activity-featured')?.checked || false,
         is_active: true
     };
@@ -538,7 +639,14 @@ function saveActivity(event) {
             }
         }).catch(error => {
             console.error('Error saving activity:', error);
-            alert('Error saving activity: ' + error.message);
+            // Try to extract validation error details
+            let errorMessage = error.message;
+            if (error.response?.data?.errors) {
+                const validationErrors = error.response.data.errors;
+                const errorDetails = validationErrors.map(e => `${e.field}: ${e.message}`).join('\n');
+                errorMessage = `Validation failed:\n${errorDetails}`;
+            }
+            alert('Error saving activity: ' + errorMessage);
         });
     } else {
         // Fallback if AdminApiService not available
@@ -555,6 +663,55 @@ function showPackageModal() {
         document.getElementById('package-modal-title').textContent = 'Add Package';
         document.getElementById('package-form').reset();
         document.getElementById('package-id').value = '';
+        
+        // Populate destination dropdown
+        populatePackageDestinations();
+    }
+}
+
+/**
+ * Populate destination dropdown for Package modal
+ */
+async function populatePackageDestinations() {
+    const select = document.getElementById('package-destination');
+    if (!select) return;
+    
+    console.log('[Admin] Populating package destinations...');
+    
+    // Default destinations as fallback
+    const defaultDestinations = ['Cebu City', 'Manila', 'Baguio', 'Davao City', 'Puerto Princesa', 'Iloilo', 'Palawan', 'Boracay', 'Siargao', 'El Nido'];
+    
+    try {
+        if (typeof AdminApiService !== 'undefined') {
+            const api = new AdminApiService();
+            const response = await api.getDestinations();
+            
+            if (response.success && response.data && response.data.length > 0) {
+                // Use API destinations
+                const destinations = response.data.map(d => d.name).sort();
+                select.innerHTML = `
+                    <option value="">Select destination</option>
+                    ${destinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+                `;
+                console.log('[Admin] Loaded', destinations.length, 'destinations from API');
+            } else {
+                // Fall back to default destinations
+                select.innerHTML = `
+                    <option value="">Select destination</option>
+                    ${defaultDestinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+                `;
+                console.log('[Admin] Using default destinations');
+            }
+        } else {
+            throw new Error('AdminApiService not available');
+        }
+    } catch (error) {
+        console.warn('[Admin] Failed to load destinations from API, using defaults:', error.message);
+        // Fall back to default destinations
+        select.innerHTML = `
+            <option value="">Select destination</option>
+            ${defaultDestinations.map(d => `<option value="${d}">${d}</option>`).join('')}
+        `;
     }
 }
 
@@ -587,28 +744,44 @@ function savePackage(event) {
         slug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
     
-    const destination_id = formData.get('destination_id') || document.getElementById('package-destination')?.value;
-    
     // Validate required fields
-    if (!name || !slug || !destination_id) {
-        alert('Please fill in all required fields: Name, Slug, and Destination');
+    if (!name || !slug) {
+        alert('Please fill in all required fields: Name and Slug');
         return;
+    }
+    
+    // Get activities as array
+    const activitiesText = formData.get('activities') || document.getElementById('package-activities')?.value || '';
+    const activities = activitiesText.split('\n').map(a => a.trim()).filter(a => a);
+    
+    // Get inclusions as array
+    const inclusionsText = formData.get('inclusions') || document.getElementById('package-inclusions')?.value || '';
+    const inclusions = inclusionsText.split(',').map(i => i.trim()).filter(i => i);
+    
+    // Get exclusions as array
+    const exclusionsText = formData.get('exclusions') || document.getElementById('package-exclusions')?.value || '';
+    const exclusions = exclusionsText.split(',').map(e => e.trim()).filter(e => e);
+    
+    // Get image URL and validate
+    let imageUrl = formData.get('image_url') || document.getElementById('package-image')?.value || '';
+    // If no image provided, use empty string (optional field)
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('Picture/')) {
+        imageUrl = ''; // Clear invalid URL
     }
     
     const packageData = {
         name: name,
         slug: slug,
-        destination_id: destination_id || null,
+        destination_id: null, // Optional - not using UUID for now
         short_description: formData.get('short_description') || document.getElementById('package-short-description')?.value || '',
         description: formData.get('description') || document.getElementById('package-description')?.value || '',
         price: parseFloat(formData.get('price') || document.getElementById('package-price')?.value) || 0,
-        duration_days: parseInt(formData.get('duration_days') || document.getElementById('package-duration')?.value) || 1,
-        min_participants: parseInt(formData.get('min_participants') || document.getElementById('package-min')?.value) || 1,
-        max_participants: parseInt(formData.get('max_participants') || document.getElementById('package-max')?.value) || 10,
-        image_url: formData.get('image_url') || document.getElementById('package-image')?.value || 'Picture/default-package.jpg',
-        activities: (formData.get('activities') || document.getElementById('package-activities')?.value || '').split('\n').map(a => a.trim()).filter(a => a),
-        inclusions: (formData.get('inclusions') || document.getElementById('package-inclusions')?.value || '').split(',').map(i => i.trim()).filter(i => i),
-        exclusions: (formData.get('exclusions') || document.getElementById('package-exclusions')?.value || '').split(',').map(e => e.trim()).filter(e => e),
+        duration: parseInt(formData.get('duration_days') || document.getElementById('package-duration')?.value) || 1,
+        package_type: 'day-tour', // Default package type (valid value per validation)
+        hero_image: imageUrl || null,
+        activities: activities.length > 0 ? activities : [],
+        inclusions: inclusions.length > 0 ? inclusions : [],
+        exclusions: exclusions.length > 0 ? exclusions : [],
         is_featured: document.getElementById('package-featured')?.checked || false,
         is_active: document.getElementById('package-status')?.checked || true
     };
@@ -640,7 +813,14 @@ function savePackage(event) {
             }
         }).catch(error => {
             console.error('Error saving package:', error);
-            alert('Error saving package: ' + error.message);
+            // Try to extract validation error details
+            let errorMessage = error.message;
+            if (error.response?.data?.errors) {
+                const validationErrors = error.response.data.errors;
+                const errorDetails = validationErrors.map(e => `${e.field}: ${e.message}`).join('\n');
+                errorMessage = `Validation failed:\n${errorDetails}`;
+            }
+            alert('Error saving package: ' + errorMessage);
         });
     } else {
         // Fallback if AdminApiService not available
@@ -707,9 +887,14 @@ async function loadActivities() {
 }
 
 async function loadPackages() {
-    console.log('Loading packages...');
+    console.log('[Admin] Loading packages...');
     const packagesTab = document.getElementById('admin-packages-tab');
-    if (!packagesTab) return;
+    if (!packagesTab) {
+        console.error('[Admin] ERROR: admin-packages-tab not found in DOM');
+        return;
+    }
+    
+    console.log('[Admin] Rendering packages loading state...');
     
     packagesTab.innerHTML = `
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -740,11 +925,14 @@ async function loadPackages() {
             throw new Error('AdminApiService not available');
         }
     } catch (error) {
-        console.error('Error loading packages:', error);
+        console.error('[Admin] Error loading packages:', error);
         packagesTab.innerHTML = `
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 border-b">
+                <div class="p-4 border-b flex justify-between items-center">
                     <h3 class="font-bold text-[#1a4d41]">Packages</h3>
+                    <button onclick="addPackage()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg text-sm hover:bg-opacity-90">
+                        + Add Package
+                    </button>
                 </div>
                 <div class="p-8 text-center text-red-500">
                     <p>Error loading packages: ${error.message}</p>
@@ -759,7 +947,10 @@ async function loadPackages() {
 
 function renderPackages(packages) {
     const packagesTab = document.getElementById('admin-packages-tab');
-    if (!packagesTab) return;
+    if (!packagesTab) {
+        console.error('[Admin] ERROR: admin-packages-tab not found in renderPackages');
+        return;
+    }
     
     if (!packages || packages.length === 0) {
         packagesTab.innerHTML = `
@@ -803,7 +994,12 @@ function renderPackages(packages) {
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center">
                 <h3 class="font-bold text-[#1a4d41]">Packages</h3>
-                <span class="text-sm text-gray-500">${packages.length} packages</span>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500">${packages.length} packages</span>
+                    <button onclick="addPackage()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg text-sm hover:bg-opacity-90">
+                        + Add Package
+                    </button>
+                </div>
             </div>
             <div class="divide-y divide-gray-50">
                 ${packagesHtml}
@@ -903,8 +1099,17 @@ function renderUsers(container, users) {
                 ${new Date(user.created_at).toLocaleDateString()}
             </td>
             <td class="px-4 py-3">
-                <button class="text-[#1a4d41] hover:text-[#153d32] font-medium text-sm">
+                <button 
+                    onclick="editUser('${user.id}')" 
+                    class="text-[#1a4d41] hover:text-[#153d32] font-medium text-sm mr-2"
+                >
                     Edit
+                </button>
+                <button 
+                    onclick="toggleUserStatus('${user.id}', ${user.is_active})" 
+                    class="px-2 py-1 text-xs rounded ${user.is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}"
+                >
+                    ${user.is_active ? 'Suspend' : 'Activate'}
                 </button>
             </td>
         </tr>
@@ -935,6 +1140,163 @@ function renderUsers(container, users) {
         </div>
     `;
 }
+
+// ============================================================================
+// USER EDIT & STATUS FUNCTIONS
+// ============================================================================
+
+// Store current user being edited
+let currentEditUserId = null;
+
+// Open user edit modal
+window.editUser = function(userId) {
+    console.log('[User] Opening edit modal for user:', userId);
+    const modal = document.getElementById('user-edit-modal');
+    if (!modal) {
+        console.error('[User] Edit modal not found');
+        return;
+    }
+    
+    // Find user data - we need to get it from the loaded users
+    // Since we don't have direct access, we'll fetch it
+    loadUserForEdit(userId);
+}
+
+async function loadUserForEdit(userId) {
+    try {
+        const api = window.adminApi;
+        const response = await api.getUsers();
+        
+        if (response.success && response.data) {
+            const user = response.data.find(u => u.id === userId);
+            if (user) {
+                currentEditUserId = userId;
+                showUserEditModal(user);
+            } else {
+                throw new Error('User not found');
+            }
+        } else {
+            throw new Error(response.message || 'Failed to load users');
+        }
+    } catch (error) {
+        console.error('[User] Error loading user:', error);
+        alert('Error loading user: ' + error.message);
+    }
+}
+
+function showUserEditModal(user) {
+    const modal = document.getElementById('user-edit-modal');
+    const nameEl = document.getElementById('user-edit-name');
+    const emailEl = document.getElementById('user-edit-email');
+    const roleEl = document.getElementById('user-edit-role');
+    const statusEl = document.getElementById('user-edit-status');
+    const statusMsg = document.getElementById('user-edit-status-message');
+    
+    nameEl.textContent = user.name || user.email;
+    emailEl.textContent = user.email;
+    roleEl.value = user.role || 'user';
+    statusEl.value = user.is_active ? 'true' : 'false';
+    
+    // Hide any previous status message
+    statusMsg.classList.add('hidden');
+    statusMsg.className = 'hidden p-3 rounded-lg text-sm';
+    
+    modal.classList.remove('hidden');
+}
+
+window.closeUserEditModal = function() {
+    const modal = document.getElementById('user-edit-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        currentEditUserId = null;
+    }
+}
+
+window.submitUserEdit = async function(event) {
+    event.preventDefault();
+    
+    if (!currentEditUserId) {
+        return;
+    }
+    
+    const roleEl = document.getElementById('user-edit-role');
+    const statusEl = document.getElementById('user-edit-status');
+    const statusMsg = document.getElementById('user-edit-status-message');
+    const submitBtn = document.getElementById('user-edit-submit');
+    
+    const newRole = roleEl.value;
+    const newStatus = statusEl.value === 'true';
+    
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Saving...</span>';
+    
+    try {
+        const api = window.adminApi;
+        
+        // Update role
+        const roleResponse = await api.updateUserRole(currentEditUserId, newRole);
+        if (!roleResponse.success) {
+            throw new Error(roleResponse.message || 'Failed to update role');
+        }
+        
+        // Update status
+        const statusResponse = await api.updateUserStatus(currentEditUserId, newStatus);
+        if (!statusResponse.success) {
+            throw new Error(statusResponse.message || 'Failed to update status');
+        }
+        
+        // Show success
+        statusMsg.classList.remove('hidden');
+        statusMsg.className = 'p-3 rounded-lg text-sm bg-green-100 text-green-700';
+        statusMsg.textContent = 'User updated successfully!';
+        
+        // Close modal and reload
+        setTimeout(() => {
+            closeUserEditModal();
+            loadUsers();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('[User] Error updating user:', error);
+        statusMsg.classList.remove('hidden');
+        statusMsg.className = 'p-3 rounded-lg text-sm bg-red-100 text-red-700';
+        statusMsg.textContent = 'Error: ' + error.message;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Save Changes</span>';
+    }
+}
+
+// Toggle user status (suspend/activate)
+window.toggleUserStatus = async function(userId, currentIsActive) {
+    const action = currentIsActive ? 'suspend' : 'activate';
+    if (!confirm(`Are you sure you want to ${action} this user?`)) {
+        return;
+    }
+    
+    try {
+        const api = window.adminApi;
+        const newStatus = !currentIsActive;
+        
+        const response = await api.updateUserStatus(userId, newStatus);
+        
+        if (response.success) {
+            alert(`User ${action}d successfully!`);
+            loadUsers();
+        } else {
+            throw new Error(response.message || `Failed to ${action} user`);
+        }
+    } catch (error) {
+        console.error('[User] Error toggling status:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Expose functions globally
+window.loadUsers = loadUsers;
+window.editUser = editUser;
+window.toggleUserStatus = toggleUserStatus;
 
 async function loadInquiries() {
     console.log('Loading inquiries...');
@@ -995,6 +1357,287 @@ async function loadInquiries() {
     }
 }
 
+// =====================================================
+// CHAT VIEW FUNCTIONS
+// =====================================================
+
+let selectedConversationId = null;
+let currentChatFilter = 'active';
+let chatPollingInterval = null;
+
+function initChatView() {
+    console.log('[Chat] Initializing chat view...');
+    loadChatConversations();
+}
+
+function getAdminToken() {
+    let token = localStorage.getItem('supabase_admin_token');
+    if (!token) {
+        token = localStorage.getItem('avalmeos_token');
+    }
+    if (!token) {
+        const authData = localStorage.getItem('avalmeos_auth');
+        if (authData) {
+            try {
+                const parsed = JSON.parse(authData);
+                token = parsed.token;
+            } catch (e) {}
+        }
+    }
+    if (!token) {
+        token = sessionStorage.getItem('supabase_admin_token');
+    }
+    console.log('[Chat] Token found:', token ? 'Yes' : 'No');
+    return token;
+}
+
+async function loadChatConversations() {
+    const container = document.getElementById('chat-conversations-list');
+    if (!container) {
+        console.error('[Chat] Container not found');
+        return;
+    }
+    
+    try {
+        const token = getAdminToken();
+        if (!token) {
+            container.innerHTML = '<div class="p-4 text-center text-red-500">Please log in as admin</div>';
+            return;
+        }
+        
+        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        const url = new URL('/api/admin/chat/conversations', baseUrl);
+        if (currentChatFilter) {
+            url.searchParams.append('status', currentChatFilter);
+        }
+        
+        console.log('[Chat] Loading conversations from:', url.toString());
+        
+        const response = await fetch(url.toString(), {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        console.log('[Chat] Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Chat] Error response:', errorText);
+            container.innerHTML = `<div class="p-4 text-center text-red-500">Error: ${response.status}</div>`;
+            return;
+        }
+        
+        const conversations = await response.json();
+        console.log('[Chat] Loaded conversations:', conversations?.length || 0);
+        
+        if (!conversations || conversations.length === 0) {
+            container.innerHTML = '<div class="p-4 text-center text-gray-500">No conversations yet. Users will appear here when they start a chat.</div>';
+            return;
+        }
+        
+        container.innerHTML = conversations.map(conv => `
+            <div onclick="selectChatConversation('${conv.id}')" 
+                class="p-4 border-b cursor-pointer hover:bg-gray-50 transition ${selectedConversationId === conv.id ? 'bg-blue-50 border-l-4 border-l-[#1a4d41]' : ''}"
+                data-conversation-id="${conv.id}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-bold text-[#1a4d41]">${escapeHtml(conv.user_name || 'Guest')}</h4>
+                        <p class="text-sm text-gray-500">${escapeHtml(conv.last_message || 'No messages yet')}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-gray-400">${formatChatTime(conv.last_message_time || conv.created_at)}</span>
+                        <div class="mt-1">
+                            <span class="px-2 py-0.5 rounded-full text-xs ${conv.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${conv.status}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('[Chat] Error loading conversations:', error);
+        container.innerHTML = `<div class="p-4 text-center text-red-500">Error: ${error.message}</div>`;
+    }
+}
+
+function filterChatConversations(status) {
+    currentChatFilter = status;
+    loadChatConversations();
+}
+
+async function selectChatConversation(conversationId) {
+    selectedConversationId = conversationId;
+    
+    document.querySelectorAll('#chat-conversations-list > div').forEach(el => {
+        el.classList.remove('bg-blue-50', 'border-l-4', 'border-l-[#1a4d41]');
+        if (el.dataset.conversationId === conversationId) {
+            el.classList.add('bg-blue-50', 'border-l-4', 'border-l-[#1a4d41]');
+        }
+    });
+    
+    document.getElementById('chat-reply-form').classList.remove('hidden');
+    document.getElementById('chat-actions').classList.remove('hidden');
+    
+    await loadChatMessages(conversationId);
+    startChatPolling(conversationId);
+}
+
+async function loadChatMessages(conversationId) {
+    const messagesArea = document.getElementById('chat-messages-area');
+    const header = document.getElementById('chat-user-name');
+    const info = document.getElementById('chat-user-info');
+    const statusSelect = document.getElementById('chat-status-select');
+    
+    try {
+        const token = getAdminToken();
+        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        
+        const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${conversationId}/messages`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load messages');
+        }
+        
+        const messages = await response.json();
+        
+        if (messages.length === 0) {
+            messagesArea.innerHTML = '<div class="h-full flex items-center justify-center text-gray-400">No messages yet</div>';
+            return;
+        }
+        
+        messagesArea.innerHTML = messages.map(msg => `
+            <div class="flex ${msg.sender_type === 'admin' ? 'justify-start' : 'justify-end'} mb-3">
+                <div class="max-w-[70%] ${msg.sender_type === 'admin' ? 'bg-gray-100' : 'bg-[#1a4d41] text-white'} rounded-2xl px-4 py-2">
+                    ${msg.sender_type === 'admin' ? `<div class="text-xs font-bold text-[#1a4d41] mb-1">${escapeHtml(msg.sender_name)} (Admin)</div>` : `<div class="text-xs font-bold text-white/80 mb-1">${escapeHtml(msg.sender_name)}</div>`}
+                    <div class="text-sm">${escapeHtml(msg.message_text)}</div>
+                    <div class="text-xs ${msg.sender_type === 'admin' ? 'text-gray-500' : 'text-white/70'} mt-1">
+                        ${formatChatTime(msg.created_at)}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+        
+    } catch (error) {
+        console.error('[Chat] Error loading messages:', error);
+        messagesArea.innerHTML = '<div class="text-center text-red-500">Error loading messages</div>';
+    }
+}
+
+async function sendChatReply() {
+    const input = document.getElementById('chat-reply-input');
+    const messageText = input.value.trim();
+    
+    if (!messageText || !selectedConversationId) return;
+    
+    try {
+        const token = getAdminToken();
+        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        
+        const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${selectedConversationId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message_text: messageText })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to send reply');
+        }
+        
+        input.value = '';
+        await loadChatMessages(selectedConversationId);
+        
+    } catch (error) {
+        console.error('[Chat] Error sending reply:', error);
+        alert('Failed to send reply. Please try again.');
+    }
+}
+
+async function updateChatStatus() {
+    const status = document.getElementById('chat-status-select').value;
+    
+    try {
+        const token = getAdminToken();
+        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        
+        const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${selectedConversationId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update status');
+        }
+        
+        loadChatConversations();
+        
+    } catch (error) {
+        console.error('[Chat] Error updating status:', error);
+        alert('Failed to update status');
+    }
+}
+
+function startChatPolling(conversationId) {
+    if (chatPollingInterval) clearInterval(chatPollingInterval);
+    
+    chatPollingInterval = setInterval(() => {
+        if (selectedConversationId) {
+            loadChatMessages(selectedConversationId);
+        }
+    }, 5000);
+}
+
+function stopChatPolling() {
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+}
+
+function formatChatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Handle enter key in reply input
+function handleChatReplyKeypress(event) {
+    if (event.key === 'Enter') {
+        sendChatReply();
+    }
+}
+
+window.handleChatReplyKeypress = handleChatReplyKeypress;
+
 function renderInquiries(container, inquiries) {
     if (!inquiries || inquiries.length === 0) {
         container.innerHTML = `
@@ -1026,18 +1669,27 @@ function renderInquiries(container, inquiries) {
                     <span class="px-2 py-1 text-xs font-medium rounded-full ${
                         inquiry.status === 'new' ? 'bg-yellow-100 text-yellow-700' :
                         inquiry.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                        inquiry.status === 'responded' ? 'bg-green-100 text-green-700' :
+                        inquiry.status === 'resolved' ? 'bg-green-100 text-green-700' :
                         'bg-gray-100 text-gray-700'
                     }">
                         ${inquiry.status}
                     </span>
-                    <button 
-                        onclick="openInquiryReplyModal('${inquiry.id}')"
-                        data-inquiry-id="${inquiry.id}"
-                        class="text-[#1a4d41] hover:text-[#153d32] font-medium text-sm inquiry-reply-btn"
-                    >
-                        Reply
-                    </button>
+                    <div class="flex gap-2">
+                        <button 
+                            onclick="deleteInquiry('${inquiry.id}')"
+                            data-inquiry-id="${inquiry.id}"
+                            class="text-red-500 hover:text-red-700 font-medium text-sm inquiry-delete-btn"
+                        >
+                            Delete
+                        </button>
+                        <button 
+                            onclick="openInquiryReplyModal('${inquiry.id}')"
+                            data-inquiry-id="${inquiry.id}"
+                            class="text-[#1a4d41] hover:text-[#153d32] font-medium text-sm inquiry-reply-btn"
+                        >
+                            Reply
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1065,6 +1717,39 @@ function renderInquiries(container, inquiries) {
             }
         });
     });
+}
+
+// Delete inquiry function
+window.deleteInquiry = async function(inquiryId) {
+    if (!confirm('Are you sure you want to delete this inquiry? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('avalmeos_token');
+        if (!token) {
+            throw new Error('Not authenticated. Please log in again.');
+        }
+        
+        const response = await fetch(`/api/admin/inquiries/${inquiryId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Inquiry deleted successfully!');
+            loadInquiries();
+        } else {
+            throw new Error(result.message || 'Failed to delete inquiry');
+        }
+    } catch (error) {
+        console.error('[Delete Inquiry] Error:', error);
+        alert('Error deleting inquiry: ' + error.message);
+    }
 }
 
 // ============================================================================
@@ -1104,7 +1789,7 @@ async function submitInquiryReply(event) {
     const statusMsg = document.getElementById('inquiry-reply-status-message');
     const submitBtn = document.getElementById('inquiry-reply-submit');
     
-    const status = document.getElementById('inquiry-reply-status').value;
+    const status = 'resolved'; // Automatically set to resolved when replying
     const response = document.getElementById('inquiry-reply-message').value.trim();
     const sendReplyEmail = document.getElementById('inquiry-send-email').checked;
     
@@ -1444,7 +2129,6 @@ if (typeof BookingService !== 'undefined') {
     window.getAllBookings = BookingService.getAllBookings.bind(BookingService);
     window.getBookingById = BookingService.getBookingById.bind(BookingService);
     window.saveAllBookings = BookingService.saveAllBookings.bind(BookingService);
-    window.updateBookingStatus = BookingService.updateBookingStatus.bind(BookingService);
     window.getBookingStats = BookingService.getBookingStats.bind(BookingService);
 }
 

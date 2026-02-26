@@ -767,15 +767,25 @@ app.get('/api/admin/bookings', authenticateToken, requireAdmin, async (req, res)
 app.patch('/api/admin/bookings/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
+    const bookingId = req.params.id;
+    
+    console.log(`[Admin] Updating booking ${bookingId} to status: ${status}`);
+    
     const { data, error } = await supabase.from('bookings')
       .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', req.params.id)
+      .eq('id', bookingId)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('[Admin] Booking update error:', error);
+      throw error;
+    }
+    
+    console.log('[Admin] Booking updated successfully:', data);
     res.json({ success: true, data });
   } catch (error) {
+    console.error('[Admin] Booking update failed:', error.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -842,6 +852,25 @@ app.patch('/api/admin/inquiries/:id', authenticateToken, requireAdmin, async (re
     });
   } catch (error) {
     console.error('Inquiry update error:', error);
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+  }
+});
+
+// Delete inquiry
+app.delete('/api/admin/inquiries/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const inquiryId = req.params.id;
+    
+    const { error } = await supabase
+      .from('inquiries')
+      .delete()
+      .eq('id', inquiryId);
+    
+    if (error) throw error;
+    
+    res.json({ success: true, message: 'Inquiry deleted successfully' });
+  } catch (error) {
+    console.error('Inquiry delete error:', error);
     res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 });
@@ -1050,7 +1079,7 @@ app.get('/api/admin/activities', authenticateToken, requireAdmin, async (req, re
 });
 
 // Create activity with validation
-app.post('/api/admin/activities', authenticateToken, requireAdmin, validateActivityCreate, async (req, res) => {
+app.post('/api/admin/activities', authenticateToken, requireAdmin, validateActivityCreate, handleValidationErrors, async (req, res) => {
   try {
     const { data, error } = await supabase.from('activities')
       .insert({ ...req.body, created_at: new Date().toISOString() })
@@ -1231,18 +1260,28 @@ app.get('/api/admin/analytics', authenticateToken, requireAdmin, async (req, res
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const { data: bookings } = await supabase.from('bookings')
-      .select('created_at, status, total_amount, guest_name, package_name')
+    const { data: bookings, error: bookingsError } = await supabase.from('bookings')
+      .select('created_at, status, final_amount, guest_name')
       .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(20);
     
+    if (bookingsError) {
+      console.error('Bookings fetch error:', bookingsError);
+      throw new Error('Failed to fetch bookings: ' + bookingsError.message);
+    }
+    
     // Get top destinations by bookings
-    const { data: topDestinations } = await supabase.from('destinations')
+    const { data: topDestinations, error: destinationsError } = await supabase.from('destinations')
       .select('id, name, total_reviews, average_rating')
       .eq('is_active', true)
       .order('total_reviews', { ascending: false })
       .limit(5);
+    
+    if (destinationsError) {
+      console.error('Destinations fetch error:', destinationsError);
+      throw new Error('Failed to fetch destinations: ' + destinationsError.message);
+    }
     
     // Calculate booking trends by date
     const trends = {};
@@ -1250,11 +1289,11 @@ app.get('/api/admin/analytics', authenticateToken, requireAdmin, async (req, res
       const date = booking.created_at.split('T')[0];
       if (!trends[date]) trends[date] = { count: 0, revenue: 0 };
       trends[date].count++;
-      trends[date].revenue += parseFloat(booking.total_amount || 0);
+      trends[date].revenue += parseFloat(booking.final_amount || 0);
     });
     
     // Calculate stats
-    const totalRevenue = bookings?.reduce((sum, b) => sum + parseFloat(b.total_amount || 0), 0) || 0;
+    const totalRevenue = bookings?.reduce((sum, b) => sum + parseFloat(b.final_amount || 0), 0) || 0;
     
     res.json({
       success: true,
@@ -1389,7 +1428,7 @@ app.get('/api/admin/packages', authenticateToken, requireAdmin, async (req, res)
 });
 
 // Create package with validation
-app.post('/api/admin/packages', authenticateToken, requireAdmin, validatePackageCreate, async (req, res) => {
+app.post('/api/admin/packages', authenticateToken, requireAdmin, validatePackageCreate, handleValidationErrors, async (req, res) => {
   try {
     const { data, error } = await supabase.from('packages')
       .insert({ ...req.body, created_at: new Date().toISOString() })
@@ -1517,6 +1556,314 @@ function broadcastChange(table, operation, data) {
     created_at: new Date().toISOString()
   }).then().catch(console.error);
 }
+
+// =====================================================
+// CHAT API ENDPOINTS
+// =====================================================
+
+// Get or create conversation (for users)
+app.post('/api/chat/conversation', async (req, res) => {
+  try {
+    const { session_id, user_name, user_email, user_id } = req.body;
+    
+    // Validate user_id is a valid UUID if provided
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validUserId = user_id && uuidRegex.test(user_id) ? user_id : null;
+    
+    // Check if conversation exists for this session/user
+    let query = supabase.from('chat_conversations').select('*');
+    
+    if (validUserId) {
+      query = query.eq('user_id', validUserId);
+    } else if (session_id) {
+      query = query.eq('session_id', session_id);
+    } else {
+      return res.status(400).json({ error: 'session_id or valid user_id (UUID) required' });
+    }
+    
+    const { data: existing, error: findError } = await query.eq('status', 'active').single();
+    
+    if (findError && findError.code !== 'PGRST116') {
+      console.error('Error finding conversation:', findError);
+      throw findError;
+    }
+    
+    if (existing) {
+      // Update last_message_at
+      await supabase.from('chat_conversations')
+        .update({ last_message_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      return res.json(existing);
+    }
+    
+    // Create new conversation
+    const conversationData = {
+      user_id: validUserId,
+      session_id: session_id || null,
+      user_name: user_name || 'Guest',
+      user_email: user_email || null,
+      status: 'active'
+    };
+    
+    const { data: conversation, error } = await supabase.from('chat_conversations').insert(
+      conversationData
+    ).select().single();
+    
+    if (error) {
+      console.error('Error creating conversation:', error);
+      if (error.code === '42P01') {
+        return res.status(503).json({ error: 'Chat service not available. Please run the migration.' });
+      }
+      throw error;
+    }
+    res.status(201).json(conversation);
+  } catch (error) {
+    console.error('Error creating conversation:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Send a message (for users)
+app.post('/api/chat/messages', async (req, res) => {
+  try {
+    const { conversation_id, message_text, sender_name, sender_id, session_id } = req.body;
+    
+    if (!conversation_id || !message_text) {
+      return res.status(400).json({ error: 'conversation_id and message_text required' });
+    }
+    
+    // Verify conversation exists
+    const { data: conversation } = await supabase
+      .from('chat_conversations')
+      .select('*')
+      .eq('id', conversation_id)
+      .single();
+    
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    
+    // Create message
+    const { data: message, error } = await supabase.from('chat_messages').insert({
+      conversation_id,
+      sender_type: 'user',
+      sender_name: sender_name || 'Guest',
+      sender_id: sender_id || session_id || null,
+      message_text
+    }).select().single();
+    
+    if (error) throw error;
+    
+    // Update conversation last_message_at
+    await supabase.from('chat_conversations')
+      .update({ 
+        last_message_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_name: sender_name || conversation.user_name
+      })
+      .eq('id', conversation_id);
+    
+    res.status(201).json(message);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get messages for a conversation (for users)
+app.get('/api/chat/conversations/:id/messages', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data: messages, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('conversation_id', id)
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    res.json(messages || []);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Get all conversations
+app.get('/api/admin/chat/conversations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, limit = 50 } = req.query;
+    console.log('[Chat API] Admin requesting conversations, status:', status);
+    
+    let query = supabase
+      .from('chat_conversations')
+      .select(`
+        *,
+        chat_messages!inner(
+          id,
+          message_text,
+          sender_type,
+          created_at
+        )
+      `)
+      .order('last_message_at', { ascending: false })
+      .limit(parseInt(limit));
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    const { data: conversations, error } = await query;
+    
+    if (error) {
+      console.error('[Chat API] Error fetching conversations:', error);
+      throw error;
+    }
+    
+    console.log('[Chat API] Found conversations:', conversations?.length || 0);
+    
+    // Transform to get last message preview
+    const transformed = (conversations || []).map(conv => {
+      const messages = conv.chat_messages || [];
+      const lastMsg = messages[messages.length - 1];
+      return {
+        ...conv,
+        last_message: lastMsg?.message_text || '',
+        last_message_time: lastMsg?.created_at || conv.last_message_at
+      };
+    });
+    
+    res.json(transformed);
+  } catch (error) {
+    console.error('[Chat API] Error fetching conversations:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Get messages for a specific conversation
+app.get('/api/admin/chat/conversations/:id/messages', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data: messages, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('conversation_id', id)
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    
+    // Mark user messages as read
+    await supabase.from('chat_messages')
+      .update({ is_read: true })
+      .eq('conversation_id', id)
+      .eq('sender_type', 'user')
+      .eq('is_read', false);
+    
+    res.json(messages || []);
+  } catch (error) {
+    console.error('Error fetching conversation messages:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Send a reply
+app.post('/api/admin/chat/conversations/:id/reply', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { message_text } = req.body;
+    
+    if (!message_text) {
+      return res.status(400).json({ error: 'message_text required' });
+    }
+    
+    // Verify conversation exists
+    const { data: conversation } = await supabase
+      .from('chat_conversations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    
+    // Get admin info
+    const adminName = req.user?.email?.split('@')[0] || 'Admin';
+    
+    // Create admin message
+    const { data: message, error } = await supabase.from('chat_messages').insert({
+      conversation_id: id,
+      sender_type: 'admin',
+      sender_name: adminName,
+      sender_id: req.user.id,
+      message_text
+    }).select().single();
+    
+    if (error) throw error;
+    
+    // Update conversation
+    await supabase.from('chat_conversations')
+      .update({ 
+        last_message_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    res.status(201).json(message);
+  } catch (error) {
+    console.error('Error sending admin reply:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Update conversation status
+app.put('/api/admin/chat/conversations/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!['active', 'closed', 'archived'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    const { data: conversation, error } = await supabase.from('chat_conversations')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    res.json(conversation);
+  } catch (error) {
+    console.error('Error updating conversation status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Get unread count
+app.get('/api/admin/chat/unread-count', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { count: unreadMessages } = await supabase
+      .from('chat_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_read', false)
+      .eq('sender_type', 'user');
+    
+    const { count: activeConversations } = await supabase
+      .from('chat_conversations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active');
+    
+    res.json({
+      unread_messages: unreadMessages || 0,
+      active_conversations: activeConversations || 0
+    });
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

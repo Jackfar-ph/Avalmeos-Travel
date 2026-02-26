@@ -263,6 +263,3 @@ class AdminApiService {
         });
     }
 }
-
-// Create global instance
-window.adminApi = new AdminApiService();

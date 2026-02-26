@@ -60,8 +60,8 @@ class AdminApiService {
   }
 
   async updateBookingStatus(id, status) {
-    return this.request(`/admin/bookings/${id}/status`, {
-      method: 'PUT',
+    return this.request(`/admin/bookings/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify({ status })
     });
   }
@@ -194,6 +194,13 @@ class AdminApiService {
     return this.request(`/admin/users/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ is_active: false })
+    });
+  }
+
+  async updateUserStatus(id, isActive) {
+    return this.request(`/admin/users/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: isActive })
     });
   }
 

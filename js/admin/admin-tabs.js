@@ -77,6 +77,17 @@ async function loadTabData(tabName) {
         case 'inquiries':
             loadInquiries();
             break;
+        case 'chat':
+            console.log('[AdminTabs] Chat tab clicked, looking for initChatView...');
+            console.log('[AdminTabs] window.initChatView exists:', typeof window.initChatView);
+            if (typeof window.initChatView === 'function') {
+                window.initChatView();
+            } else if (typeof initChatView === 'function') {
+                initChatView();
+            } else {
+                console.error('[AdminTabs] initChatView not found! ChatView.html may not be loaded.');
+            }
+            break;
         case 'analytics':
             loadAnalytics();
             break;
@@ -164,12 +175,17 @@ async function loadDashboard() {
     
     try {
         // Get dashboard stats from API
+        console.log('[Admin] Fetching dashboard stats...');
         const statsResponse = await adminApi.getDashboardStats();
+        console.log('[Admin] Stats response:', statsResponse);
         const stats = statsResponse.data;
         
         // Get recent bookings
+        console.log('[Admin] Fetching recent bookings...');
         const recentResponse = await adminApi.getRecentBookings(5);
+        console.log('[Admin] Recent bookings response:', recentResponse);
         const recentBookings = recentResponse.data || [];
+        console.log('[Admin] Recent bookings:', recentBookings);
         
         dashboard.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -204,11 +220,12 @@ async function loadDashboard() {
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             ${recentBookings.length === 0 
-                                ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No recent bookings</td></tr>'
+                                ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">No recent bookings</td></tr>'
                                 : recentBookings.map(booking => `
                                     <tr>
                                         <td class="px-4 py-3 text-sm font-medium">#${booking.id.substring(0, 8)}</td>
@@ -218,6 +235,14 @@ async function loadDashboard() {
                                             <span class="px-2 py-1 rounded-full text-xs ${getStatusClass(booking.status)}">
                                                 ${booking.status || 'pending'}
                                             </span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            ${(booking.status === 'pending' || !booking.status) ? `
+                                                <button onclick="window.updateBooking('${booking.id}', 'confirmed', event)" class="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 rounded text-white mr-1">Approve</button>
+                                                <button onclick="window.updateBooking('${booking.id}', 'cancelled', event)" class="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 rounded text-white">Reject</button>
+                                            ` : booking.status === 'confirmed' ? `
+                                                <button onclick="window.updateBooking('${booking.id}', 'completed', event)" class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 rounded text-white">Complete</button>
+                                            ` : '-'}
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -279,10 +304,11 @@ async function loadBookings() {
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="admin-bookings-table" class="divide-y divide-gray-100">
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -311,8 +337,16 @@ async function loadBookings() {
                         <td class="px-4 py-3 text-sm">${new Date(booking.created_at).toLocaleDateString()}</td>
                         <td class="px-4 py-3">
                             <span class="px-2 py-1 rounded-full text-xs ${getStatusClass(booking.status)}">
-                                ${booking.status}
+                                ${booking.status || 'pending'}
                             </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            ${(booking.status === 'pending' || !booking.status) ? `
+                                <button type="button" onclick="window.updateBooking('${booking.id}', 'confirmed', event)" class="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 rounded text-white mr-1">Approve</button>
+                                <button type="button" onclick="window.updateBooking('${booking.id}', 'cancelled', event)" class="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 rounded text-white">Reject</button>
+                            ` : booking.status === 'confirmed' ? `
+                                <button type="button" onclick="window.updateBooking('${booking.id}', 'completed', event)" class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 rounded text-white">Complete</button>
+                            ` : '-'}
                         </td>
                     </tr>
                 `).join('');
@@ -422,7 +456,12 @@ function renderDestinations(destinations) {
 // Activities
 async function loadActivities() {
     const activitiesTab = document.getElementById('admin-activities-tab');
-    if (!activitiesTab) return;
+    if (!activitiesTab) {
+        console.error('[AdminTabs] ERROR: admin-activities-tab not found in DOM');
+        return;
+    }
+    
+    console.log('[AdminTabs] Loading activities...');
     
     activitiesTab.innerHTML = `
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -453,11 +492,14 @@ async function loadActivities() {
             throw new Error('AdminApiService not available');
         }
     } catch (error) {
-        console.error('Error loading activities:', error);
+        console.error('[AdminTabs] Error loading activities:', error);
         activitiesTab.innerHTML = `
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 border-b">
+                <div class="p-4 border-b flex justify-between items-center">
                     <h3 class="font-bold text-[#1a4d41]">Activities</h3>
+                    <button onclick="addActivity()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg text-sm hover:bg-opacity-90">
+                        + Add Activity
+                    </button>
                 </div>
                 <div class="p-8 text-center text-red-500">
                     <p>Error loading activities: ${error.message}</p>
@@ -472,7 +514,10 @@ async function loadActivities() {
 
 function renderActivities(activities) {
     const activitiesTab = document.getElementById('admin-activities-tab');
-    if (!activitiesTab) return;
+    if (!activitiesTab) {
+        console.error('[AdminTabs] ERROR: admin-activities-tab not found in renderActivities');
+        return;
+    }
     
     if (!activities || activities.length === 0) {
         activitiesTab.innerHTML = `
@@ -516,7 +561,12 @@ function renderActivities(activities) {
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center">
                 <h3 class="font-bold text-[#1a4d41]">Activities</h3>
-                <span class="text-sm text-gray-500">${activities.length} activities</span>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500">${activities.length} activities</span>
+                    <button onclick="addActivity()" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg text-sm hover:bg-opacity-90">
+                        + Add Activity
+                    </button>
+                </div>
             </div>
             <div class="divide-y divide-gray-50">
                 ${activitiesHtml}
@@ -618,7 +668,16 @@ async function loadAnalytics() {
         
     } catch (error) {
         console.error('Error loading analytics:', error);
-        renderOfflineAnalytics();
+        
+        // Show specific error message to help debugging
+        const errorMessage = error.message || 'Failed to load analytics data';
+        analyticsTab.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p class="text-red-700"><strong>Analytics Error:</strong> ${errorMessage}</p>
+                <p class="text-red-500 text-sm mt-1">Please check the console for details or ensure you're logged in as admin.</p>
+            </div>
+            ${renderOfflineAnalytics()}
+        `;
     }
 }
 
@@ -726,7 +785,8 @@ function editDestination(id) {
                     // Populate form fields
                     document.getElementById('destination-modal-title').textContent = 'Edit Destination';
                     document.getElementById('destination-id').value = destination.id;
-                    document.getElementById('destination-city').value = destination.name || '';
+                    document.getElementById('destination-name').value = destination.name || '';
+                    document.getElementById('destination-location').value = destination.location || '';
                     document.getElementById('destination-slug').value = destination.slug || '';
                     document.getElementById('destination-description').value = destination.description || '';
                     document.getElementById('destination-region').value = destination.region || '';
@@ -770,10 +830,13 @@ function deleteDestination(id) {
 
 function addActivity() {
     // Show the modal for adding a new activity
+    console.log('[AdminTabs] addActivity() called');
+    
     if (typeof showActivityModal === 'function') {
         showActivityModal();
     } else {
-        alert('Modal not available. Please ensure the admin components are loaded.');
+        console.error('[AdminTabs] showActivityModal function not found');
+        alert('Activity modal is not available. Please ensure the admin components loaded correctly.\n\nCheck browser console for details.');
     }
 }
 
@@ -839,10 +902,13 @@ function deleteActivity(id) {
 
 function addPackage() {
     // Show the modal for adding a new package
+    console.log('[AdminTabs] addPackage() called');
+    
     if (typeof showPackageModal === 'function') {
         showPackageModal();
     } else {
-        alert('Modal not available. Please ensure the admin components are loaded.');
+        console.error('[AdminTabs] showPackageModal function not found');
+        alert('Package modal is not available. Please ensure the admin components loaded correctly.\n\nCheck browser console for details.');
     }
 }
 
@@ -856,18 +922,31 @@ function editPackage(id) {
                 if (pkg) {
                     showPackageModal();
                     
-                    // Populate form fields
+                    // Populate form fields with null checks
+                    const setValue = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = value || '';
+                    };
+                    const setChecked = (id, checked) => {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = checked;
+                    };
+                    
                     document.getElementById('package-modal-title').textContent = 'Edit Package';
-                    document.getElementById('package-id').value = pkg.id;
-                    document.getElementById('package-name').value = pkg.name || '';
-                    document.getElementById('package-destination').value = pkg.destination_id || '';
-                    document.getElementById('package-type').value = pkg.package_type || '';
-                    document.getElementById('package-description').value = pkg.description || '';
-                    document.getElementById('package-price').value = pkg.price || '';
-                    document.getElementById('package-duration').value = pkg.duration || '';
-                    document.getElementById('package-includes').value = pkg.includes || '';
-                    document.getElementById('package-excludes').value = pkg.excludes || '';
-                    document.getElementById('package-image').value = pkg.image || '';
+                    setValue('package-id', pkg.id);
+                    setValue('package-name', pkg.name);
+                    setValue('package-slug', pkg.slug);
+                    setValue('package-destination', pkg.destination_name);
+                    setValue('package-short-description', pkg.short_description);
+                    setValue('package-description', pkg.description);
+                    setValue('package-price', pkg.price);
+                    setValue('package-duration', pkg.duration || 1);
+                    setValue('package-activities', Array.isArray(pkg.activities) ? pkg.activities.join('\n') : '');
+                    setValue('package-inclusions', Array.isArray(pkg.inclusions) ? pkg.inclusions.join(', ') : '');
+                    setValue('package-exclusions', Array.isArray(pkg.exclusions) ? pkg.exclusions.join(', ') : '');
+                    setValue('package-image', pkg.hero_image);
+                    setChecked('package-featured', pkg.is_featured);
+                    setChecked('package-status', pkg.is_active !== false);
                 }
             }
         }).catch(error => {
@@ -908,14 +987,76 @@ function viewUserDetails(id) {
     console.log('View user:', id);
 }
 
+// Add global unhandled rejection handler for debugging
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('[Admin] Unhandled promise rejection:', event.reason);
+    alert('Unhandled error: ' + event.reason);
+});
+
 async function updateBookingStatus(id, status) {
-    try {
-        await adminApi.updateBooking(id, { status });
+    console.log('[Admin] updateBookingStatus called:', id, status);
+    
+    // Check if adminApi exists
+    if (!window.adminApi) {
+        console.error('[Admin] adminApi is not defined');
         loadBookings();
+        return;
+    }
+    
+    // Check token
+    const token = localStorage.getItem('avalmeos_token');
+    if (!token) {
+        console.error('[Admin] No token');
+        loadBookings();
+        return;
+    }
+
+    try {
+        const result = await window.adminApi.updateBookingStatus(id, status);
+        console.log('[Admin] Result:', result);
+        
+        if (result && result.success) {
+            console.log('[Admin] Status updated successfully');
+        } else {
+            console.log('[Admin] Update failed:', result?.message);
+        }
     } catch (error) {
-        console.error('Error updating booking:', error);
+        console.error('[Admin] Error:', error);
+    } finally {
+        console.log('[Admin] Refreshing...');
+        loadBookings();
+        if (typeof loadDashboard === 'function') {
+            loadDashboard();
+        }
     }
 }
+
+// Wrapper function for inline onclick handlers
+window.updateBooking = async function(id, status, btnElement) {
+    console.log('[Admin] updateBooking called:', id, status);
+    
+    // If btnElement not provided or not a valid button, skip button state
+    if (!btnElement || typeof btnElement !== 'object' || btnElement.tagName !== 'BUTTON') {
+        btnElement = null;
+    }
+    
+    // Show loading state on the clicked button
+    if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = '...';
+    }
+    
+    console.log('[Admin] About to call updateBookingStatus...');
+    try {
+        console.log('[Admin] In try, calling updateBookingStatus...');
+        await updateBookingStatus(id, status);
+        console.log('[Admin] updateBookingStatus completed');
+    } catch (error) {
+        console.error('[Admin] Error in updateBooking:', error);
+        alert('Error: ' + error.message);
+        loadBookings();
+    }
+};
 
 /**
  * Notify other tabs about data changes

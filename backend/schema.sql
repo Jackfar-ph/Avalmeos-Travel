@@ -237,6 +237,44 @@ CREATE TABLE search_history (
 );
 
 -- =====================================================
+-- CHAT CONVERSATIONS TABLE
+-- =====================================================
+
+CREATE TABLE chat_conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    session_id TEXT,
+    user_name TEXT,
+    user_email TEXT,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed', 'archived')),
+    last_message_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- CHAT MESSAGES TABLE
+-- =====================================================
+
+CREATE TABLE chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES chat_conversations(id) ON DELETE CASCADE,
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'admin')),
+    sender_name TEXT NOT NULL,
+    sender_id TEXT,
+    message_text TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for chat performance
+CREATE INDEX idx_chat_conversations_user_id ON chat_conversations(user_id);
+CREATE INDEX idx_chat_conversations_status ON chat_conversations(status);
+CREATE INDEX idx_chat_conversations_last_message ON chat_conversations(last_message_at DESC);
+CREATE INDEX idx_chat_messages_conversation ON chat_messages(conversation_id);
+CREATE INDEX idx_chat_messages_created ON chat_messages(created_at);
+
+-- =====================================================
 -- ANALYTICS/EVENTS TABLE
 -- =====================================================
 
@@ -572,3 +610,5 @@ COMMENT ON TABLE bookings IS 'Customer bookings with reference numbers';
 COMMENT ON TABLE inquiries IS 'Customer inquiries and messages';
 COMMENT ON TABLE reviews IS 'Customer reviews for destinations and activities';
 COMMENT ON TABLE favorites IS 'User favorite destinations and activities';
+COMMENT ON TABLE chat_conversations IS 'Chat conversations between users and admins';
+COMMENT ON TABLE chat_messages IS 'Individual messages in chat conversations';

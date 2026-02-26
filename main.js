@@ -203,6 +203,11 @@ async function initSite() {
         loadComponent('modals-placeholder', 'components/Modals.html')
     ]);
     
+    // Load packages dynamically for homepage
+    if (typeof window.loadHomepagePackages === 'function') {
+        setTimeout(() => window.loadHomepagePackages(), 100);
+    }
+    
     // Components are now loaded via checkComponentsReady()
 }
 
@@ -1246,5 +1251,53 @@ window.openBookingModal = function(cityName, packageTitle, price, image) {
 // Open admin dashboard
 window.openAdminDashboard = function() {
     window.location.href = 'admin.html';
+};
+
+// --- 21. DYNAMIC PACKAGES FOR HOMEPAGE ---
+// Load packages dynamically for homepage
+window.loadHomepagePackages = async function() {
+    const container = document.getElementById('packages-grid');
+    if (!container) return;
+    
+    try {
+        const response = await fetch('/api/packages');
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+            const packages = data.data.slice(0, 6); // Show max 6 packages
+            
+            container.innerHTML = packages.map(pkg => {
+                const price = pkg.price || 0;
+                const duration = pkg.duration || 1;
+                const image = pkg.hero_image || 'Picture/placeholder.jpg';
+                const name = pkg.name || 'Package';
+                const packageType = pkg.package_type || 'tour';
+                const destination = pkg.destination_name || (pkg.destinations ? pkg.destinations.name : '');
+                
+                return `
+                    <div onclick="openActivitiesModal('${destination}', '${name.replace(/'/g, "\\'")}', ${price}, '${image}')" 
+                         class="group cursor-pointer bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
+                        <div class="relative overflow-hidden aspect-[4/5]">
+                            <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">${duration}D${duration > 1 ? duration - 1 : ''}N ${packageType}</div>
+                            <img src="${image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                 onerror="this.src='Picture/placeholder.jpg'">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-base leading-tight">${name}</h3>
+                            <div class="mt-4 flex items-center justify-between">
+                                <span class="text-xs font-bold text-gray-400">Starts at</span>
+                                <span class="price-value text-lg font-black text-[#1a4d41]" data-php="${price}">₱${price.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No packages available</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading homepage packages:', error);
+        container.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-red-500">Failed to load packages</p></div>';
+    }
 };
 

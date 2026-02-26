@@ -9,6 +9,7 @@ const { body, param, query, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.log('Validation errors:', JSON.stringify(errors.array(), null, 2));
         return res.status(400).json({
             success: false,
             message: 'Validation failed',
@@ -169,8 +170,11 @@ const validateDestinationId = [
 
 const validateActivityCreate = [
     body('destination_id')
-        .notEmpty().withMessage('Destination ID is required')
-        .isUUID(4).withMessage('Destination ID must be a valid UUID v4'),
+        .optional({ nullable: true }),
+    
+    body('destination_name')
+        .optional({ nullable: true })
+        .trim(),
     
     body('name')
         .trim()
@@ -223,8 +227,9 @@ const validateActivityCreate = [
         .isInt({ min: 1, max: 1000 }).withMessage('Max participants must be between 1 and 1000'),
     
     body('price')
-        .notEmpty().withMessage('Price is required')
-        .isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+        .optional()
+        .isFloat({ min: 0 }).withMessage('Price must be a positive number')
+        .default(0),
     
     body('discount_price')
         .optional()
@@ -238,8 +243,7 @@ const validateActivityCreate = [
     
     body('image_url')
         .optional({ nullable: true, checkFalsy: true })
-        .trim()
-        .isURL().withMessage('Image URL must be a valid URL'),
+        .trim(),
     
     body('inclusions')
         .optional()
@@ -320,8 +324,11 @@ const validateActivityId = [
 
 const validatePackageCreate = [
     body('destination_id')
-        .optional()
-        .isUUID(4).withMessage('Destination ID must be a valid UUID v4'),
+        .optional({ nullable: true }),
+    
+    body('destination_name')
+        .optional({ nullable: true })
+        .trim(),
     
     body('name')
         .trim()
@@ -345,8 +352,9 @@ const validatePackageCreate = [
         .isLength({ max: 500 }).withMessage('Short description cannot exceed 500 characters'),
     
     body('price')
-        .notEmpty().withMessage('Price is required')
-        .isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+        .optional()
+        .isFloat({ min: 0 }).withMessage('Price must be a positive number')
+        .default(0),
     
     body('duration')
         .optional()
@@ -361,13 +369,11 @@ const validatePackageCreate = [
     
     body('hero_image')
         .optional({ nullable: true, checkFalsy: true })
-        .trim()
-        .isURL().withMessage('Hero image must be a valid URL'),
+        .trim(),
     
     body('image_url')
         .optional({ nullable: true, checkFalsy: true })
-        .trim()
-        .isURL().withMessage('Image URL must be a valid URL'),
+        .trim(),
     
     body('gallery')
         .optional()

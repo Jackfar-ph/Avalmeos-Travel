@@ -1,71 +1,53 @@
 /**
  * ============================================================================
- * Unified Admin Authentication Handler
+ * Supabase Admin Authentication Handler
  * ============================================================================
  * 
- * Handles admin login/logout with unified JWT token management.
+ * Handles admin login/logout using Supabase authentication.
  * This file provides admin-specific auth functions that:
- * 1. First checks for existing JWT token from main site login
- * 2. If user is admin, converts/uses that token for admin access
- * 3. Falls back to admin-specific login if needed
+ * 1. Authenticate with Supabase using email/password
+ * 2. Store and manage Supabase session tokens
+ * 3. Verify admin role from user profile
  */
 
-// Unified token storage keys
-const UNIFIED_TOKEN_KEY = 'avalmeos_auth'; // Same as main site
+// Supabase configuration
+const SUPABASE_URL = 'https://jdxxfmtconqowzgtegou.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkeHhmbXRjb25xb3d6Z3RlZ291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1ODQyOTAsImV4cCI6MjA4NjE2MDI5MH0.USgx6RdvH9lddGgW8ulT82MZmStM4nUC-pJKEWzRkrk';
+
+// Supabase client initialization
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
- * Get JWT token from main site storage
+ * Get Supabase session token
  */
-function getUnifiedToken() {
-    // First try: Check main site auth storage
-    const authData = localStorage.getItem(UNIFIED_TOKEN_KEY);
-    if (authData) {
-        try {
-            const parsed = JSON.parse(authData);
-            // Check if it's a JWT token format (should have token field from API login)
-            if (parsed.token) {
-                return parsed.token;
-            }
-            // Check if it's stored directly
-            if (typeof parsed === 'string' && parsed.includes('.')) {
-                return parsed;
-            }
-        } catch (e) {
-            console.warn('[AdminAuth] Failed to parse main auth data:', e);
-        }
-    }
-    
-    // Fallback: Check admin-specific token
-    return localStorage.getItem('avalmeos_admin_token');
+function getSupabaseToken() {
+    const session = supabase.auth.getSession();
+    return session.data?.access_token;
 }
 
 /**
- * Get current user from main site storage
+ * Get current user from Supabase session
  */
-function getUnifiedUser() {
-    const authData = localStorage.getItem(UNIFIED_TOKEN_KEY);
-    if (authData) {
-        try {
-            const parsed = JSON.parse(authData);
-            // Return user object if available
-            if (parsed.user || parsed.data?.user) {
-                return parsed.user || parsed.data?.user;
-            }
-            // Return parsed directly if it's the user object
-            if (parsed.id && parsed.email) {
-                return parsed;
-            }
-        } catch (e) {
-            console.warn('[AdminAuth] Failed to parse user data:', e);
-        }
-    }
+function getSupabaseUser() {
+    const session = supabase.auth.getSession();
+    const user = session.data?.user;
     
-    // Fallback: Check admin-specific user
-    const adminUser = localStorage.getItem('avalmeos_admin_user');
-    if (adminUser) {
-        try {
-            return JSON.parse(adminUser);
-        } catch (e) {}
+    if (user) {
+        // Get user profile from Supabase
+        return supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single()
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error('[AdminAuth] Failed to get user profile:', error);
+                    return user;
+                }
+                return { ...user, ...data };
+            })
+            .catch(() => user);
     }
     
     return null;
@@ -74,15 +56,27 @@ function getUnifiedUser() {
 /**
  * Check if user is authenticated as admin
  */
-function isUnifiedAdminAuthenticated() {
-    const user = getUnifiedUser();
-    const token = getUnifiedToken();
+async function isSupabaseAdminAuthenticated() {
+    const session = supabase.auth.getSession();
+    const user = session.data?.user;
     
-    if (!user || !token) return false;
+    if (!user) return false;
+    
+    // Get user profile to check role
+    const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+    
+    if (error) {
+        console.error('[AdminAuth] Failed to get user profile:', error);
+        return false;
+    }
     
     // Check if user has admin role
-    if (user.role !== 'admin') {
-        console.log('[AdminAuth] User is not admin:', user.role);
+    if (profile?.role !== 'admin') {
+        console.log('[AdminAuth] User is not admin:', profile?.role);
         return false;
     }
     
@@ -90,73 +84,71 @@ function isUnifiedAdminAuthenticated() {
 }
 
 /**
- * Store unified authentication data (shares with main site)
+ * Store Supabase authentication data
  */
-function setUnifiedAuthData(data) {
-    // Store in main site format for shared access
-    if (data.token) {
-        localStorage.setItem(UNIFIED_TOKEN_KEY, JSON.stringify({
-            ...data.user,
-            token: data.token,
-            refreshToken: data.refreshToken,
-            loggedInAt: new Date().toISOString()
-        }));
+async function storeSupabaseAuthData(user) {
+    // Store user profile
+    if (user) {
+        localStorage.setItem('supabase_admin_user', JSON.stringify(user));
     }
     
-    // Also store admin-specific for backward compatibility
-    if (data.token) {
-        localStorage.setItem('avalmeos_admin_token', data.token);
-    }
-    if (data.refreshToken) {
-        localStorage.setItem('avalmeos_admin_refresh_token', data.refreshToken);
-    }
-    
-    // Store expiry
-    const expiresIn = data.expiresIn || (7 * 24 * 60 * 60 * 1000);
-    const expiry = Date.now() + expiresIn;
-    localStorage.setItem('avalmeos_admin_token_expiry', expiry.toString());
-    
-    // Store user
-    if (data.user) {
-        localStorage.setItem('avalmeos_admin_user', JSON.stringify(data.user));
+    // Store session token (Supabase handles this internally)
+    const session = supabase.auth.getSession();
+    if (session.data?.access_token) {
+        localStorage.setItem('supabase_admin_token', session.data.access_token);
     }
 }
 
 /**
- * Clear all auth data (both main and admin)
+ * Clear Supabase authentication data
  */
-function clearUnifiedAuthData() {
-    localStorage.removeItem(UNIFIED_TOKEN_KEY);
-    localStorage.removeItem('avalmeos_admin_token');
-    localStorage.removeItem('avalmeos_admin_refresh_token');
-    localStorage.removeItem('avalmeos_admin_token_expiry');
-    localStorage.removeItem('avalmeos_admin_user');
+async function clearSupabaseAuthData() {
+    // Clear Supabase session
+    await supabase.auth.signOut();
+    
+    // Clear local storage
+    localStorage.removeItem('supabase_admin_user');
+    localStorage.removeItem('supabase_admin_token');
+    localStorage.removeItem('supabase_admin_refresh_token');
+    localStorage.removeItem('supabase_admin_token_expiry');
 }
 
 /**
- * Admin login function - uses backend API
+ * Admin login function - uses Supabase auth
  */
 async function adminLogin(email, password) {
     try {
-        const response = await fetch('http://localhost:3000/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
+        const { data: { session }, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Login failed');
+        if (error) {
+            throw new Error(error.message || 'Login failed');
         }
 
-        // Store auth data (shared with main site)
-        setUnifiedAuthData(data.data);
+        // Get user profile and check if admin
+        const { data: user, error: userError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
 
-        console.log('[AdminAuth] Login successful, token stored for unified auth');
-        return data.data;
+        if (userError) {
+            throw new Error('Failed to retrieve user profile');
+        }
+
+        // Check if user has admin role
+        if (user.role !== 'admin') {
+            await clearSupabaseAuthData();
+            throw new Error('Access denied. Admin privileges required.');
+        }
+
+        // Store auth data
+        await storeSupabaseAuthData(user);
+
+        console.log('[AdminAuth] Login successful, Supabase session stored');
+        return { user, token: session.access_token };
     } catch (error) {
         console.error('[AdminAuth] Login failed:', error);
         throw error;
@@ -164,26 +156,14 @@ async function adminLogin(email, password) {
 }
 
 /**
- * Admin logout function - clears all auth data
+ * Admin logout function - clears Supabase auth data
  */
 async function adminLogout() {
     try {
-        const token = getUnifiedToken();
-        if (token) {
-            await fetch('http://localhost:3000/api/auth/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            }).catch(() => {});
-        }
+        await clearSupabaseAuthData();
     } catch (error) {
         console.warn('[AdminAuth] Logout API call failed:', error);
     }
-
-    // Clear all auth data
-    clearUnifiedAuthData();
 
     // Reload to reset UI
     if (window.location.href.includes('admin.html')) {
@@ -192,15 +172,15 @@ async function adminLogout() {
 }
 
 /**
- * Check if admin panel should be visible - handles unified auth
+ * Check if admin panel should be visible - handles Supabase auth
  */
-function checkUnifiedAdminAuth() {
+async function checkSupabaseAdminAuth() {
     const loginOverlay = document.getElementById('admin-login-overlay');
     const adminContent = document.querySelector('.admin-content-area');
     const sidebar = document.getElementById('admin-sidebar');
     
     // Check if user is logged in and is admin
-    const isAdmin = isUnifiedAdminAuthenticated();
+    const isAdmin = await isSupabaseAdminAuthenticated();
     
     if (!isAdmin) {
         // Hide admin content, show login
@@ -216,7 +196,7 @@ function checkUnifiedAdminAuth() {
         
         // Update user name display
         const userNameEl = document.getElementById('admin-user-name');
-        const user = getUnifiedUser();
+        const user = await getSupabaseUser();
         if (userNameEl && user) {
             userNameEl.textContent = user.first_name || user.name || user.email || 'Admin';
         }
@@ -247,8 +227,8 @@ window.handleAdminLogin = async function(e) {
         
         // Check if user is admin
         if (result.user && result.user.role === 'admin') {
-            // Login successful - unified auth will handle everything
-            checkUnifiedAdminAuth();
+            // Login successful - Supabase auth will handle everything
+            await checkSupabaseAdminAuth();
             
             // Load dashboard data
             if (typeof window.loadAdminDashboard === 'function') {
@@ -257,11 +237,11 @@ window.handleAdminLogin = async function(e) {
             
             // Show success notification
             if (typeof window.showNotification === 'function') {
-                window.showNotification('Welcome, ' + (result.user.first_name || result.user.name || 'Admin') + '!', 'success');
+                window.showNotification('Welcome, ' + (result.user.first_name || result.user.name || result.user.email || 'Admin') + '!', 'success');
             }
         } else {
             // Not an admin
-            clearUnifiedAuthData();
+            await clearSupabaseAuthData();
             throw new Error('Access denied. Admin privileges required.');
         }
     } catch (error) {
@@ -295,24 +275,164 @@ window.logoutFromAdmin = function() {
  */
 function initUnifiedAdminAuth() {
     // Check auth on load
-    checkUnifiedAdminAuth();
+    checkSupabaseAdminAuth();
     
     // Listen for auth changes from other tabs
     window.addEventListener('storage', function(e) {
-        if (e.key === UNIFIED_TOKEN_KEY) {
+        if (e.key === 'supabase_admin_token') {
             console.log('[AdminAuth] Auth changed in another tab');
-            checkUnifiedAdminAuth();
+            checkSupabaseAdminAuth();
         }
     });
 }
 
 // Make functions globally available
-window.getUnifiedToken = getUnifiedToken;
-window.getUnifiedUser = getUnifiedUser;
-window.isUnifiedAdminAuthenticated = isUnifiedAdminAuthenticated;
-window.setUnifiedAuthData = setUnifiedAuthData;
-window.clearUnifiedAuthData = clearUnifiedAuthData;
+window.getSupabaseToken = getSupabaseToken;
+window.getSupabaseUser = getSupabaseUser;
+window.isSupabaseAdminAuthenticated = isSupabaseAdminAuthenticated;
+window.storeSupabaseAuthData = storeSupabaseAuthData;
+window.clearSupabaseAuthData = clearSupabaseAuthData;
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
-window.checkUnifiedAdminAuth = checkUnifiedAdminAuth;
-window.initUnifiedAdminAuth = initUnifiedAdminAuth;
+window.checkSupabaseAdminAuth = checkSupabaseAdminAuth;
+window.initSupabaseAdminAuth = initSupabaseAdminAuth;
+
+// Test login function for debugging
+async function testAdminLogin() {
+    try {
+        console.log('🔍 Testing admin login with admin@avalmeos.com / admin123...');
+        
+        const result = await adminLogin('admin@avalmeos.com', 'admin123');
+        
+        if (result && result.user && result.user.role === 'admin') {
+            console.log('✅ Login successful!');
+            console.log('👤 User:', result.user);
+            console.log('🔐 Token:', result.token.substring(0, 20) + '...');
+            
+            // Check if admin panel is visible
+            const isAdminVisible = await checkSupabaseAdminAuth();
+            console.log('📋 Admin panel visible:', isAdminVisible);
+            
+            return true;
+        } else {
+            console.error('❌ Login failed: User is not admin or invalid credentials');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Login error:', error.message);
+        return false;
+    }
+}
+
+// Check if test admin user exists
+async function checkTestAdminUser() {
+    try {
+        console.log('🔍 Checking if test admin user exists...');
+        
+        const { data: users, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('email', 'admin@avalmeos.com')
+            .single();
+        
+        if (error) {
+            console.error('❌ Error checking user:', error.message);
+            return false;
+        }
+        
+        if (users) {
+            console.log('✅ Test admin user exists!');
+            console.log('👤 User:', users);
+            console.log('📋 Role:', users.role);
+            return true;
+        } else {
+            console.log('❌ Test admin user not found');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error checking user:', error.message);
+        return false;
+    }
+}
+
+// Create test admin user
+async function createTestAdminUser() {
+    try {
+        console.log('🔱 Creating test admin user...');
+        
+        // First create the user in auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: 'admin@avalmeos.com',
+            password: 'admin123'
+        });
+        
+        if (authError) {
+            console.error('❌ Error creating auth user:', authError.message);
+            return false;
+        }
+        
+        // Then create the user profile
+        const { data: profileData, error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+                user_id: authData.user.id,
+                email: 'admin@avalmeos.com',
+                first_name: 'Admin',
+                last_name: 'User',
+                role: 'admin'
+            })
+            .select()
+            .single();
+        
+        if (profileError) {
+            console.error('❌ Error creating user profile:', profileError.message);
+            return false;
+        }
+        
+        console.log('✅ Test admin user created successfully!');
+        console.log('👤 User:', profileData);
+        console.log('📋 Role:', profileData.role);
+        return true;
+    } catch (error) {
+        console.error('❌ Error creating test admin user:', error.message);
+        return false;
+    }
+}
+
+// Auto-create admin user if not found
+async function ensureAdminUserExists() {
+    const userExists = await checkTestAdminUser();
+    if (!userExists) {
+        console.log('🚀 Creating admin user...');
+        const created = await createTestAdminUser();
+        if (created) {
+            console.log('✅ Admin user created successfully!');
+        } else {
+            console.error('❌ Failed to create admin user');
+        }
+    } else {
+        console.log('✅ Admin user already exists');
+    }
+}
+
+// Auto-run user check when page loads
+window.addEventListener('load', async function() {
+    console.log('🔍 Checking admin user...');
+    await ensureAdminUserExists();
+});
+
+// Initialize test on page load
+window.testAdminAuth = async function() {
+    await testAdminLogin();
+};
+
+// Initialize user check on page load
+window.checkAdminUser = async function() {
+    await checkTestAdminUser();
+};
+
+// Auto-run user check when page loads
+window.addEventListener('load', async function() {
+    console.log('🔍 Checking admin user...');
+    await checkTestAdminUser();
+});
