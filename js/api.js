@@ -3,7 +3,8 @@
  * Frontend service for communicating with the backend API
  */
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// Dynamic API URL - works on localhost and production
+const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/api');
 
 class ApiService {
   constructor() {

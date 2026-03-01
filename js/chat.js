@@ -1,7 +1,7 @@
 // --- Chat System ---
 
 const CHAT_KEY = 'avalmeos_chat';
-const CHAT_API_BASE = window.API_BASE_URL || 'http://localhost:3000/api';
+const CHAT_API_BASE = window.API_BASE_URL || (window.location.origin + '/api');
 
 // Enable auto-replies even when API is working (for testing or demo)
 const AUTO_REPLY_ENABLED = true;

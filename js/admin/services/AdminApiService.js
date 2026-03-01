@@ -14,7 +14,7 @@
 class AdminApiService {
     constructor() {
         // Configuration
-        this.baseUrl = window.API_BASE_URL || 'http://localhost:3000/api';
+        this.baseUrl = window.API_BASE_URL || (window.location.origin + '/api');
         this.timeout = 30000; // 30 seconds
         this.maxRetries = 2; // Retry failed requests max 2 times
         this.tokenRefreshThreshold = 5 * 60 * 1000; // Refresh if token expires within 5 minutes

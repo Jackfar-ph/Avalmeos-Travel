@@ -8,11 +8,12 @@
 
 class AdminApiService {
     /**
-     * Base URL for API requests - defaults to localhost:3000
-     * Can be overridden by environment variable
+     * Base URL for API requests - dynamic (works on localhost and production)
+     * Can be overridden by window.API_BASE_URL
      */
     constructor() {
-        this.baseUrl = window.API_BASE_URL || 'http://localhost:3000/api';
+        // Dynamic URL - works on localhost and production
+        this.baseUrl = window.API_BASE_URL || (window.location.origin + '/api');
     }
 
     /**

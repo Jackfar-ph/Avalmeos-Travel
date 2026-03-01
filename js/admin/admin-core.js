@@ -3,8 +3,8 @@
  * Part of the modular admin architecture
  */
 
-// API Base URL - should match backend server
-const API_BASE_URL = 'http://localhost:3000/api';
+// API Base URL - dynamic for localhost and production
+const API_BASE_URL = window.API_BASE_URL || (window.location.origin + '/api');
 
 // Check admin access
 function checkAdminAccess() {

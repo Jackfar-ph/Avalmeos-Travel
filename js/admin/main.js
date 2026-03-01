@@ -1405,8 +1405,7 @@ async function loadChatConversations() {
             return;
         }
         
-        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
-        const url = new URL('/api/admin/chat/conversations', baseUrl);
+        const baseUrl = window.API_BASE_URL || window.location.origin;
         if (currentChatFilter) {
             url.searchParams.append('status', currentChatFilter);
         }
@@ -1491,7 +1490,7 @@ async function loadChatMessages(conversationId) {
     
     try {
         const token = getAdminToken();
-        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        const baseUrl = window.API_BASE_URL || window.location.origin;
         
         const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${conversationId}/messages`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -1536,7 +1535,7 @@ async function sendChatReply() {
     
     try {
         const token = getAdminToken();
-        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        const baseUrl = window.API_BASE_URL || window.location.origin;
         
         const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${selectedConversationId}/reply`, {
             method: 'POST',
@@ -1565,7 +1564,7 @@ async function updateChatStatus() {
     
     try {
         const token = getAdminToken();
-        const baseUrl = window.API_BASE_URL || 'http://localhost:3000';
+        const baseUrl = window.API_BASE_URL || window.location.origin;
         
         const response = await fetch(`${baseUrl}/api/admin/chat/conversations/${selectedConversationId}/status`, {
             method: 'PUT',

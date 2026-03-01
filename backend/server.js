@@ -87,13 +87,21 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://localhost:5000',
   'http://127.0.0.1:5000',
-  undefined // Allow file:// protocol for local development
-];
+  undefined, // Allow file:// protocol for local development
+  process.env.FRONTEND_URL // Production frontend URL
+].filter(Boolean);
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://127.0.0.1:')) {
+    // Also allow if origin matches any allowed origin or starts with railway.app
+    const isAllowed = !origin || 
+      allowedOrigins.includes(origin) || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.includes('.railway.app') ||
+      origin.includes('.vercel.app');
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(null, false);
