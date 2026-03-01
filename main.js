@@ -50,6 +50,60 @@ function checkComponentsReady() {
     }
 }
 
+// --- 3. MOBILE MENU FUNCTIONS ---
+// Mobile menu toggle function
+window.toggleMobileMenu = function() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuBtn = document.getElementById('menu-btn');
+    
+    if (mobileMenu) {
+        const isOpen = !mobileMenu.classList.contains('translate-x-full');
+        
+        if (isOpen) {
+            // Close menu
+            mobileMenu.classList.add('translate-x-full');
+        } else {
+            // Open menu
+            mobileMenu.classList.remove('translate-x-full');
+        }
+    }
+    
+    if (menuBtn) {
+        const lines = menuBtn.querySelectorAll('span');
+        if (lines.length >= 3) {
+            const isOpen = mobileMenu && !mobileMenu.classList.contains('translate-x-full');
+            if (isOpen) {
+                lines[0].classList.add('rotate-45', 'translate-y-2');
+                lines[1].classList.add('opacity-0');
+                lines[2].classList.add('-rotate-45', '-translate-y-2.5');
+            } else {
+                lines[0].classList.remove('rotate-45', 'translate-y-2');
+                lines[1].classList.remove('opacity-0');
+                lines[2].classList.remove('-rotate-45', '-translate-y-2.5');
+            }
+        }
+    }
+};
+
+// Mobile menu close helper
+window.closeMobileMenu = function() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuBtn = document.getElementById('menu-btn');
+    
+    if (mobileMenu) {
+        mobileMenu.classList.add('translate-x-full');
+    }
+    
+    if (menuBtn) {
+        const lines = menuBtn.querySelectorAll('span');
+        if (lines.length >= 3) {
+            lines[0].classList.remove('rotate-45', 'translate-y-2');
+            lines[1].classList.remove('opacity-0');
+            lines[2].classList.remove('-rotate-45', '-translate-y-2.5');
+        }
+    }
+};
+
 // Modified component loader that tracks loading state
 async function loadComponent(elementId, filePath) {
     console.log('[ComponentLoader] Loading:', elementId, 'from', filePath);

@@ -1,9 +1,11 @@
-// --- Authentication System ---
+// --- Authentication System (Supabase Integration) ---
+// This module now uses Supabase for user authentication
 
 // Storage keys
 const AUTH_KEY = 'avalmeos_auth';
 const USERS_KEY = 'avalmeos_users';
 const BOOKINGS_KEY = 'avalmeos_bookings';
+const SUPABASE_AUTH_KEY = 'supabase_user_auth';
 
 // Auth State Management
 const AuthState = {
@@ -33,12 +35,24 @@ const AuthState = {
     
     // Get current user
     getCurrentUser() {
+        // First check Supabase auth
+        const supabaseAuth = localStorage.getItem('supabase_user_auth');
+        if (supabaseAuth) {
+            return JSON.parse(supabaseAuth);
+        }
+        // Fall back to local auth
         const auth = localStorage.getItem(AUTH_KEY);
         return auth ? JSON.parse(auth) : null;
     },
     
     // Check if user is logged in
     isLoggedIn() {
+        // Check Supabase first
+        const supabaseAuth = localStorage.getItem('supabase_user_auth');
+        if (supabaseAuth) {
+            return true;
+        }
+        // Fall back to local auth
         return this.getCurrentUser() !== null;
     }
 };
@@ -202,13 +216,33 @@ function logoutFromAdmin() {
     window.location.reload();
 }
 
-// Get current user
+// Get current user - checks Supabase first, then falls back to localStorage
 function getCurrentUser() {
+    // First check Supabase auth
+    const supabaseUser = localStorage.getItem(SUPABASE_AUTH_KEY);
+    if (supabaseUser) {
+        const user = JSON.parse(supabaseUser);
+        
+        // Check if user is admin email - update role if needed
+        if (user.email && user.email.toLowerCase() === 'admin@avalmeos.com' && user.role !== 'admin') {
+            user.role = 'admin';
+            localStorage.setItem(SUPABASE_AUTH_KEY, JSON.stringify(user));
+        }
+        
+        return user;
+    }
+    // Fall back to local auth
     return AuthState.getCurrentUser();
 }
 
-// Check if user is logged in
+// Check if user is logged in - checks Supabase first
 function isLoggedIn() {
+    // Check Supabase auth first
+    const supabaseUser = localStorage.getItem(SUPABASE_AUTH_KEY);
+    if (supabaseUser) {
+        return true;
+    }
+    // Fall back to local auth
     return AuthState.isLoggedIn();
 }
 
@@ -271,5 +305,198 @@ function updateUserProfile(updates) {
     return { success: true, message: 'Profile updated' };
 }
 
-// Initialize auth on load
-initUsers();
+// Initialize auth on load - check Supabase session
+async function initAuth() {
+    // Check for Supabase session
+    if (window.supabaseAuth) {
+        window.supabaseAuth.initSupabaseAuth();
+        
+        // Check and refresh session
+        const isValid = await window.supabaseAuth.checkAndRefreshSession();
+        if (isValid) {
+            // Update UI if user is logged in
+            const user = window.supabaseAuth.getStoredUser();
+            if (user) {
+                // Force UI update
+                if (typeof AuthUIManager !== 'undefined') {
+                    AuthUIManager.updateAuthUI();
+                }
+                if (typeof window.updateAuthUI === 'function') {
+                    window.updateAuthUI();
+                }
+            }
+        }
+    }
+    
+    // Also initialize local users
+    initUsers();
+}
+
+// Listen for componentsLoaded event to update UI after components load
+document.addEventListener('componentsLoaded', function() {
+    console.log('[Auth] componentsLoaded event fired!');
+    // Check if user is logged in via Supabase
+    const supabaseAuth = localStorage.getItem('supabase_user_auth');
+    console.log('[Auth] supabase_user_auth in localStorage:', supabaseAuth ? 'FOUND' : 'NOT FOUND');
+    if (supabaseAuth) {
+        console.log('[Auth] User found in localStorage, updating UI...');
+        const user = JSON.parse(supabaseAuth);
+        
+        // Check which elements exist
+        const authButtons = document.getElementById('auth-buttons');
+        const userMenu = document.getElementById('user-menu');
+        const userName = document.getElementById('user-display-name');
+        const mobileAuth = document.getElementById('mobile-auth');
+        const mobileUserMenu = document.getElementById('mobile-user-menu');
+        
+        console.log('[Auth] Element checks:');
+        console.log('  auth-buttons:', authButtons ? 'EXISTS' : 'NOT FOUND');
+        console.log('  user-menu:', userMenu ? 'EXISTS' : 'NOT FOUND');
+        console.log('  user-display-name:', userName ? 'EXISTS' : 'NOT FOUND');
+        console.log('  mobile-auth:', mobileAuth ? 'EXISTS' : 'NOT FOUND');
+        console.log('  mobile-user-menu:', mobileUserMenu ? 'EXISTS' : 'NOT FOUND');
+        
+        // Hide auth buttons, show user menu - FORCE both class AND style
+        if (authButtons) {
+            authButtons.classList.add('hidden');
+            authButtons.style.display = 'none !important';
+            console.log('[Auth] Hidden auth-buttons');
+        }
+        if (userMenu) {
+            userMenu.classList.remove('hidden');
+            userMenu.style.display = 'flex !important';
+            console.log('[Auth] Showed user-menu');
+        }
+        if (userName) userName.textContent = user.name || user.email.split('@')[0];
+        
+        // Mobile menu
+        if (mobileAuth) {
+            mobileAuth.classList.add('hidden');
+            mobileAuth.style.display = 'none !important';
+        }
+        if (mobileUserMenu) {
+            mobileUserMenu.classList.remove('hidden');
+            mobileUserMenu.style.display = 'flex !important';
+        }
+        const mobileUserNameEl = document.getElementById('mobile-user-name');
+        if (mobileUserNameEl) mobileUserNameEl.textContent = user.name || user.email.split('@')[0];
+        
+        console.log('[Auth] UI updated for user:', user.email);
+        
+        // Verify the changes stuck - check after a short delay
+        setTimeout(() => {
+            console.log('[Auth] Verification - auth-buttons display:', authButtons ? authButtons.style.display : 'N/A');
+            console.log('[Auth] Verification - user-menu display:', userMenu ? userMenu.style.display : 'N/A');
+            console.log('[Auth] Verification - auth-buttons classList:', authButtons ? authButtons.classList.toString() : 'N/A');
+            console.log('[Auth] Verification - user-menu classList:', userMenu ? userMenu.classList.toString() : 'N/A');
+        }, 500);
+    } else {
+        console.log('[Auth] No user found in localStorage');
+    }
+});
+
+// Initialize on load
+initAuth();
+
+// Force UI update every second - keep running until user is found in localStorage
+let forceUpdateCount = 0;
+const forceUpdateInterval = setInterval(() => {
+    const supabaseAuth = localStorage.getItem('supabase_user_auth');
+    const authButtons = document.getElementById('auth-buttons');
+    const userMenu = document.getElementById('user-menu');
+    const adminLink = document.getElementById('admin-link');
+    
+    // Only run if elements exist
+    if (!authButtons || !userMenu) {
+        return;
+    }
+    
+    // Always update UI based on current auth state
+    if (supabaseAuth) {
+        let user = JSON.parse(supabaseAuth);
+        
+        // Check if user is admin email - update role if needed
+        if (user.email && user.email.toLowerCase() === 'admin@avalmeos.com' && user.role !== 'admin') {
+            user.role = 'admin';
+            localStorage.setItem('supabase_user_auth', JSON.stringify(user));
+        }
+        
+        authButtons.style.display = 'none';
+        authButtons.classList.add('hidden');
+        userMenu.style.display = 'flex';
+        userMenu.classList.remove('hidden');
+        
+        const userName = document.getElementById('user-display-name');
+        if (userName) userName.textContent = user.name || user.email.split('@')[0];
+        
+        // Show/hide admin link based on role
+        if (adminLink) {
+            if (user.role === 'admin') {
+                adminLink.classList.remove('hidden');
+                adminLink.style.display = 'block';
+            } else {
+                adminLink.classList.add('hidden');
+                adminLink.style.display = 'none';
+            }
+        }
+        
+        // Only log first few times to avoid console spam
+        if (forceUpdateCount < 3) {
+            console.log('[Auth] Force update #' + forceUpdateCount + ' - user found, UI updated');
+        }
+    } else {
+        // Not logged in - show auth buttons
+        authButtons.style.display = 'flex';
+        authButtons.classList.remove('hidden');
+        userMenu.style.display = 'none';
+        userMenu.classList.add('hidden');
+        
+        // Hide admin link
+        if (adminLink) {
+            adminLink.classList.add('hidden');
+            adminLink.style.display = 'none';
+        }
+        
+        // Only log first few times to avoid console spam
+        if (forceUpdateCount < 3) {
+            console.log('[Auth] Force update #' + forceUpdateCount + ' - no user');
+        }
+    }
+    
+    forceUpdateCount++;
+    // Keep running but with minimal logging after initial load
+}, 1000);
+
+// Listen for storage changes (for when user logs in/out in another tab or same tab)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'supabase_user_auth') {
+        console.log('[Auth] Storage changed, updating UI...');
+        const supabaseAuth = localStorage.getItem('supabase_user_auth');
+        const authButtons = document.getElementById('auth-buttons');
+        const userMenu = document.getElementById('user-menu');
+        
+        if (supabaseAuth) {
+            const user = JSON.parse(supabaseAuth);
+            if (authButtons) {
+                authButtons.style.display = 'none';
+                authButtons.classList.add('hidden');
+            }
+            if (userMenu) {
+                userMenu.style.display = 'flex';
+                userMenu.classList.remove('hidden');
+                const userName = document.getElementById('user-display-name');
+                if (userName) userName.textContent = user.name || user.email.split('@')[0];
+            }
+        } else {
+            // Not logged in
+            if (authButtons) {
+                authButtons.style.display = 'flex';
+                authButtons.classList.remove('hidden');
+            }
+            if (userMenu) {
+                userMenu.style.display = 'none';
+                userMenu.classList.add('hidden');
+            }
+        }
+    }
+});

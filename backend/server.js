@@ -481,6 +481,212 @@ app.get('/api/activities/:id', async (req, res) => {
 });
 
 // ======================
+// REVIEWS ROUTES
+// ======================
+
+// Get reviews for a destination
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const { destination_id, limit = 10, offset = 0 } = req.query;
+    
+    // First get the reviews
+    let query = supabase
+      .from('reviews')
+      .select('*')
+      .eq('destination_id', destination_id)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+    
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+    
+    if (offset) {
+      query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit || 10) - 1);
+    }
+    
+    const { data: reviews, error } = await query;
+    
+    if (error) throw error;
+    
+    // Get user profiles for each review
+    const userIds = [...new Set(reviews?.map(r => r.user_id).filter(Boolean))];
+    let userProfiles = {};
+    
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, avatar_url')
+        .in('user_id', userIds);
+      
+      if (profiles) {
+        profiles.forEach(p => {
+          userProfiles[p.user_id] = p;
+        });
+      }
+    }
+    
+    // Attach user info to reviews
+    const reviewsWithUser = reviews?.map(review => ({
+      ...review,
+      user: userProfiles[review.user_id] || null
+    })) || [];
+    
+    // Get total count
+    const { count } = await supabase
+      .from('reviews')
+      .select('*', { count: 'exact', head: true })
+      .eq('destination_id', destination_id)
+      .eq('is_public', true);
+    
+    // Get average rating
+    const { data: avgData } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('destination_id', destination_id)
+      .eq('is_public', true);
+    
+    const averageRating = avgData?.length > 0 
+      ? (avgData.reduce((sum, r) => sum + r.rating, 0) / avgData.length).toFixed(1)
+      : 0;
+    
+    res.json({ 
+      success: true, 
+      data: reviewsWithUser,
+      total: count || 0,
+      averageRating: parseFloat(averageRating)
+    });
+  } catch (error) {
+    console.error('Reviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get reviews for an activity
+app.get('/api/reviews/activity/:activity_id', async (req, res) => {
+  try {
+    const { limit = 10, offset = 0 } = req.query;
+    
+    let query = supabase
+      .from('reviews')
+      .select('*')
+      .eq('activity_id', req.params.activity_id)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+    
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+    
+    if (offset) {
+      query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit || 10) - 1);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    res.json({ success: true, data: data || [] });
+  } catch (error) {
+    console.error('Activity reviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Submit a review (requires authentication)
+app.post('/api/reviews', authenticateToken, async (req, res) => {
+  try {
+    const { destination_id, activity_id, rating, title, comment } = req.body;
+    
+    // Validate required fields
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' });
+    }
+    
+    if (!destination_id && !activity_id) {
+      return res.status(400).json({ success: false, message: 'Either destination_id or activity_id is required' });
+    }
+    
+    // Check if user has already reviewed this destination/activity
+    const existingReview = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .eq('destination_id', destination_id || null)
+      .eq('activity_id', activity_id || null)
+      .single();
+    
+    if (existingReview.data) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this' });
+    }
+    
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        user_id: req.user.id,
+        destination_id: destination_id || null,
+        activity_id: activity_id || null,
+        rating,
+        title: title || null,
+        comment: comment || null,
+        is_public: true,
+        is_verified: false
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    // Update destination average rating if destination_id provided
+    if (destination_id) {
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('destination_id', destination_id)
+        .eq('is_public', true);
+      
+      if (reviews?.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        await supabase
+          .from('destinations')
+          .update({ 
+            average_rating: avgRating.toFixed(2),
+            total_reviews: reviews.length
+          })
+          .eq('id', destination_id);
+      }
+    }
+    
+    res.json({ success: true, data, message: 'Review submitted successfully!' });
+  } catch (error) {
+    console.error('Submit review error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get user's own reviews
+app.get('/api/reviews/my', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        destination:destinations(name),
+        activity:activities(name)
+      `)
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    res.json({ success: true, data: data || [] });
+  } catch (error) {
+    console.error('My reviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ======================
 // BOOKINGS ROUTES (User)
 // ======================
 
@@ -1321,7 +1527,7 @@ app.get('/api/admin/analytics', authenticateToken, requireAdmin, async (req, res
 // Get all packages (public - active only)
 app.get('/api/packages', async (req, res) => {
   try {
-    const { featured, search, destination_id } = req.query;
+    const { featured, search, destination_id, destination } = req.query;
     let query = supabase.from('packages').select('*, destinations(*)').eq('is_active', true);
     
     if (featured === 'true') {
@@ -1334,6 +1540,53 @@ app.get('/api/packages', async (req, res) => {
     
     if (destination_id) {
       query = query.eq('destination_id', destination_id);
+    }
+    
+    // Filter by destination name (new parameter)
+    if (destination) {
+      // First get the destination ID by name (case-insensitive partial match)
+      const { data: destData } = await supabase
+        .from('destinations')
+        .select('id')
+        .ilike('name', `%${destination}%`)
+        .limit(1);
+      
+      console.log('[API] Searching for destination:', destination, 'Result:', destData);
+      
+      if (destData && destData.length > 0) {
+        const destId = destData[0].id;
+        console.log('[API] Destination ID:', destId, '- now searching for packages...');
+        
+        // Check packages with this destination_id first
+        const { data: destPackages } = await supabase
+          .from('packages')
+          .select('id, name, destination_id, is_active')
+          .eq('destination_id', destId);
+        console.log('[API] Packages for destination', destId, ':', destPackages);
+        
+        // If no packages linked to destination, try to find by name (including those with null destination_id)
+        if (!destPackages || destPackages.length === 0) {
+          console.log('[API] No packages linked to destination, trying name match...');
+          const { data: namePackages } = await supabase
+            .from('packages')
+            .select('id, name, destination_id, is_active')
+            .ilike('name', `%${destination}%`)
+            .limit(1);
+          console.log('[API] Packages with name match:', namePackages);
+          
+          if (namePackages && namePackages.length > 0) {
+            query = query.ilike('name', `%${destination}%`);
+          } else {
+            return res.json({ success: true, data: [] });
+          }
+        } else {
+          query = query.eq('destination_id', destId);
+        }
+      } else {
+        // No matching destination found
+        console.log('[API] No destination found for:', destination);
+        return res.json({ success: true, data: [] });
+      }
     }
     
     query = query.order('created_at', { ascending: false });

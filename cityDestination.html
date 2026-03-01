@@ -10,6 +10,37 @@
 </head>
 <body class="bg-gray-50">
 
+    <!-- Review Modal - placed at body level to ensure visibility -->
+    <div id="review-modal" class="fixed inset-0 z-[100] hidden" style="display:none;">
+        <div class="absolute inset-0 bg-black/50" onclick="closeReviewModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden p-6">
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
+            <h2 class="text-xl font-bold text-[#1a4d41] mb-4">Write a Review</h2>
+            <form id="review-form" onsubmit="submitReview(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Rating</label>
+                    <select id="review-rating" class="w-full border rounded p-2" required>
+                        <option value="">Select rating...</option>
+                        <option value="5">★★★★★ (5)</option>
+                        <option value="4">★★★★☆ (4)</option>
+                        <option value="3">★★★☆☆ (3)</option>
+                        <option value="2">★★☆☆☆ (2)</option>
+                        <option value="1">★☆☆☆☆ (1)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Title (optional)</label>
+                    <input type="text" id="review-title" class="w-full border rounded p-2" placeholder="Review title">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Comment</label>
+                    <textarea id="review-comment" class="w-full border rounded p-2" rows="4" placeholder="Your review" required></textarea>
+                </div>
+                <button type="submit" class="w-full bg-[#1a4d41] text-white py-2 rounded font-bold">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-sm">
         <div class="max-w-[1440px] mx-auto px-8 md:px-12 py-5 flex items-center justify-between">
@@ -82,6 +113,39 @@
 
             <h3 class="text-xl font-bold mb-6 text-[#1a4d41]">Activities Included</h3>
             <div id="activity-list" class="flex flex-col gap-4"></div>
+            
+            <!-- Reviews Section -->
+            <section id="reviews-section" class="mt-12 animate-on-scroll">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-[#1a4d41]">Traveler Reviews</h3>
+                    <div class="flex items-center gap-4">
+                        <div id="average-rating" class="flex items-center gap-2">
+                            <span class="text-2xl font-bold text-[#1a4d41]">0.0</span>
+                            <div class="flex text-orange-400">
+                                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                            </div>
+                            <span class="text-gray-500 text-sm">(0 reviews)</span>
+                        </div>
+                        <button onclick="var m=document.getElementById('review-modal'); if(m){m.style.display='flex';m.classList.remove('hidden');}else{alert('Modal not found')}" class="px-4 py-2 bg-[#1a4d41] text-white rounded-lg font-medium hover:bg-opacity-90 transition">
+                            Write a Review
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Reviews List -->
+                <div id="reviews-list" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Loading reviews...</p>
+                    </div>
+                </div>
+                
+                <!-- Load More Reviews -->
+                <div id="load-more-reviews" class="hidden text-center mt-6">
+                    <button onclick="loadMoreReviews()" class="px-6 py-2 border border-[#1a4d41] text-[#1a4d41] rounded-lg font-medium hover:bg-[#1a4d41] hover:text-white transition">
+                        Load More Reviews
+                    </button>
+                </div>
+            </section>
         </div>
 
         <div class="lg:col-span-1">
@@ -251,9 +315,49 @@
                 </div>
             </div>
         </div>
+    
+    <!-- Review Modal - placed directly in body for reliability -->
+    <div id="review-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeReviewModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="bg-[#1a4d41] px-6 py-6 text-center">
+                <h2 class="text-xl font-bold text-white">Write a Review</h2>
+                <p class="text-white/80 text-sm mt-1" id="review-destination-name"></p>
+            </div>
+            <form id="review-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
+                    <div class="flex gap-2" id="star-rating">
+                        <button type="button" onclick="setRating(1)" class="text-3xl text-gray-300 hover:text-orange-400 transition star-btn" data-rating="1">★</button>
+                        <button type="button" onclick="setRating(2)" class="text-3xl text-gray-300 hover:text-orange-400 transition star-btn" data-rating="2">★</button>
+                        <button type="button" onclick="setRating(3)" class="text-3xl text-gray-300 hover:text-orange-400 transition star-btn" data-rating="3">★</button>
+                        <button type="button" onclick="setRating(4)" class="text-3xl text-gray-300 hover:text-orange-400 transition star-btn" data-rating="4">★</button>
+                        <button type="button" onclick="setRating(5)" class="text-3xl text-gray-300 hover:text-orange-400 transition star-btn" data-rating="5">★</button>
+                    </div>
+                    <input type="hidden" id="review-rating" required>
+                    <p class="text-xs text-gray-500 mt-1" id="rating-text">Tap to rate</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Title (Optional)</label>
+                    <input type="text" id="review-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent" placeholder="Summarize your experience" maxlength="100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Review</label>
+                    <textarea id="review-comment" required rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent resize-none" placeholder="Share your experience at this destination..." maxlength="500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1 text-right"><span id="comment-count">0</span>/500</p>
+                </div>
+                <button type="submit" class="w-full bg-[#1a4d41] text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition">Submit Review</button>
+            </form>
+        </div>
     </div>
 
     <!-- JavaScript Files -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="data.js"></script>
     
     <!-- Shared Utilities - Load first to eliminate code duplication -->
@@ -261,14 +365,15 @@
     <script>console.log('After shared-utils.js - window.getExchangeRate:', typeof window.getExchangeRate);</script>
     
     <!-- Core Modules -->
-    <script src="js/auth.js?v=4"></script>
+    <script src="js/auth.js?v=12"></script>
+    <script src="js/supabase-auth.js?v=4"></script>
     <script>console.log('After auth.js - window.getCart:', typeof window.getCart);</script>
     <script src="js/cart.js?v=4"></script>
     <script>console.log('After cart.js - window.addToCart:', typeof window.addToCart, window.addToCart);</script>
     <script src="js/notifications.js?v=4"></script>
     <script src="js/api.js?v=4"></script>
     <script src="js/chat.js?v=4"></script>
-    <script src="js/auth-handlers.js?v=4"></script>
+    <script src="js/auth-handlers.js?v=6"></script>
     
     <!-- Main Application - Must load after cart.js to use addToCart -->
     <script src="main.js?v=6"></script>
@@ -317,38 +422,176 @@
             const cityLowerCase = cityParam.toLowerCase();
             const cityWithoutSpacesLower = cityWithoutSpaces.toLowerCase();
             
-            // Fetch packages from API
-            fetch('/api/packages')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.data && data.data.length > 0) {
-                        const packages = data.data;
-                        
-                        // Find matching package by destination_name
-                        let matchingPkg = packages.find(pkg => {
-                            const destName = (pkg.destination_name || (pkg.destinations && pkg.destinations.name) || '').toLowerCase();
-                            return destName === cityLowerCase || 
-                                   destName === cityWithoutSpacesLower ||
-                                   cityLowerCase.includes(destName) ||
-                                   destName.includes(cityLowerCase);
-                        });
-                        
-                        if (matchingPkg) {
-                            displayPackage(matchingPkg, cityParam);
+            // Check if this is a known destination with hardcoded data
+            const knownDestinations = ['Cebu City', 'Manila', 'Baguio', 'Davao City', 'Puerto Princesa', 'Iloilo'];
+            const isKnownDestination = knownDestinations.some(d => 
+                d.toLowerCase() === cityLowerCase || 
+                d.toLowerCase().replace(/\s+/g, '') === cityWithoutSpacesLower
+            );
+            
+            if (isKnownDestination) {
+                // Use hardcoded data for known destinations
+                console.log('[CityPage] Known destination - using hardcoded data');
+                loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+            } else {
+                // Try API for new/unknown destinations (like Plaridel)
+                const apiUrl = `/api/packages?destination=${encodeURIComponent(cityParam)}`;
+                console.log('[CityPage] Unknown destination - trying API:', apiUrl);
+                
+                fetch(apiUrl)
+                    .then(res => {
+                        console.log('[CityPage] API response status:', res.status);
+                        return res.json();
+                    })
+                    .then(data => {
+                        console.log('[CityPage] API response:', data);
+                        if (data.success && data.data && data.data.length > 0) {
+                            // API has packages for this destination - use API data
+                            console.log('[CityPage] API package found:', data.data[0].name);
+                            displayPackage(data.data[0], data.data[0].destinations?.name || cityParam);
                         } else {
-                            // Fall back to hardcoded data if no API package found
+                            // No API package found - fall back to hardcoded data
+                            console.log('[CityPage] No API package found, using hardcoded data');
                             loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
                         }
-                    } else {
-                        // Fall back to hardcoded data
+                    })
+                    .catch(err => {
+                        console.log('[CityPage] API fetch failed, using hardcoded data:', err);
                         loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+                    });
+            }
+        }
+        
+        // FIX: Global function to render Explore Other Cities
+        // This can be called from both loadFromHardcodedData() and displayPackage()
+        function renderExploreOtherCities() {
+            const navContainer = document.getElementById('other-cities-nav');
+            if (!navContainer) {
+                console.error('[ExploreCities] navContainer not found!');
+                return;
+            }
+            
+            const hardcodedCities = Object.keys(packageData);
+            const normalizeCity = (name) => name.toLowerCase().replace(/\s+/g, '').trim();
+            
+            // Check if two city names are exactly the same (case-insensitive)
+            const isSimilar = (a, b) => {
+                return a.toLowerCase().trim() === b.toLowerCase().trim();
+            };
+            
+            // Fetch destinations from API
+            fetch('/api/destinations')
+                .then(res => {
+                    console.log('[ExploreCities] API response status:', res.status);
+                    return res.json();
+                })
+                .then(apiData => {
+                    console.log('[ExploreCities] API response:', apiData);
+                    // Use a Map to track unique city names (case-insensitive)
+                    const cityMap = new Map();
+                    
+                    // Helper to normalize city name for deduplication
+                    const normalizeKey = (name) => name.toLowerCase().trim();
+                    
+                    // Get current city for filtering
+                    const currentCityLower = currentCity.toLowerCase().trim();
+                    
+                    // Check if API city should be excluded (too similar to hardcoded or current city)
+                    const shouldExcludeCity = (apiCityName) => {
+                        const apiLower = apiCityName.toLowerCase().trim();
+                        // Exclude if exact match to current city
+                        if (apiLower === currentCityLower) return true;
+                        // Exclude if it's the current city with added text (e.g., "Baguio City" when viewing "Baguio")
+                        if (currentCityLower && apiLower.startsWith(currentCityLower + ' ')) return true;
+                        if (currentCityLower && apiLower.endsWith(' ' + currentCityLower)) return true;
+                        // Exclude if contains current city name as a word
+                        if (currentCityLower && apiLower.includes(' ' + currentCityLower + ' ')) return true;
+                        // Exclude if contains any hardcoded city name (e.g., "Iloilo & Guimaras" contains "Iloilo")
+                        return hardcodedCities.some(hc => {
+                            const hcLower = hc.toLowerCase().trim();
+                            return apiLower.includes(hcLower);
+                        });
+                    };
+                    
+                    // Add hardcoded cities first
+                    hardcodedCities.forEach(city => {
+                        const key = normalizeKey(city);
+                        // Only add if not already present (prefer hardcoded)
+                        if (!cityMap.has(key)) {
+                            cityMap.set(key, { name: city, source: 'hardcoded' });
+                        }
+                    });
+                    
+                    console.log('[ExploreCities] Hardcoded cities:', hardcodedCities);
+                    
+                    // Add API destinations - skip if too similar to existing or current city
+                    if (apiData.success && apiData.data) {
+                        console.log('[ExploreCities] API destinations found:', apiData.data.length);
+                        apiData.data.forEach(dest => {
+                            const key = normalizeKey(dest.name);
+                            // Only add if not already in map AND not too similar
+                            if (!cityMap.has(key) && !shouldExcludeCity(dest.name)) {
+                                cityMap.set(key, { name: dest.name, source: 'api', heroImage: dest.hero_image });
+                            }
+                        });
+                    } else {
+                        console.log('[ExploreCities] No API data or API error');
                     }
+                    
+                    // Convert to array
+                    const allCities = Array.from(cityMap.values());
+                    console.log('[ExploreCities] All cities to display:', allCities);
+                    
+                    // Render navigation
+                    renderOtherCitiesNav(allCities, navContainer, isSimilar);
                 })
                 .catch(err => {
-                    console.error('[CityPage] Error fetching packages:', err);
-                    // Fall back to hardcoded data
-                    loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower);
+                    console.error('[ExploreCities] Error:', err);
+                    // On error, just use hardcoded
+                    renderOtherCitiesNav(hardcodedCities.map(c => ({ name: c, source: 'hardcoded' })), navContainer, isSimilar);
                 });
+            
+            function renderOtherCitiesNav(cities, navContainer, isSimilar) {
+                console.log('[ExploreCities] renderOtherCitiesNav called with:', cities);
+                
+                const currentCityLower = currentCity.toLowerCase();
+                
+                const filteredCities = cities.filter(city => !isSimilar(city.name, currentCity));
+                console.log('[ExploreCities] Filtered cities (excluding current):', filteredCities);
+                
+                if (filteredCities.length === 0) {
+                    console.log('[ExploreCities] No cities to display after filtering');
+                    navContainer.innerHTML = '<p class="text-gray-400 text-sm">No other cities available</p>';
+                    return;
+                }
+                
+                navContainer.innerHTML = filteredCities
+                    .map(city => {
+                        // Get image from appropriate source
+                        let img = 'Picture/placeholder.jpg';
+                        if (city.source === 'api' && city.heroImage) {
+                            img = city.heroImage;
+                        } else if (city.source === 'hardcoded' && packageData[city.name]) {
+                            img = packageData[city.name].img;
+                        }
+                        
+                        // Get price from hardcoded if available
+                        let price = 'Check Price';
+                        if (city.source === 'hardcoded' && packageData[city.name]?.price) {
+                            price = formatPrice(packageData[city.name].price);
+                        }
+                        
+                        return `
+                            <div onclick="navigateToCity('${city.name}')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition cursor-pointer group">
+                                <img src="${img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition" onerror="this.src='Picture/placeholder.jpg'">
+                                <div>
+                                    <p class="text-sm font-bold text-[#1a4d41] group-hover:text-orange-500">${city.name}</p>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold">${price}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+            }
         }
         
         function displayPackage(pkg, cityParam) {
@@ -358,7 +601,7 @@
             if (pkg.hero_image) bannerImg.src = pkg.hero_image;
             
             document.getElementById('pkg-title').innerText = pkg.name;
-            document.getElementById('pkg-subtitle').innerText = pkg.destination_name || cityParam;
+            document.getElementById('pkg-subtitle').innerText = pkg.destinations?.name || pkg.destination_name || cityParam;
             document.getElementById('pkg-desc').innerText = pkg.description || pkg.short_description || '';
             document.getElementById('pkg-price').innerText = formatPrice(pkg.price);
             
@@ -373,6 +616,9 @@
                 excluded: pkg.exclusions,
                 image: pkg.hero_image
             };
+            
+            // FIX: Also render Explore Other Cities when loading from API
+            renderExploreOtherCities();
         }
         
         function loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower) {
@@ -410,6 +656,10 @@
             
             const pkg = packageData[currentCity];
             const activities = cityData[currentCity];
+            
+            // FIX: Render Explore Other Cities FIRST, using global function
+            // This ensures it always runs regardless of whether package/activities are found
+            window.renderExploreOtherCities();
             
             if (!pkg) {
                 document.getElementById('pkg-title').innerText = 'Package not found for: ' + cityParam;
@@ -465,21 +715,11 @@
                     </div>
                 `).join('');
                 
-                // Other cities nav - with automatic logout on click
-                const navContainer = document.getElementById('other-cities-nav');
-                const allCities = Object.keys(packageData);
+                // Other cities nav - fetch from API and combine with hardcoded
+                // FIX: Now uses shared GLOBAL function renderExploreOtherCities()
+                window.renderExploreOtherCities();
                 
-                navContainer.innerHTML = allCities
-                    .filter(city => city !== currentCity)
-                    .map(city => `
-                        <div onclick="navigateToCity('${city}')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition cursor-pointer group">
-                            <img src="${packageData[city].img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition">
-                            <div>
-                                <p class="text-sm font-bold text-[#1a4d41] group-hover:text-orange-500">${city}</p>
-                                <p class="text-[10px] text-gray-400 uppercase font-bold">${formatPrice(packageData[city].price)}</p>
-                            </div>
-                        </div>
-                    `).join('');
+                // END - Local renderExploreOtherCities function removed to use global version
                 
                 // Trigger animations
                 document.querySelectorAll('.animate-on-scroll').forEach(el => el.classList.add('visible'));
@@ -866,6 +1106,405 @@
                 console.log('Dispatching componentsLoaded event');
                 document.dispatchEvent(new CustomEvent('componentsLoaded'));
             }, 100);
+            
+            // ======================
+            // REVIEWS FUNCTIONALITY
+            // ======================
+            let currentDestinationId = null;
+            let reviewOffset = 0;
+            const reviewLimit = 5;
+            let totalReviews = 0;
+            
+            // Initialize reviews when page loads
+            window.addEventListener('DOMContentLoaded', () => {
+                // Wait for main.js to load and set up destination
+                setTimeout(initReviews, 500);
+            });
+            
+            document.addEventListener('componentsLoaded', () => {
+                setTimeout(initReviews, 300);
+            });
+            
+            async function initReviews() {
+                // Get destination ID from the loaded package
+                const params = new URLSearchParams(window.location.search);
+                const cityParam = decodeURIComponent(params.get('city') || 'Cebu City');
+                
+                // Set destination name in modal if element exists
+                const reviewDestNameEl = document.getElementById('review-destination-name');
+                if (reviewDestNameEl) {
+                    reviewDestNameEl.innerText = cityParam;
+                }
+                
+                // Try to get destination from API
+                try {
+                    const response = await fetch(`/api/destinations?search=${encodeURIComponent(cityParam)}`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data && result.data.length > 0) {
+                        const dest = result.data.find(d => d.name.toLowerCase().includes(cityParam.toLowerCase().replace(/\s+/g, ''))) || result.data[0];
+                        currentDestinationId = dest.id;
+                        if (reviewDestNameEl) {
+                            reviewDestNameEl.innerText = dest.name;
+                        }
+                        loadReviews();
+                    } else {
+                        // Try from hardcoded data
+                        const destId = getDestinationIdFromCity(cityParam);
+                        if (destId) {
+                            currentDestinationId = destId;
+                            loadReviews();
+                        } else {
+                            showNoReviews();
+                        }
+                    }
+                } catch (error) {
+                    console.log('Using hardcoded destination ID');
+                    const destId = getDestinationIdFromCity(cityParam);
+                    if (destId) {
+                        currentDestinationId = destId;
+                        loadReviews();
+                    } else {
+                        showNoReviews();
+                    }
+                }
+                
+                // Set up comment character counter
+                const commentArea = document.getElementById('review-comment');
+                if (commentArea) {
+                    commentArea.addEventListener('input', () => {
+                        const countEl = document.getElementById('comment-count');
+                        if (countEl) {
+                            countEl.innerText = commentArea.value.length;
+                        }
+                    });
+                }
+                
+                // Set up review form submission
+                const reviewForm = document.getElementById('review-form');
+                if (reviewForm) {
+                    reviewForm.addEventListener('submit', submitReview);
+                }
+            }
+            
+            // Map of hardcoded cities to UUIDs (fallback)
+            function getDestinationIdFromCity(cityName) {
+                // These are placeholder UUIDs - in production, would come from database
+                const cityMap = {
+                    'Cebu City': 'c0c8a4e4-4e5c-4e5c-4e5c-4e5c4e5c4e5c',
+                    'Manila': 'a1b2c3d4-4e5f-4e5f-4e5f-4e5f4e5f4e5f',
+                    'Baguio': 'b2c3d4e5-4f5a-4f5a-4f5a-4f5a4f5a4f5a',
+                    'Davao City': 'c3d4e5f6-5a6b-5a6b-5a6b-5a6b5a6b5a6b',
+                    'Puerto Princesa': 'd4e5f6a7-6b7c-6b7c-6b7c-6b7c6b7c6b7c',
+                    'Iloilo': 'e5f6a7b8-7c8d-7c8d-7c8d-7c8d7c8d7c8d'
+                };
+                return cityMap[cityName] || cityMap[cityName.replace(/\s+/g, '')];
+            }
+            
+            async function loadReviews() {
+                if (!currentDestinationId) {
+                    showNoReviews();
+                    return;
+                }
+                
+                reviewOffset = 0;
+                
+                try {
+                    const response = await fetch(`/api/reviews?destination_id=${currentDestinationId}&limit=${reviewLimit}&offset=0`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        totalReviews = result.total || 0;
+                        displayReviews(result.data || []);
+                        updateAverageRating(result.averageRating || 0, totalReviews);
+                        
+                        // Show/hide load more button
+                        const loadMoreBtn = document.getElementById('load-more-reviews');
+                        if (loadMoreBtn) {
+                            if (result.data && result.data.length < totalReviews) {
+                                loadMoreBtn.classList.remove('hidden');
+                            } else {
+                                loadMoreBtn.classList.add('hidden');
+                            }
+                        }
+                    } else {
+                        showNoReviews();
+                    }
+                } catch (error) {
+                    console.error('Error loading reviews:', error);
+                    showNoReviews();
+                }
+            }
+            
+            async function loadMoreReviews() {
+                if (!currentDestinationId) return;
+                
+                reviewOffset += reviewLimit;
+                
+                try {
+                    const response = await fetch(`/api/reviews?destination_id=${currentDestinationId}&limit=${reviewLimit}&offset=${reviewOffset}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        appendReviews(result.data || []);
+                        
+                        // Hide load more if no more reviews
+                        const loadMoreBtn = document.getElementById('load-more-reviews');
+                        if (loadMoreBtn) {
+                            const currentCount = document.querySelectorAll('#reviews-list .review-item').length;
+                            if (currentCount >= totalReviews) {
+                                loadMoreBtn.classList.add('hidden');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading more reviews:', error);
+                }
+            }
+            
+            function displayReviews(reviews) {
+                const container = document.getElementById('reviews-list');
+                if (!container) return;
+                
+                if (reviews.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500 mb-2">No reviews yet. Be the first to review!</p>
+                            <p class="text-sm text-gray-400">Share your experience at this destination.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = reviews.map(review => createReviewHTML(review)).join('');
+            }
+            
+            function appendReviews(reviews) {
+                const container = document.getElementById('reviews-list');
+                if (!container || reviews.length === 0) return;
+                
+                container.innerHTML += reviews.map(review => createReviewHTML(review)).join('');
+            }
+            
+            function createReviewHTML(review) {
+                const userName = review.user ? `${review.user.first_name || 'Anonymous'} ${review.user.last_name || ''}`.trim() : 'Anonymous';
+                const avatarUrl = review.user?.avatar_url || null;
+                const date = new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const verifiedBadge = review.is_verified ? '<span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Verified</span>' : '';
+                
+                return `
+                    <div class="review-item bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-[#1a4d41] flex items-center justify-center text-white font-bold flex-shrink-0">
+                                ${avatarUrl ? `<img src="${avatarUrl}" alt="${userName}" class="w-12 h-12 rounded-full object-cover">` : userName.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-[#1a4d41]">${userName} ${verifiedBadge}</h4>
+                                        <p class="text-xs text-gray-500">${date}</p>
+                                    </div>
+                                    <div class="flex text-orange-400">
+                                        ${Array(5).fill(0).map((_, i) => `<span class="${i < review.rating ? 'text-orange-400' : 'text-gray-300'}">★</span>`).join('')}
+                                    </div>
+                                </div>
+                                ${review.title ? `<h5 class="font-bold text-gray-800 mt-2">${review.title}</h5>` : ''}
+                                <p class="text-gray-600 mt-2">${review.comment || ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function updateAverageRating(rating, count) {
+                const container = document.getElementById('average-rating');
+                if (!container) return;
+                
+                const stars = container.querySelectorAll('.flex.text-orange-400 span');
+                const ratingText = container.querySelector('span.text-2xl');
+                const countText = container.querySelector('span.text-sm');
+                
+                if (ratingText) ratingText.innerText = rating.toFixed(1);
+                if (countText) countText.innerText = `(${count} reviews)`;
+                
+                stars.forEach((star, i) => {
+                    if (i < Math.round(rating)) {
+                        star.classList.add('text-orange-400');
+                        star.classList.remove('text-gray-300');
+                    } else {
+                        star.classList.remove('text-orange-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            function showNoReviews() {
+                const container = document.getElementById('reviews-list');
+                if (!container) return;
+                
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500 mb-2">No reviews yet. Be the first to review!</p>
+                        <p class="text-sm text-gray-400">Share your experience at this destination.</p>
+                    </div>
+                `;
+                
+                const avgContainer = document.getElementById('average-rating');
+                if (avgContainer) {
+                    avgContainer.innerHTML = `
+                        <span class="text-2xl font-bold text-[#1a4d41]">0.0</span>
+                        <div class="flex text-gray-300">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">(0 reviews)</span>
+                    `;
+                }
+            }
+            
+            // Star rating functionality
+            window.setRating = function(rating) {
+                document.getElementById('review-rating').value = rating;
+                
+                const stars = document.querySelectorAll('.star-btn');
+                const ratingText = document.getElementById('rating-text');
+                const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+                
+                stars.forEach((star, i) => {
+                    if (i < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-orange-400');
+                    } else {
+                        star.classList.remove('text-orange-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+                
+                if (ratingText) {
+                    ratingText.innerText = ratingLabels[rating] || '';
+                    ratingText.classList.add('text-orange-500', 'font-medium');
+                }
+            };
+            
+            // Open review modal
+            window.openReviewModal = function() {
+                const modal = document.getElementById('review-modal');
+                
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Reset form
+                    const ratingInput = document.getElementById('review-rating');
+                    const titleInput = document.getElementById('review-title');
+                    const commentInput = document.getElementById('review-comment');
+                    const countEl = document.getElementById('comment-count');
+                    const ratingTextEl = document.getElementById('rating-text');
+                    
+                    if (ratingInput) ratingInput.value = '';
+                    if (titleInput) titleInput.value = '';
+                    if (commentInput) {
+                        commentInput.value = '';
+                    }
+                    if (countEl) {
+                        countEl.innerText = '0';
+                    }
+                    
+                    // Reset stars
+                    const stars = document.querySelectorAll('.star-btn');
+                    stars.forEach(star => {
+                        star.classList.remove('text-orange-400');
+                        star.classList.add('text-gray-300');
+                    });
+                    
+                    if (ratingTextEl) {
+                        ratingTextEl.innerText = 'Tap to rate';
+                        ratingTextEl.classList.remove('text-orange-500', 'font-medium');
+                    }
+                }
+            };
+            
+            // Close review modal
+            window.closeReviewModal = function() {
+                var modal = document.getElementById('review-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            };
+            
+            // Submit review
+            async function submitReview(e) {
+                e.preventDefault();
+                
+                const rating = document.getElementById('review-rating').value;
+                const title = document.getElementById('review-title').value;
+                const comment = document.getElementById('review-comment').value;
+                
+                console.log('Submitting review - rating:', rating, 'destinationId:', currentDestinationId);
+                
+                if (!rating) {
+                    alert('Please select a rating');
+                    return;
+                }
+                
+                if (!comment.trim()) {
+                    alert('Please write a review');
+                    return;
+                }
+                
+                if (!currentDestinationId) {
+                    alert('Unable to submit - destination not identified. Please refresh the page.');
+                    return;
+                }
+                
+                // Check login
+                const token = localStorage.getItem('avalmeos_token');
+                if (!token) {
+                    alert('Please log in to submit a review. Use the Log In button above.');
+                    return;
+                }
+                
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (!submitBtn) return;
+                
+                const originalText = submitBtn.innerText;
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Submitting...';
+                
+                try {
+                    const token = localStorage.getItem('avalmeos_token');
+                    const response = await fetch('/api/reviews', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            destination_id: currentDestinationId,
+                            rating: parseInt(rating),
+                            title: title || null,
+                            comment: comment
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Review submitted successfully! Thank you for your feedback.');
+                        closeReviewModal();
+                        loadReviews(); // Reload reviews to show new one
+                    } else {
+                        alert(result.message || 'Failed to submit review. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error submitting review:', error);
+                    alert('An error occurred. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalText;
+                }
+            }
         };
     </script>
 </body>

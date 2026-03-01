@@ -4,27 +4,100 @@ window.handleLogin = function(e) {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     
-    loginUser(email, password)
-        .then(user => {
-            closeAuthModal();
-            
-            // Check if admin user - redirect to admin dashboard
-            if (user.role === 'admin') {
-                window.location.href = 'admin.html';
-                return;
+    // Check if Supabase auth is available
+    if (window.supabaseAuth) {
+        // Use Supabase email/password auth
+        window.supabaseAuth.signInWithEmail(email, password)
+            .then(result => {
+                if (result.success) {
+                    handleLoginSuccess(result.user);
+                } else {
+                    showNotification(result.error || 'Login failed', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification(error.message || 'Login failed', 'error');
+            });
+    } else {
+        // Fall back to local auth
+        loginUser(email, password)
+            .then(user => {
+                handleLoginSuccess(user);
+            })
+            .catch(error => {
+                showNotification(error, 'error');
+            });
+    }
+};
+
+// Handle successful login (common for both Supabase and local auth)
+function handleLoginSuccess(user) {
+    closeAuthModal();
+    
+    // Check if admin user - redirect to admin dashboard
+    if (user.role === 'admin') {
+        window.location.href = 'admin.html';
+        return;
+    }
+    
+    // Normal user - show welcome message
+    if (typeof AuthUIManager !== 'undefined') {
+        AuthUIManager.updateAuthUI();
+    }
+    
+    showNotification(`Welcome back, ${user.name || user.first_name || 'User'}!`, 'success');
+}
+
+// --- Google OAuth Handler ---
+window.handleGoogleLogin = function(e) {
+    if (e) e.preventDefault();
+    
+    if (!window.supabaseAuth) {
+        showNotification('Authentication service not available', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+        googleBtn.disabled = true;
+        googleBtn.innerHTML = '<span class="animate-spin">⏳</span> Connecting...';
+    }
+    
+    window.supabaseAuth.signInWithGoogle()
+        .then(result => {
+            if (!result.success) {
+                showNotification(result.error || 'Google sign-in failed', 'error');
+                
+                // Reset button
+                if (googleBtn) {
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = getGoogleButtonHTML();
+                }
             }
-            
-            // Normal user - show welcome message
-            if (typeof AuthUIManager !== 'undefined') {
-                AuthUIManager.updateAuthUI();
-            }
-            
-            showNotification(`Welcome back, ${user.name}!`, 'success');
+            // If successful, Supabase will redirect
         })
         .catch(error => {
-            showNotification(error, 'error');
+            showNotification(error.message || 'Google sign-in failed', 'error');
+            
+            // Reset button
+            if (googleBtn) {
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = getGoogleButtonHTML();
+            }
         });
 };
+
+// Helper function to get Google button HTML
+function getGoogleButtonHTML() {
+    return `<svg class="w-5 h-5" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+    <span>Continue with Google</span>`;
+}
 
 // --- Signup Handler ---
 window.handleSignup = function(e) {
@@ -50,8 +123,14 @@ window.handleSignup = function(e) {
 
 // --- Logout Handler ---
 window.logoutUser = function() {
-    // Clear auth state
+    // Clear both local and Supabase auth state
     localStorage.removeItem('avalmeos_auth');
+    localStorage.removeItem('supabase_user_auth');
+    
+    // Also sign out from Supabase
+    if (typeof window.supabaseAuth !== 'undefined' && window.supabaseAuth.signOutUser) {
+        window.supabaseAuth.signOutUser();
+    }
     
     // Restore UI elements immediately
     restoreAuthUI();

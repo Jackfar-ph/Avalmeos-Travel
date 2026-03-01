@@ -21,6 +21,7 @@
     <div id="modals-placeholder"></div>
 
     <!-- JavaScript Files -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="data.js"></script>
     
     <!-- Shared Utilities - Load first to eliminate code duplication -->
@@ -28,7 +29,9 @@
     <script>console.log('After shared-utils.js - window.getExchangeRate:', typeof window.getExchangeRate);</script>
     
     <!-- Core Modules -->
-    <script src="js/auth.js?v=5"></script>
+    <script src="js/auth.js?v=12"></script>
+    <script src="js/supabase-auth.js?v=4"></script>
+    <script src="js/auth-handlers.js?v=6"></script>
     <script>console.log('After auth.js - window.getCart:', typeof window.getCart);</script>
     <script src="js/cart.js?v=5"></script>
     <script>console.log('After cart.js - window.addToCart:', typeof window.addToCart, window.addToCart);</script>
@@ -57,7 +60,6 @@
     </script>
     
     <!-- Auth Handlers -->
-    <script src="js/auth-handlers.js?v=5"></script>
     
     <!-- Admin Module (legacy support) -->
     <script src="js/admin.js?v=5"></script>

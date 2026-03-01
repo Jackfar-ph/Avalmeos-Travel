@@ -41,8 +41,6 @@
                         </svg>
                     </button>
                     <div id="dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 hidden z-50">
-                        <a href="#profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
-                        <a href="#bookings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</a>
                         <a href="admin.html" id="admin-link" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             Admin Dashboard
                         </a>
@@ -54,7 +52,7 @@
                 </div>
             </div>
 
-            <button id="menu-btn" class="block lg:hidden w-8 h-6 relative z-[110]">
+            <button id="menu-btn" onclick="toggleMobileMenu()" class="block lg:hidden w-8 h-6 relative z-[110]">
                 <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-0"></span>
                 <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 top-2.5"></span>
                 <span class="absolute block w-full h-1 bg-[#1a4d41] rounded-full transition-all duration-300 bottom-0"></span>
@@ -102,6 +100,40 @@
 </div>
 
 <script>
+// Mobile menu toggle function
+window.toggleMobileMenu = function() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuBtn = document.getElementById('menu-btn');
+    
+    if (mobileMenu) {
+        const isOpen = !mobileMenu.classList.contains('translate-x-full');
+        
+        if (isOpen) {
+            // Close menu
+            mobileMenu.classList.add('translate-x-full');
+        } else {
+            // Open menu
+            mobileMenu.classList.remove('translate-x-full');
+        }
+    }
+    
+    if (menuBtn) {
+        const lines = menuBtn.querySelectorAll('span');
+        if (lines.length >= 3) {
+            const isOpen = !mobileMenu.classList.contains('translate-x-full');
+            if (isOpen) {
+                lines[0].classList.add('rotate-45', 'translate-y-2');
+                lines[1].classList.add('opacity-0');
+                lines[2].classList.add('-rotate-45', '-translate-y-2.5');
+            } else {
+                lines[0].classList.remove('rotate-45', 'translate-y-2');
+                lines[1].classList.remove('opacity-0');
+                lines[2].classList.remove('-rotate-45', '-translate-y-2.5');
+            }
+        }
+    }
+};
+
 // Mobile menu close helper
 window.closeMobileMenu = function() {
     const mobileMenu = document.getElementById('mobile-menu');
