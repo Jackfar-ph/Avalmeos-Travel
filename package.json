@@ -1,0 +1,13 @@
+{
+  "name": "avalmeos-travel",
+  "version": "1.0.0",
+  "description": "Avalmeo's Travel - Full Stack Application",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
