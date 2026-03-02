@@ -2131,6 +2131,25 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Fallback: Serve HTML files for non-API routes
+app.get('*', (req, res) => {
+  let filePath = req.path;
+  
+  // If it's a root path, serve index.html
+  if (filePath === '/') {
+    filePath = '/index.html';
+  }
+  
+  // Try to serve the file from parent directory
+  const fullPath = path.join(__dirname, '..', filePath);
+  res.sendFile(fullPath, (err) => {
+    // If file not found, try index.html (for SPA routing)
+    if (err) {
+      res.sendFile(path.join(__dirname, '..', 'index.html'));
+    }
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n✅ Avalmeo's Travel API running on http://localhost:${PORT}`);
