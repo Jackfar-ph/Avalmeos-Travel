@@ -113,12 +113,27 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from parent directory
-const staticPath = path.join(__dirname, '..');
-console.log('Serving static files from:', staticPath);
-app.use(express.static(staticPath));
+// Serve static files - try multiple paths
+const path = require('path');
+const rootDir = path.join(__dirname, '..');
+console.log('Root directory:', rootDir);
 
-// Also try serving from root /app directly
+// Check if admin.html exists
+const fs = require('fs');
+const adminPath = path.join(rootDir, 'admin.html');
+console.log('admin.html exists:', fs.existsSync(adminPath));
+console.log('Looking for admin.html at:', adminPath);
+
+// List files in root directory
+try {
+  const files = fs.readdirSync(rootDir);
+  console.log('Files in root directory:', files.slice(0, 10));
+} catch(e) {
+  console.log('Error reading root directory:', e.message);
+}
+
+app.use(express.static(rootDir));
+app.use(express.static(path.join(__dirname)));
 app.use(express.static('/app'));
 
 // Redirect root to admin.html
