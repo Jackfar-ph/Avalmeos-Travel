@@ -114,7 +114,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from parent directory
-app.use(express.static(path.join(__dirname, '..')));
+const staticPath = path.join(__dirname, '..');
+console.log('Serving static files from:', staticPath);
+app.use(express.static(staticPath));
+
+// Also try serving from root /app directly
+app.use(express.static('/app'));
 
 // Redirect root to admin.html
 app.get('/', (req, res) => {
