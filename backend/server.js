@@ -113,27 +113,25 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files - try multiple paths
-const rootDir = path.join(__dirname, '..');
-console.log('Root directory:', rootDir);
+// Serve static files - use /app as project root
+const projectRoot = '/app';
+console.log('Project root:', projectRoot);
 
-// Check if admin.html exists
+// Check if admin.html exists in /app
 const fs = require('fs');
-const adminPath = path.join(rootDir, 'admin.html');
-console.log('admin.html exists:', fs.existsSync(adminPath));
-console.log('Looking for admin.html at:', adminPath);
+const adminPath = path.join(projectRoot, 'admin.html');
+console.log('admin.html exists in /app:', fs.existsSync(adminPath));
 
-// List files in root directory
+// List files in /app
 try {
-  const files = fs.readdirSync(rootDir);
-  console.log('Files in root directory:', files.slice(0, 10));
+  const files = fs.readdirSync(projectRoot);
+  console.log('Files in /app:', files.slice(0, 15));
 } catch(e) {
-  console.log('Error reading root directory:', e.message);
+  console.log('Error reading /app:', e.message);
 }
 
-app.use(express.static(rootDir));
+app.use(express.static(projectRoot));
 app.use(express.static(path.join(__dirname)));
-app.use(express.static('/app'));
 
 // Redirect root to admin.html
 app.get('/', (req, res) => {
