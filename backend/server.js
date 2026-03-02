@@ -114,7 +114,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files - try multiple paths
-const path = require('path');
 const rootDir = path.join(__dirname, '..');
 console.log('Root directory:', rootDir);
 
