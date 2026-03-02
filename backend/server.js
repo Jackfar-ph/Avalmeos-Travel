@@ -2132,7 +2132,12 @@ app.get('/api/health', (req, res) => {
 });
 
 // Fallback: Serve HTML files for non-API routes
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
   let filePath = req.path;
   
   // If it's a root path, serve index.html
