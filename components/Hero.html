@@ -1,6 +1,6 @@
 <section id="home" class="relative h-screen w-full overflow-hidden flex items-center">
     <div class="absolute inset-0 z-0">
-        <img id="hero-main" src="Picture/Cebu City.jpg" class="w-full h-full object-cover brightness-75 bg-gray-300">
+        <img id="hero-main" src="Picture/Intramuros.webp" class="w-full h-full object-cover brightness-75 bg-gray-300">
     </div>
 
     <div class="relative z-10 px-[8%] text-white">
@@ -16,11 +16,38 @@
     </div>
 
     <div class="absolute right-[5%] top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-4 z-20">
-        <img src="Picture/Cebu City.jpg" data-src="Picture/Cebu City.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-white object-cover">
-        <img src="Picture/Old Manila.jpg" data-src="Picture/Old Manila.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
-        <img src="Picture/Baguio.jpg" data-src="Picture/Baguio.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
-        <img src="Picture/Davao.jpg" data-src="Picture/Davao.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
-        <img src="Picture/Puerto Princesa.jpg" data-src="Picture/Puerto Princesa.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
-        <img src="Picture/Iloilo.jpg" data-src="Picture/Iloilo.jpg" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer transition-all object-cover">
+        <img src="Picture/Intramuros.webp" data-src="Picture/Intramuros.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-white object-cover cursor-pointer hover:opacity-100">
+        <img src="Picture/Mt. Ulap Hiking Day Tour from Baguio.webp" data-src="Picture/Mt. Ulap Hiking Day Tour from Baguio.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition-all object-cover">
+        <img src="Picture/Sky Ranch Baguio.webp" data-src="Picture/Sky Ranch Baguio.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition-all object-cover">
+        <img src="Picture/Nature Tour in Davao.webp" data-src="Picture/Nature Tour in Davao.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition-all object-cover">
+        <img src="Picture/Puerto Princesa Underground River.webp" data-src="Picture/Puerto Princesa Underground River.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition-all object-cover">
+        <img src="Picture/Oslob Whaleshark.webp" data-src="Picture/Oslob Whaleshark.webp" class="nav-thumb w-24 h-16 rounded-lg border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition-all object-cover">
     </div>
 </section>
+
+<script>
+// Hero slider functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const heroMain = document.getElementById('hero-main');
+    const thumbs = document.querySelectorAll('.nav-thumb');
+    
+    if (heroMain && thumbs.length > 0) {
+        thumbs.forEach(thumb => {
+            thumb.addEventListener('click', function() {
+                const newSrc = this.getAttribute('data-src');
+                if (newSrc && heroMain.src !== newSrc) {
+                    heroMain.src = newSrc;
+                    
+                    // Update thumbnail borders
+                    thumbs.forEach(t => {
+                        t.classList.remove('border-white');
+                        t.classList.add('border-transparent', 'opacity-60');
+                    });
+                    this.classList.remove('border-transparent', 'opacity-60');
+                    this.classList.add('border-white');
+                }
+            });
+        });
+    }
+});
+</script>

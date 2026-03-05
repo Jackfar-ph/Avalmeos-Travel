@@ -38,13 +38,17 @@ const cityData = {
 };
 
 const packageData = {
-    "Cebu City": { title: "Cebu City Package Tour", price: 8497, originalCurrency: "PHP", details: "3D2N All-In: Hotel, Transfers, Temple of Leah, and Sirao Garden.", img: "Picture/Cebu City.jpg" },
-    "Manila": { title: "Old Manila Heritage Tour", price: 2399, originalCurrency: "PHP", details: "Full Day: Intramuros, Luneta, and National Museum with Lunch.", img: "Picture/Old Manila.jpg" },
-    "Baguio": { title: "Baguio City Package", price: 5898, originalCurrency: "PHP", details: "3D2N Escape: Camp John Hay, Mines View, and Strawberry Farm.", img: "Picture/Baguio.jpg" },
-    "Davao City": { title: "Davao Highland Tour", price: 4198, originalCurrency: "PHP", details: "Nature Adventure: Eden Nature Park and Philippine Eagle Center.", img: "Picture/Davao.jpg" },
-    "Puerto Princesa": { title: "Puerto Princesa Package", price: 7198, originalCurrency: "PHP", details: "Nature Escape: Underground River and Honda Bay Island Hopping.", img: "Picture/Puerto Princesa.jpg" },
-    "Iloilo": { title: "Iloilo City & Gigantes", price: 6498, originalCurrency: "PHP", details: "Cultural & Island Tour: Molo Church and Islas de Gigantes.", img: "Picture/Iloilo.jpg" }
+    "Cebu City": { title: "Cebu City Package Tour", price: 8497, originalCurrency: "PHP", details: "3D2N All-In: Hotel, Transfers, Temple of Leah, and Sirao Garden.", img: "Picture/Cebu City Private Day Tour.webp" },
+    "Manila": { title: "Old Manila Heritage Tour", price: 2399, originalCurrency: "PHP", details: "Full Day: Intramuros, Luneta, and National Museum with Lunch.", img: "Picture/Intramuros.webp" },
+    "Baguio": { title: "Baguio City Package", price: 5898, originalCurrency: "PHP", details: "3D2N Escape: Camp John Hay, Mines View, and Strawberry Farm.", img: "Picture/Sky Ranch Baguio.webp" },
+    "Davao City": { title: "Davao Highland Tour", price: 4198, originalCurrency: "PHP", details: "Nature Adventure: Eden Nature Park and Philippine Eagle Center.", img: "Picture/Nature Tour in Davao.webp" },
+    "Puerto Princesa": { title: "Puerto Princesa Package", price: 7198, originalCurrency: "PHP", details: "Nature Escape: Underground River and Honda Bay Island Hopping.", img: "Picture/Puerto Princesa Underground River.webp" },
+    "Iloilo": { title: "Iloilo City & Gigantes", price: 6498, originalCurrency: "PHP", details: "Cultural & Island Tour: Molo Church and Islas de Gigantes.", img: "Picture/Iloilo Pilgrimage.webp" }
 };
+
+// Expose to window for global access
+window.cityData = cityData;
+window.packageData = packageData;
 
 const packageMapping = {
     "Cebu City": "Cebu City Package Tour",

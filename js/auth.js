@@ -118,7 +118,7 @@ function validatePassword(password) {
 }
 
 // Register new user
-function registerUser(email, password, name, phone) {
+function registerUser(email, password, name, phone = '') {
     return new Promise((resolve, reject) => {
         // Validate inputs
         if (!validateEmail(email)) {
@@ -129,33 +129,71 @@ function registerUser(email, password, name, phone) {
             reject(validatePassword(password).message);
             return;
         }
-        if (!validatePhone(phone)) {
-            reject('Invalid Philippine phone number format (e.g., 09123456789)');
-            return;
-        }
+        
+        // Phone validation is now optional - skip if empty
+        
+        // Check if email exists in local users FIRST (before attempting Supabase signup)
         if (emailExists(email)) {
-            reject('Email already registered');
+            reject('Email already registered. Please use a different email or log in.');
             return;
         }
 
-        const users = getUsers();
-        const userId = 'user_' + Date.now();
-        
-        users[email.toLowerCase()] = {
-            id: userId,
-            email: email.toLowerCase(),
-            password: password,
-            name: name,
-            phone: phone,
-            role: 'user',
-            personalization: [],
-            createdAt: new Date().toISOString()
-        };
-        
-        saveUsers(users);
-        
-        // Auto login after registration
-        loginUser(email, password).then(resolve).catch(reject);
+        // Try Supabase signup first if available
+        if (window.supabaseAuth) {
+            window.supabaseAuth.signUpWithEmail(email, password, { name, phone })
+                .then(result => {
+                    if (result.success) {
+                        // Also save to local users for fallback
+                        const users = getUsers();
+                        const userId = 'user_' + Date.now();
+                        
+                        users[email.toLowerCase()] = {
+                            id: userId,
+                            email: email.toLowerCase(),
+                            password: password,
+                            name: name,
+                            phone: phone,
+                            role: 'user',
+                            personalization: [],
+                            createdAt: new Date().toISOString()
+                        };
+                        saveUsers(users);
+                        
+                        // Auto login after successful registration
+                        loginUser(email, password).then(resolve).catch(reject);
+                    } else {
+                        // Check if error indicates email already exists
+                        if (result.error && (result.error.includes('already been registered') || result.error.includes('already exists'))) {
+                            reject('Email already registered. Please use a different email or log in.');
+                        } else {
+                            reject(result.error || 'Registration failed');
+                        }
+                    }
+                })
+                .catch(error => {
+                    reject(error.message || 'Registration failed');
+                });
+        } else {
+            // Fall back to local-only registration
+            const users = getUsers();
+            const userId = 'user_' + Date.now();
+            
+            users[email.toLowerCase()] = {
+                id: userId,
+                email: email.toLowerCase(),
+                password: password,
+                name: name,
+                phone: phone,
+                role: 'user',
+                personalization: [],
+                createdAt: new Date().toISOString()
+            };
+            
+            saveUsers(users);
+            
+            // Auto login after registration
+            loginUser(email, password).then(resolve).catch(reject);
+        }
     });
 }
 
@@ -178,17 +216,9 @@ function loginUser(email, password) {
             return;
         }
         
-        // Save auth session
-        const user = users[userKey];
-        const authData = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone,
-            role: user.role,
-            personalization: user.personalization || [],
-            loggedInAt: new Date().toISOString()
-        };
+        // Save auth session to BOTH keys for UI compatibility
+        // supabase_user_auth is checked first by the UI
+        localStorage.setItem(SUPABASE_AUTH_KEY, JSON.stringify(authData));
         localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
         
         // Notify auth state listeners
@@ -318,6 +348,23 @@ async function initAuth() {
             const user = window.supabaseAuth.getStoredUser();
             if (user) {
                 // Force UI update
+                if (typeof AuthUIManager !== 'undefined') {
+                    AuthUIManager.updateAuthUI();
+                }
+                if (typeof window.updateAuthUI === 'function') {
+                    window.updateAuthUI();
+                }
+            }
+        } else {
+            // Supabase session check failed - check for local auth
+            const localAuth = localStorage.getItem(AUTH_KEY);
+            if (localAuth) {
+                // Copy local auth to supabase_user_auth for UI compatibility
+                const user = JSON.parse(localAuth);
+                localStorage.setItem(SUPABASE_AUTH_KEY, JSON.stringify(user));
+                console.log('[Auth] Restored auth from local storage');
+                
+                // Update UI
                 if (typeof AuthUIManager !== 'undefined') {
                     AuthUIManager.updateAuthUI();
                 }

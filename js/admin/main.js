@@ -850,17 +850,18 @@ function closeDeletePackageModal() {
 // ============================================================================
 
 async function loadDashboard() {
-    console.log('Loading dashboard...');
-    if (typeof window.loadDashboard === 'function' && window.loadDashboard !== loadDashboard) {
-        window.loadDashboard();
+    console.log('Loading dashboard - delegating to admin-tabs.js...');
+    // This function is now just a wrapper that delegates to the real implementation in admin-tabs.js
+    // The real loadDashboard is defined in admin-tabs.js and exposed via window there
+    if (typeof window.loadDashboard === 'function') {
+        // Call the window.loadDashboard which should be the one from admin-tabs.js
+        await window.loadDashboard();
     } else {
-        const dashboard = document.getElementById('admin-dashboard');
+        // Fallback - try to call the function directly from admin-tabs context
+        console.error('[Admin] loadDashboard not available - admin-tabs.js may not be loaded');
+        const dashboard = document.getElementById('admin-dashboard-tab');
         if (dashboard) {
-            dashboard.innerHTML = `
-                <div class="flex items-center justify-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a4d41]"></div>
-                </div>
-            `;
+            dashboard.innerHTML = '<div class="p-4 text-red-500">Error loading dashboard</div>';
         }
     }
 }
@@ -1406,6 +1407,7 @@ async function loadChatConversations() {
         }
         
         const baseUrl = window.API_BASE_URL || window.location.origin;
+        const url = new URL(`${baseUrl}/api/admin/chat/conversations`);
         if (currentChatFilter) {
             url.searchParams.append('status', currentChatFilter);
         }

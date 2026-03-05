@@ -109,8 +109,12 @@ function getStatusClass(status) {
 
 // Dashboard
 async function loadDashboard() {
-    const dashboard = document.getElementById('admin-dashboard');
-    if (!dashboard) return;
+    // Find the correct dashboard container
+    const dashboard = document.getElementById('admin-dashboard-tab');
+    if (!dashboard) {
+        console.error('[Admin] Dashboard container (admin-dashboard-tab) not found');
+        return;
+    }
     
     // Show loading
     dashboard.innerHTML = `

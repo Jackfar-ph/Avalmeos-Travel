@@ -259,7 +259,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="font-bold text-[#1a4d41]" id="booking-package-name"></h3>
-                                    <p class="text-sm text-gray-500">Best Value Package</p>
+                                    <p class="text-sm text-gray-500">Full Package</p>
                                 </div>
                                 <div class="text-2xl font-bold text-orange-500" id="booking-package-price"></div>
                             </div>
@@ -289,6 +289,51 @@
                         <button type="submit" class="w-full bg-[#1a4d41] text-white font-bold py-4 rounded-lg hover:bg-opacity-90 transition text-lg">Add to Cart 🛒</button>
                     </form>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Activity Booking Modal -->
+        <div id="activity-booking-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeActivityModal()"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+                <button onclick="closeActivityModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div class="bg-[#1a4d41] px-6 py-6">
+                    <h2 class="text-xl font-bold text-white">Book Activity</h2>
+                    <p class="text-white/80 text-sm mt-1" id="activity-booking-name"></p>
+                </div>
+                <form id="activity-booking-form" class="p-6 space-y-4">
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-[#1a4d41]" id="activity-name-display"></h3>
+                                <p class="text-sm text-gray-500" id="activity-city-display"></p>
+                            </div>
+                            <div class="text-2xl font-bold text-orange-500" id="activity-price-display"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date</label>
+                            <input type="date" id="activity-booking-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Pax</label>
+                            <input type="number" id="activity-booking-pax" value="1" min="1" max="20" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a4d41] focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1" id="activity-pax-display">1 Person</p>
+                        </div>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-700">Total:</span>
+                            <span class="text-2xl font-bold text-orange-500" id="activity-total-display"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-[#1a4d41] text-white font-bold py-4 rounded-lg hover:bg-opacity-90 transition text-lg">Add to Cart 🛒</button>
+                </form>
             </div>
         </div>
         
@@ -358,10 +403,10 @@
 
     <!-- JavaScript Files -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="data.js"></script>
+    <script src="data.js?v=2"></script>
     
     <!-- Shared Utilities - Load first to eliminate code duplication -->
-    <script src="js/utils/shared-utils.js?v=4"></script>
+    <script src="js/utils/shared-utils.js?v=6"></script>
     <script>console.log('After shared-utils.js - window.getExchangeRate:', typeof window.getExchangeRate);</script>
     
     <!-- Core Modules -->
@@ -380,6 +425,62 @@
 
     <script>
         let currentCity = '';
+        
+        // Initialize auth UI on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in and update UI
+            setTimeout(function() {
+                const supabaseAuth = localStorage.getItem('supabase_user_auth');
+                const localAuth = localStorage.getItem('avalmeos_auth');
+                
+                if (supabaseAuth || localAuth) {
+                    const user = supabaseAuth ? JSON.parse(supabaseAuth) : JSON.parse(localAuth);
+                    
+                    // Update UI elements
+                    const authButtons = document.getElementById('auth-buttons');
+                    const userMenu = document.getElementById('user-menu');
+                    const userName = document.getElementById('user-display-name');
+                    const adminLink = document.getElementById('admin-link');
+                    
+                    if (authButtons) {
+                        authButtons.classList.add('hidden');
+                        authButtons.style.display = 'none';
+                    }
+                    if (userMenu) {
+                        userMenu.classList.remove('hidden');
+                        userMenu.style.display = 'flex';
+                    }
+                    if (userName) {
+                        userName.textContent = user.name || user.first_name || (user.email ? user.email.split('@')[0] : 'User');
+                    }
+                    if (adminLink && user.role === 'admin') {
+                        adminLink.classList.remove('hidden');
+                        adminLink.style.display = 'block';
+                    }
+                    
+                    // Also update mobile menu
+                    const mobileAuth = document.getElementById('mobile-auth');
+                    const mobileUserMenu = document.getElementById('mobile-user-menu');
+                    const mobileUserName = document.getElementById('mobile-user-name');
+                    
+                    if (mobileAuth) {
+                        mobileAuth.classList.add('hidden');
+                        mobileAuth.style.display = 'none';
+                    }
+                    if (mobileUserMenu) {
+                        mobileUserMenu.classList.remove('hidden');
+                        mobileUserMenu.style.display = 'flex';
+                    }
+                    if (mobileUserName) {
+                        mobileUserName.textContent = user.name || user.first_name || (user.email ? user.email.split('@')[0] : 'User');
+                    }
+                    
+                    console.log('[CityDestination] Auth UI updated for logged-in user:', user.email);
+                } else {
+                    console.log('[CityDestination] No logged-in user found');
+                }
+            }, 500); // Small delay to ensure all scripts are loaded
+        });
         
         // Fallback functions if not loaded from shared-utils.js or cart.js
         function verifyCartFunctions() {
@@ -407,7 +508,34 @@
         
         // === CITY NAVIGATION (NO AUTOMATIC LOGOUT) ===
         window.navigateToCity = function(cityName) {
-            window.location.href = 'cityDestination.html?city=' + encodeURIComponent(cityName);
+            // Normalize city name to match known destinations
+            let normalizedCity = cityName;
+            
+            // Map of database names to cityData keys
+            const cityNameMapping = {
+                'Baguio City': 'Baguio',
+                'Cebu City': 'Cebu City',
+                'Davao City': 'Davao City',
+                'Manila': 'Manila',
+                'Puerto Princesa': 'Puerto Princesa',
+                'Iloilo City': 'Iloilo'
+            };
+            
+            // Check if we need to normalize
+            if (cityNameMapping[cityName]) {
+                normalizedCity = cityNameMapping[cityName];
+            } else {
+                // Try to find partial match
+                for (const [dbName, key] of Object.entries(cityNameMapping)) {
+                    if (cityName.toLowerCase().includes(dbName.toLowerCase()) || 
+                        dbName.toLowerCase().includes(cityName.toLowerCase())) {
+                        normalizedCity = key;
+                        break;
+                    }
+                }
+            }
+            
+            window.location.href = 'cityDestination.html?city=' + encodeURIComponent(normalizedCity);
         };
         
         function loadPackageDetails() {
@@ -568,7 +696,7 @@
                 navContainer.innerHTML = filteredCities
                     .map(city => {
                         // Get image from appropriate source
-                        let img = 'Picture/placeholder.jpg';
+                        let img = 'Picture/Cebu City.jpg';
                         if (city.source === 'api' && city.heroImage) {
                             img = city.heroImage;
                         } else if (city.source === 'hardcoded' && packageData[city.name]) {
@@ -583,7 +711,7 @@
                         
                         return `
                             <div onclick="navigateToCity('${city.name}')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition cursor-pointer group">
-                                <img src="${img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition" onerror="this.src='Picture/placeholder.jpg'">
+                                <img src="${img}" class="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:scale-105 transition" onerror="this.onerror=null;this.src='Picture/Cebu City.jpg'">
                                 <div>
                                     <p class="text-sm font-bold text-[#1a4d41] group-hover:text-orange-500">${city.name}</p>
                                     <p class="text-[10px] text-gray-400 uppercase font-bold">${price}</p>
@@ -617,8 +745,76 @@
                 image: pkg.hero_image
             };
             
+            // FIX: Also load activities from cityData even when using API package
+            // Normalize city name to find matching key in cityData
+            let normalizedCity = cityParam;
+            const cityKeys = Object.keys(cityData);
+            for (const key of cityKeys) {
+                if (key.toLowerCase() === cityParam.toLowerCase() ||
+                    cityParam.toLowerCase().includes(key.toLowerCase()) ||
+                    key.toLowerCase().includes(cityParam.toLowerCase())) {
+                    normalizedCity = key;
+                    break;
+                }
+            }
+            
+            currentCity = normalizedCity;
+            console.log('[CityPage] API package - normalized city:', normalizedCity, 'activities:', cityData[normalizedCity]?.length);
+            
+            // If we have hardcoded activities for this city, display them
+            if (cityData[normalizedCity] && cityData[normalizedCity].length > 0) {
+                renderActivitiesList(cityData[normalizedCity]);
+                // Initialize all activities as selected (price starts at max)
+                initializeAllActivitiesSelected();
+            } else {
+                // Try to find activities from API or show message
+                const activityContainer = document.getElementById('activity-list');
+                if (activityContainer) {
+                    activityContainer.innerHTML = '<p class="text-center text-gray-500 py-8">No activities available for this destination yet.</p>';
+                }
+            }
+            
             // FIX: Also render Explore Other Cities when loading from API
             renderExploreOtherCities();
+            
+            // Gallery - render from cityPhotos using normalized city name
+            const carousel = document.getElementById('photo-carousel');
+            const galleryPhotos = cityPhotos[normalizedCity] || [];
+            
+            if (galleryPhotos.length > 0) {
+                document.getElementById('photo-carousel-container').classList.remove('hidden');
+                carousel.className = 'flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x';
+                carousel.innerHTML = galleryPhotos.map(imgSrc => `
+                    <div class="flex-shrink-0 w-72 h-48 rounded-2xl overflow-hidden shadow-md snap-start card-zoom-container">
+                        <img src="${imgSrc}" onerror="this.onerror=null;this.src='Picture/Cebu City.jpg'" class="card-zoom-image w-full h-full object-cover">
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('photo-carousel-container').classList.add('hidden');
+            }
+        }
+        
+        // Helper function to render activities list
+        function renderActivitiesList(activities) {
+            const container = document.getElementById('activity-list');
+            if (!container) return;
+            
+            container.innerHTML = activities.map((act, index) => `
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex gap-4">
+                        <img src="${act.img || 'Picture/Intramuros.webp'}" class="w-24 h-24 object-cover rounded-lg" alt="${act.title}">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-[#1a4d41]">${act.title}</h4>
+                            <p class="text-gray-500 text-sm mt-1">${act.rating ? '★ ' + act.rating : ''}</p>
+                            <p class="text-orange-500 font-bold mt-2">${formatPrice(act.price)}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2">
+                        <input type="checkbox" id="book-activity-${index}" checked class="w-5 h-5 rounded border-gray-300 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="toggleActivityBooking('${act.title.replace(/'/g, "\\'")}', this.checked, ${index}, ${act.price || 0})">
+                        <label for="book-activity-${index}" class="text-sm font-medium text-[#1a4d41]">Book</label>
+                    </div>
+                </div>
+            `).join('');
         }
         
         function loadFromHardcodedData(cityParam, cityWithoutSpaces, cityLowerCase, cityWithoutSpacesLower) {
@@ -683,7 +879,7 @@
                 carousel.className = 'flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x';
                 carousel.innerHTML = photos.map(imgSrc => `
                     <div class="flex-shrink-0 w-72 h-48 rounded-2xl overflow-hidden shadow-md snap-start card-zoom-container">
-                        <img src="${imgSrc}" onerror="this.src='Picture/Cebu City.jpg'" class="card-zoom-image w-full h-full object-cover">
+                        <img src="${imgSrc}" onerror="this.onerror=null;this.src='Picture/Cebu City.jpg'" class="card-zoom-image w-full h-full object-cover">
                     </div>
                 `).join('');
             } else {
@@ -705,7 +901,7 @@
                         </div>
                         <div class="flex flex-col items-center gap-2">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="book-activity-${index}" class="w-5 h-5 rounded border-gray-300 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="toggleActivityBooking('${act.title.replace(/'/g, "\\'")}', this.checked, ${index})">
+                                <input type="checkbox" id="book-activity-${index}" checked class="w-5 h-5 rounded border-gray-300 text-[#1a4d41] focus:ring-[#1a4d41]" onchange="toggleActivityBooking('${act.title.replace(/'/g, "\\'")}', this.checked, ${index}, ${act.price || 0})">
                                 <span class="text-sm font-medium text-[#1a4d41]">Book</span>
                             </label>
                             <button onclick="bookActivity('${act.title.replace(/'/g, "\\'")}', ${index})" class="px-3 py-1 text-xs bg-[#1a4d41] text-white rounded-lg hover:bg-opacity-90 transition opacity-0" id="book-btn-${index}">
@@ -714,6 +910,9 @@
                         </div>
                     </div>
                 `).join('');
+                
+                // Initialize all activities as selected (price starts at max)
+                initializeAllActivitiesSelected();
                 
                 // Other cities nav - fetch from API and combine with hardcoded
                 // FIX: Now uses shared GLOBAL function renderExploreOtherCities()
@@ -733,47 +932,98 @@
         // === BOOKING CHECKBOX FUNCTIONS ===
         const selectedActivities = {};
         
-        window.toggleActivityBooking = function(activityTitle, isChecked, index) {
-            const bookBtn = document.getElementById('book-btn-' + index);
+        // Store activity prices for calculation
+        const activityPrices = {};
+        
+        // Initialize all activities as selected (price starts at max = sum of all activities)
+        function initializeAllActivitiesSelected() {
+            if (!cityData[currentCity]) return;
             
-            if (isChecked) {
-                selectedActivities[activityTitle] = true;
+            const activities = cityData[currentCity];
+            activities.forEach((act, index) => {
+                const activityTitle = act.title;
+                const activityPrice = act.price || 0;
+                
+                // Add to selected activities
+                selectedActivities[activityTitle] = activityPrice;
+                activityPrices[activityTitle] = activityPrice;
+                
+                // Also check the checkbox programmatically
+                const checkbox = document.getElementById('book-activity-' + index);
+                if (checkbox) checkbox.checked = true;
+            });
+            
+            // Calculate initial price (sum of all activities)
+            updatePackagePriceWithActivities();
+            console.log('[Activities] Initialized all activities selected. Total:', Object.values(activityPrices).reduce((a, b) => a + b, 0));
+        }
+        
+        window.toggleActivityBooking = function(activityTitle, isChecked, index, activityPrice) {
+            const bookBtn = document.getElementById('book-btn-' + index);
+            const activities = cityData[currentCity];
+            const activity = activities ? activities[index] : null;
+            
+            if (isChecked && activity) {
+                selectedActivities[activityTitle] = activityPrice || activity.price;
+                activityPrices[activityTitle] = activityPrice || activity.price;
                 if (bookBtn) bookBtn.classList.remove('opacity-0');
             } else {
                 delete selectedActivities[activityTitle];
+                delete activityPrices[activityTitle];
                 if (bookBtn) bookBtn.classList.add('opacity-0');
             }
             
+            // Update package price based on selected activities (price reduction)
+            updatePackagePriceWithActivities();
             updateSelectedActivitiesDisplay();
         };
         
-        window.bookActivity = function(activityTitle, index) {
-            const checkbox = document.getElementById('book-activity-' + index);
-            if (checkbox && checkbox.checked) {
-                // Find activity data
-                const activities = cityData[currentCity];
-                const activity = activities.find(a => a.title === activityTitle);
-                
-                if (activity) {
-                    // Add to cart as individual activity
-                    window.addToCart({
-                        title: activity.title,
-                        city: currentCity,
-                        img: activity.img,
-                        price: activity.price,
-                        originalCurrency: 'USD'
-                    }, 1, new Date().toISOString().split('T')[0], []);
-                    
-                    showNotification('Activity "' + activityTitle + '" added to cart!', 'success');
-                    
-                    // Uncheck after adding
-                    checkbox.checked = false;
-                    const bookBtn = document.getElementById('book-btn-' + index);
-                    if (bookBtn) bookBtn.classList.add('opacity-0');
-                    delete selectedActivities[activityTitle];
-                    updateSelectedActivitiesDisplay();
+        // Function to update package price when activities are selected
+        function updatePackagePriceWithActivities() {
+            const pkgPriceEl = document.getElementById('pkg-price');
+            if (!pkgPriceEl || !packageData[currentCity]) return;
+            
+            // Calculate total from selected activities only
+            // Price starts at max (all activities), decreases when unchecked
+            let totalActivityPrice = 0;
+            
+            // Sum up all selected activity prices
+            Object.values(activityPrices).forEach(price => {
+                totalActivityPrice += price;
+            });
+            
+            // Price is the sum of selected activities
+            const finalPrice = totalActivityPrice;
+            
+            // Update the displayed price
+            if (totalActivityPrice > 0) {
+                // Show the total price (starts at max = all activities selected)
+                pkgPriceEl.innerText = 'From ' + formatPrice(finalPrice);
+            } else {
+                pkgPriceEl.innerText = 'Select activities';
+            }
+            
+            // Store the calculated price for booking
+            packageData[currentCity].calculatedPrice = finalPrice;
+            packageData[currentCity].activityTotal = totalActivityPrice;
+            
+            // Also update booking modal price if open
+            const bookingModal = document.getElementById('booking-modal');
+            if (bookingModal && !bookingModal.classList.contains('hidden')) {
+                const pkgPriceBookingEl = document.getElementById('booking-package-price');
+                if (pkgPriceBookingEl) {
+                    if (totalActivityPrice > 0) {
+                        pkgPriceBookingEl.innerText = formatPrice(finalPrice);
+                    } else {
+                        pkgPriceBookingEl.innerText = 'Select activities';
+                    }
                 }
             }
+        };
+        
+        window.bookActivity = function(activityTitle, index) {
+            // Open activity booking modal instead of directly adding to cart
+            window.openActivityModal(activityTitle, index);
         };
         
         function updateSelectedActivitiesDisplay() {
@@ -991,12 +1241,21 @@
                     
                     console.log('addToCart returned:', cartItem);
                     
+                    // Show floating cart when item is added
+                    const floatingCart = document.getElementById('floating-cart');
+                    if (floatingCart) {
+                        floatingCart.classList.remove('hidden');
+                    }
+                    
+                    // Also call updateFloatingCart if available
+                    if (typeof window.updateFloatingCart === 'function') {
+                        window.updateFloatingCart();
+                    }
+                    
                     showNotification(personalization.length === 0 
                         ? 'Package added to cart without extra activities!' 
                         : 'Added to cart successfully!', 'success');
                     closeModal();
-                    
-                    setTimeout(() => { toggleFloatingCart(); }, 500);
                 } catch (error) {
                     console.error('Error in addToCart:', error);
                     showNotification('Error adding to cart: ' + error.message, 'error');
@@ -1028,6 +1287,185 @@
                 document.body.style.overflow = 'auto';
             }
         }
+        
+        // Activity Booking Modal Functions
+        let currentActivityData = null;
+        
+        window.openActivityModal = function(activityTitle, index) {
+            // Use the existing booking-modal that's already in the DOM
+            const modal = document.getElementById('booking-modal');
+            const modalTitle = document.getElementById('booking-city-name');
+            const pkgNameEl = document.getElementById('booking-package-name');
+            const pkgPriceEl = document.getElementById('booking-package-price');
+            const dateInput = document.getElementById('booking-date');
+            const paxInput = document.getElementById('booking-pax');
+            const paxDisplay = document.getElementById('pax-display');
+            const priceDisplay = document.getElementById('booking-price-display');
+            
+            if (!modal) {
+                console.error('Booking modal not found in DOM');
+                showNotification('Unable to open booking modal. Please refresh the page and try again.', 'error');
+                return;
+            }
+            
+            // Get activity data
+            let activities = cityData[currentCity];
+            if (!activities && currentCity) {
+                const cityKeys = Object.keys(cityData);
+                for (const key of cityKeys) {
+                    if (currentCity.toLowerCase().includes(key.toLowerCase()) || 
+                        key.toLowerCase().includes(currentCity.toLowerCase())) {
+                        activities = cityData[key];
+                        break;
+                    }
+                }
+            }
+            
+            const activity = activities ? activities[index] : null;
+            if (!activity) {
+                console.error('Activity not found:', activityTitle, 'at index:', index);
+                showNotification('Unable to book this activity. Please try again.', 'error');
+                return;
+            }
+            
+            currentActivityData = { activity, index };
+            
+            // Populate modal for activity
+            if (modalTitle) modalTitle.textContent = 'Activity: ' + currentCity;
+            if (pkgNameEl) pkgNameEl.textContent = activity.title;
+            if (pkgPriceEl) pkgPriceEl.textContent = formatPrice(activity.price);
+            
+            // Set default date to today
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+                // Set min date to today to prevent past dates
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.setAttribute('min', today);
+            }
+            if (paxInput) paxInput.value = 1;
+            if (paxDisplay) paxDisplay.textContent = '1 Person';
+            
+            // Update initial total
+            if (priceDisplay) priceDisplay.textContent = formatPrice(activity.price);
+            
+            // Add event listener to update total when pax changes
+            const updateActivityTotal = function() {
+                const pax = parseInt(paxInput?.value) || 1;
+                const total = activity.price * pax;
+                if (priceDisplay) priceDisplay.textContent = formatPrice(total);
+                if (paxDisplay) paxDisplay.textContent = pax + (pax > 1 ? ' Persons' : ' Person');
+            };
+            
+            // Remove old event listener if exists and add new one
+            if (paxInput) {
+                paxInput.removeEventListener('input', window._activityPaxListener);
+                paxInput.addEventListener('input', updateActivityTotal);
+                window._activityPaxListener = updateActivityTotal;
+            }
+            
+            // Update form for activity booking
+            const form = document.getElementById('booking-form');
+            if (form) {
+                // Remove old handler and add new one for activity
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop the document listener from also handling this
+                    
+                    const pax = parseInt(document.getElementById('booking-pax').value) || 1;
+                    const date = document.getElementById('booking-date').value;
+                    // Pass price PER PERSON - addToCart will multiply by pax
+                    const pricePerPerson = activity.price;
+                    
+                    window.addToCart({
+                        title: activity.title,
+                        city: currentCity,
+                        img: activity.img,
+                        price: pricePerPerson, // Price per person, not total!
+                        originalCurrency: 'PHP' // Use PHP since activity prices are in PHP
+                    }, pax, date, []);
+                    
+                    showNotification('Activity "' + activity.title + '" added to cart for ' + pax + ' person(s)!', 'success');
+                    
+                    // Show floating cart
+                    const floatingCart = document.getElementById('floating-cart');
+                    if (floatingCart) floatingCart.classList.remove('hidden');
+                    if (typeof window.updateFloatingCart === 'function') window.updateFloatingCart();
+                    
+                    window.closeModal();
+                };
+            }
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+        
+        window.closeActivityModal = function() {
+            // Use the main booking modal close
+            if (typeof window.closeModal === 'function') {
+                window.closeModal();
+            } else {
+                const modal = document.getElementById('booking-modal');
+                if (modal) modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+            currentActivityData = null;
+        };
+        
+        // Update activity total when pax changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const activityPaxInput = document.getElementById('activity-booking-pax');
+            if (activityPaxInput) {
+                activityPaxInput.addEventListener('input', function() {
+                    const pax = parseInt(this.value) || 1;
+                    document.getElementById('activity-pax-display').textContent = pax + (pax > 1 ? ' Persons' : ' Person');
+                    
+                    if (currentActivityData && currentActivityData.activity) {
+                        const total = currentActivityData.activity.price * pax;
+                        document.getElementById('activity-total-display').textContent = formatPrice(total);
+                    }
+                });
+            }
+            
+            // Activity booking form submit
+            const activityForm = document.getElementById('activity-booking-form');
+            if (activityForm) {
+                activityForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    if (!currentActivityData || !currentActivityData.activity) return;
+                    
+                    const activity = currentActivityData.activity;
+                    const pax = parseInt(document.getElementById('activity-booking-pax').value) || 1;
+                    const date = document.getElementById('activity-booking-date').value;
+                    const total = activity.price * pax;
+                    
+                    // Add to cart
+                    window.addToCart({
+                        title: activity.title,
+                        city: currentCity,
+                        img: activity.img,
+                        price: total,
+                        originalCurrency: 'USD',
+                        pricePerPerson: activity.price
+                    }, pax, date, []);
+                    
+                    showNotification('Activity "' + activity.title + '" added to cart for ' + pax + ' person(s)!', 'success');
+                    
+                    // Show floating cart
+                    const floatingCart = document.getElementById('floating-cart');
+                    if (floatingCart) {
+                        floatingCart.classList.remove('hidden');
+                    }
+                    
+                    if (typeof window.updateFloatingCart === 'function') {
+                        window.updateFloatingCart();
+                    }
+                    
+                    closeActivityModal();
+                });
+            }
+        });
         
         
         // Function to update all prices on currency toggle

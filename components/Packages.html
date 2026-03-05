@@ -50,7 +50,7 @@ let currentPackageData = {
 };
 
 // Open activities modal for a city
-function openActivitiesModal(cityName, packageTitle, price, image) {
+window.openActivitiesModal = function(cityName, packageTitle, price, image) {
     const modal = document.getElementById('activities-modal');
     const title = document.getElementById('activities-modal-title');
     const grid = document.getElementById('activities-modal-grid');
@@ -87,8 +87,8 @@ function openActivitiesModal(cityName, packageTitle, price, image) {
                 innerDiv.className = 'flex items-center gap-3 mb-3';
                 
                 const img = document.createElement('img');
-                img.src = act.img;
-                img.onerror = function() { this.src = 'Picture/placeholder.jpg'; };
+                img.src = act.img || 'Picture/Cebu Ocean Park.webp';
+                img.onerror = function() { this.onerror=null; this.src = 'Picture/Cebu Ocean Park.webp'; };
                 img.className = 'w-16 h-12 rounded-lg object-cover';
                 
                 const infoDiv = document.createElement('div');
@@ -132,7 +132,7 @@ function openActivitiesModal(cityName, packageTitle, price, image) {
 }
 
 // Close activities modal
-function closeActivitiesModal() {
+window.closeActivitiesModal = function() {
     const modal = document.getElementById('activities-modal');
     if (modal) {
         modal.classList.add('hidden');
@@ -140,8 +140,134 @@ function closeActivitiesModal() {
     }
 }
 
-// Book full package - add to cart
-function bookFullPackage() {
+// Book full package - show modal with date and pax selection
+window.bookFullPackage = async function() {
+    if (!currentPackageData.title) {
+        showNotification('Please select a package first', 'error');
+        return;
+    }
+    
+    console.log('bookFullPackage called, currentPackageData:', currentPackageData);
+    
+    // Wait for modals to be loaded (handle async loading)
+    let attempts = 0;
+    let modal = document.getElementById('booking-modal');
+    
+    console.log('Initial modal check:', modal);
+    
+    // Wait up to 2 seconds for modal to become available
+    while (!modal && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        modal = document.getElementById('booking-modal');
+        console.log('Modal check attempt', attempts, ':', modal);
+        attempts++;
+    }
+    
+    if (modal) {
+        console.log('Modal found, populating...');
+        // Use the existing booking modal from cityDestination page
+        // Populate it with package data
+        const cityNameEl = document.getElementById('booking-city-name');
+        const pkgNameEl = document.getElementById('booking-package-name');
+        const pkgPriceEl = document.getElementById('booking-package-price');
+        
+        if (cityNameEl) cityNameEl.textContent = currentPackageData.city || 'Tour Package';
+        if (pkgNameEl) pkgNameEl.textContent = currentPackageData.title;
+        if (pkgPriceEl) pkgPriceEl.textContent = formatPrice(currentPackageData.price);
+        
+        // Set default date
+        const dateInput = document.getElementById('booking-date');
+        if (dateInput) {
+            const travelDate = new Date();
+            travelDate.setDate(travelDate.getDate() + 7);
+            dateInput.value = travelDate.toISOString().split('T')[0];
+        }
+        
+        // Set default pax
+        const paxInput = document.getElementById('booking-pax');
+        if (paxInput) {
+            paxInput.value = 1;
+            const paxDisplay = document.getElementById('pax-display');
+            if (paxDisplay) paxDisplay.textContent = '1 Person';
+        }
+        
+        // Update total
+        const priceDisplay = document.getElementById('booking-price-display');
+        if (priceDisplay) {
+            priceDisplay.textContent = formatPrice(currentPackageData.price);
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Add form submit handler using onsubmit (like activity modal)
+        const bookingForm = document.getElementById('booking-form');
+        if (bookingForm) {
+            console.log('Setting up form handler for package booking');
+            bookingForm.onsubmit = function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Stop document listener from also firing
+                
+                const pax = parseInt(document.getElementById('booking-pax').value) || 1;
+                const date = document.getElementById('booking-date').value;
+                
+                if (!date) {
+                    showNotification('Please select a travel date', 'error');
+                    return;
+                }
+                
+                // Create package data object for cart
+                const packageData = {
+                    id: 'pkg_' + currentPackageData.city.toLowerCase().replace(/\s+/g, '_'),
+                    title: currentPackageData.title,
+                    city: currentPackageData.city,
+                    img: currentPackageData.img,
+                    price: currentPackageData.price,
+                    originalCurrency: 'PHP'
+                };
+                
+                // Add to cart
+                if (typeof window.addToCart === 'function') {
+                    window.addToCart(packageData, pax, date, []);
+                    showNotification('Package "' + currentPackageData.title + '" added to cart for ' + pax + ' person(s)!', 'success');
+                } else if (typeof addToCart === 'function') {
+                    addToCart(packageData, pax, date, []);
+                    showNotification('Package "' + currentPackageData.title + '" added to cart for ' + pax + ' person(s)!', 'success');
+                } else {
+                    showNotification('Cart functionality not available', 'error');
+                    return;
+                }
+                
+                // Close modal
+                const modal = document.getElementById('booking-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+                
+                // Show floating cart
+                const floatingCart = document.getElementById('floating-cart');
+                if (floatingCart) {
+                    floatingCart.classList.remove('hidden');
+                }
+                
+                if (typeof window.updateFloatingCart === 'function') {
+                    window.updateFloatingCart();
+                }
+            };
+        } else {
+            console.error('booking-form not found');
+        }
+    } else {
+        // Show error instead of silently adding to cart
+        console.error('Booking modal not found in DOM');
+        showNotification('Unable to open booking modal. Please refresh the page and try again.', 'error');
+    }
+}
+
+// Helper function to add package to cart (fallback)
+function addPackageToCart() {
     if (!currentPackageData.title) return;
     
     // Get today's date + 7 days as default travel date
@@ -263,7 +389,7 @@ function updateFloatingCart() {
         
         container.innerHTML = cart.items.map(item => `
             <div class="flex items-center gap-3 py-3 border-b">
-                <img src="${item.img || 'Picture/placeholder.jpg'}" class="w-12 h-12 rounded-lg object-cover">
+                <img src="${item.img || 'Picture/Cebu Ocean Park.webp'}" class="w-12 h-12 rounded-lg object-cover">
                 <div class="flex-1">
                     <h4 class="font-bold text-sm">${item.packageTitle}</h4>
                     <p class="text-xs text-gray-500">${item.city} | ${item.paxSize} pax</p>

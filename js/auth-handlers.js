@@ -32,6 +32,8 @@ window.handleLogin = function(e) {
 
 // Handle successful login (common for both Supabase and local auth)
 function handleLoginSuccess(user) {
+    console.log('[Auth] Login successful, user:', user);
+    
     closeAuthModal();
     
     // Check if admin user - redirect to admin dashboard
@@ -40,12 +42,11 @@ function handleLoginSuccess(user) {
         return;
     }
     
-    // Normal user - show welcome message
-    if (typeof AuthUIManager !== 'undefined') {
-        AuthUIManager.updateAuthUI();
-    }
+    // Use the helper function to update UI
+    updateAuthUIElements(user);
     
-    showNotification(`Welcome back, ${user.name || user.first_name || 'User'}!`, 'success');
+    // Show welcome message
+    showNotification(`Welcome back, ${user.name || user.email.split('@')[0]}!`, 'success');
 }
 
 // --- Google OAuth Handler ---
@@ -102,24 +103,144 @@ function getGoogleButtonHTML() {
 // --- Signup Handler ---
 window.handleSignup = function(e) {
     e.preventDefault();
+    e.stopPropagation();
+    
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
-    const phone = document.getElementById('signup-phone').value;
+    const phone = ''; // Phone number removed from signup
     const password = document.getElementById('signup-password').value;
+    
+    // Show loading state
+    const signupBtn = document.querySelector('#signup-form button[type="submit"]');
+    if (signupBtn) {
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Creating Account...';
+    }
     
     registerUser(email, password, name, phone)
         .then(user => {
+            console.log('[Auth] Signup successful, user:', user);
+            
+            // Close modal first
             closeAuthModal();
-            // Force immediate UI update
+            
+            // Get the user from localStorage to ensure we have correct data
+            const storedAuth = localStorage.getItem('avalmeos_auth');
+            const supabaseAuth = localStorage.getItem('supabase_user_auth');
+            const authData = storedAuth ? JSON.parse(storedAuth) : (supabaseAuth ? JSON.parse(supabaseAuth) : user);
+            
+            console.log('[Auth] Auth data from storage:', authData);
+            
+            // Show success notification
+            showNotification(`Welcome to Avalmeo's, ${authData.name || authData.email.split('@')[0]}! Your account has been created.`, 'success');
+            
+            // Update UI to show logged in state BEFORE reload
+            if (typeof updateAuthUIElements === 'function') {
+                updateAuthUIElements(authData);
+            }
             if (typeof AuthUIManager !== 'undefined') {
                 AuthUIManager.updateAuthUI();
             }
-            showNotification(`Welcome to Avalmeo's, ${user.name}!`, 'success');
+            if (typeof updateAuthUI === 'function') {
+                updateAuthUI();
+            }
+            
+            // Reload page to ensure UI properly reflects logged-in state
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+            
+            // Reset button state
+            if (signupBtn) {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
         })
         .catch(error => {
+            console.error('[Auth] Signup error:', error);
+            // Show error notification
             showNotification(error, 'error');
+            
+            // Reset button state
+            if (signupBtn) {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
         });
 };
+
+// Helper function to update auth UI elements
+function updateAuthUIElements(user) {
+    if (!user) {
+        console.warn('[Auth] No user data provided to updateAuthUIElements');
+        return;
+    }
+    
+    const userDisplayName = user.name || user.email.split('@')[0];
+    
+    // Desktop menu elements
+    const authButtons = document.getElementById('auth-buttons');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-display-name');
+    const adminLink = document.getElementById('admin-link');
+    
+    // Mobile menu elements
+    const mobileAuth = document.getElementById('mobile-auth');
+    const mobileUserMenu = document.getElementById('mobile-user-menu');
+    const mobileUserName = document.getElementById('mobile-user-name');
+    const mobileAdminLink = document.getElementById('mobile-admin-link');
+    
+    console.log('[Auth] Updating UI with user:', userDisplayName);
+    console.log('[Auth] Elements found - authButtons:', !!authButtons, 'userMenu:', !!userMenu);
+    
+    // Hide auth buttons, show user menu - desktop
+    if (authButtons) {
+        authButtons.classList.add('hidden');
+        authButtons.style.display = 'none';
+    }
+    if (userMenu) {
+        userMenu.classList.remove('hidden');
+        userMenu.style.display = 'flex';
+    }
+    if (userName) {
+        userName.textContent = userDisplayName;
+    }
+    
+    // Hide admin link for non-admin users
+    if (adminLink) {
+        adminLink.classList.add('hidden');
+        adminLink.style.display = 'none';
+    }
+    
+    // Mobile menu
+    if (mobileAuth) {
+        mobileAuth.classList.add('hidden');
+        mobileAuth.style.display = 'none';
+    }
+    if (mobileUserMenu) {
+        mobileUserMenu.classList.remove('hidden');
+        mobileUserMenu.style.display = 'flex';
+    }
+    if (mobileUserName) {
+        mobileUserName.textContent = userDisplayName;
+    }
+    if (mobileAdminLink) {
+        mobileAdminLink.classList.add('hidden');
+        mobileAdminLink.style.display = 'none';
+    }
+    
+    // Also call the AuthUIManager for any other updates
+    if (typeof AuthUIManager !== 'undefined') {
+        AuthUIManager.updateAuthUI();
+    }
+    
+    if (typeof window.updateAuthUI === 'function') {
+        window.updateAuthUI();
+    }
+}
+
+// Make it globally accessible
+window.updateAuthUIElements = updateAuthUIElements;
 
 // --- Logout Handler ---
 window.logoutUser = function() {

@@ -413,9 +413,9 @@ class HomePageDataService {
         // Render destinations with consistent styling
         container.innerHTML = this.dataSources.destinations.map(dest => `
             <div onclick="navigateToCity('${encodeURIComponent(dest.name)}')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg hover:shadow-xl transition-all">
-                <img src="${dest.hero_image || 'Picture/placeholder.jpg'}" 
+                <img src="${dest.hero_image || 'Picture/Intramuros.webp'}" 
                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                     onerror="this.src='Picture/placeholder.jpg'"
+                     onerror="this.onerror=null;this.src='Picture/Cebu City.jpg';this.onerror=null"
                      alt="${dest.name}">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                 <div class="absolute bottom-5 left-5 text-white">
@@ -438,9 +438,9 @@ class HomePageDataService {
         // Render activities
         container.innerHTML = this.dataSources.activities.map(activity => `
             <div class="activity-card" data-id="${activity.id}">
-                <img src="${activity.hero_image || 'Picture/placeholder.jpg'}" 
+                <img src="${activity.hero_image || 'Picture/Cebu Ocean Park.webp'}" 
                      alt="${activity.name}"
-                     onerror="this.src='Picture/placeholder.jpg'">
+                     onerror="this.onerror=null;this.src='Picture/Cebu Ocean Park.webp'">
                 <div class="activity-info">
                     <h4>${activity.name}</h4>
                     <p class="price">${this.formatPrice(activity.price)}</p>
@@ -462,9 +462,9 @@ class HomePageDataService {
         // Render packages
         container.innerHTML = this.dataSources.packages.map(pkg => `
             <div class="package-card" data-id="${pkg.id}">
-                <img src="${pkg.hero_image || 'Picture/placeholder.jpg'}" 
+                <img src="${pkg.hero_image || 'Picture/Intramuros.webp'}" 
                      alt="${pkg.name}"
-                     onerror="this.src='Picture/placeholder.jpg'">
+                     onerror="this.onerror=null;this.src='Picture/Intramuros.webp'">
                 <div class="package-info">
                     <h4>${pkg.name}</h4>
                     <p class="duration">${pkg.duration} Days</p>

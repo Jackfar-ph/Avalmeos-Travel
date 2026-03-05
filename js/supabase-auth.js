@@ -439,6 +439,13 @@ async function checkAndRefreshSession() {
         }
         
         if (!session) {
+            // No Supabase session - but check if user has valid local auth
+            // Don't clear localStorage if there's a valid local auth session
+            const localAuth = localStorage.getItem('avalmeos_auth');
+            if (localAuth) {
+                console.log('[SupabaseAuth] No Supabase session, but local auth exists');
+                return true; // Keep local auth active
+            }
             // No session, clear stored user
             localStorage.removeItem(SUPABASE_USER_KEY);
             localStorage.removeItem('supabase_user_auth');
@@ -455,6 +462,12 @@ async function checkAndRefreshSession() {
             
             if (refreshError) {
                 console.log('[SupabaseAuth] Session refresh failed:', refreshError);
+                // Check if user has valid local auth - don't clear it
+                const localAuth = localStorage.getItem('avalmeos_auth');
+                if (localAuth) {
+                    console.log('[SupabaseAuth] Refresh failed, but local auth exists');
+                    return true; // Keep local auth active
+                }
                 localStorage.removeItem(SUPABASE_USER_KEY);
                 localStorage.removeItem('supabase_user_auth');
                 return false;
@@ -546,7 +559,21 @@ async function checkExistingSession() {
                 history.replaceState(null, '', window.location.pathname);
             }
         } else {
-            console.log('[SupabaseAuth] No existing session found');
+            // No Supabase session found - check if local auth exists
+            const localAuth = localStorage.getItem('avalmeos_auth');
+            if (localAuth) {
+                console.log('[SupabaseAuth] No Supabase session, but local auth found - preserving it');
+                // Copy local auth to supabase_user_auth for UI compatibility
+                const user = JSON.parse(localAuth);
+                localStorage.setItem('supabase_user_auth', JSON.stringify(user));
+                
+                // Update UI for logged-in state
+                if (typeof AuthUIManager !== 'undefined') {
+                    AuthUIManager.updateAuthUI();
+                }
+            } else {
+                console.log('[SupabaseAuth] No existing session found');
+            }
         }
     } catch (error) {
         console.error('[SupabaseAuth] Error in checkExistingSession:', error);

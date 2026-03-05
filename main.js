@@ -486,9 +486,9 @@ function renderDestinationsStatic(destinations) {
     
     container.innerHTML = destinations.map(dest => `
         <div onclick="navigateToCity('${encodeURIComponent(dest.name)}')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg hover:shadow-xl transition-all">
-            <img src="${dest.hero_image || 'Picture/placeholder.jpg'}" 
+            <img src="${dest.hero_image || 'Picture/Cebu City.jpg'}" 
                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                 onerror="this.src='Picture/placeholder.jpg'"
+                 onerror="this.onerror=null;this.src='Picture/Cebu City.jpg'"
                  alt="${dest.name}">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             <div class="absolute bottom-5 left-5 text-white">
@@ -598,7 +598,34 @@ window.selectSearch = function(city) {
 
 // Navigate to city (preserves user session)
 window.navigateToCity = function(city) {
-    window.location.href = `cityDestination.html?city=${encodeURIComponent(city)}`;
+    // Normalize city name to match known destinations
+    let normalizedCity = city;
+    
+    // Map of database names to cityData keys
+    const cityNameMapping = {
+        'Baguio City': 'Baguio',
+        'Cebu City': 'Cebu City',
+        'Davao City': 'Davao City',
+        'Manila': 'Manila',
+        'Puerto Princesa': 'Puerto Princesa',
+        'Iloilo City': 'Iloilo'
+    };
+    
+    // Check if we need to normalize
+    if (cityNameMapping[city]) {
+        normalizedCity = cityNameMapping[city];
+    } else {
+        // Try to find partial match
+        for (const [dbName, key] of Object.entries(cityNameMapping)) {
+            if (city.toLowerCase().includes(dbName.toLowerCase()) || 
+                dbName.toLowerCase().includes(city.toLowerCase())) {
+                normalizedCity = key;
+                break;
+            }
+        }
+    }
+    
+    window.location.href = `cityDestination.html?city=${encodeURIComponent(normalizedCity)}`;
 };
 
 // --- 7. HERO SLIDER ---
@@ -1089,6 +1116,15 @@ document.addEventListener('submit', function(e) {
             return;
         }
         
+        // Validate date is not in the past
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+            showNotification('Please select a valid future date', 'error');
+            return;
+        }
+        
         const cartItem = window.addToCart(
             { ...pkg, city: cityName, id: cityName, originalCurrency: 'PHP' },
             pax,
@@ -1198,9 +1234,28 @@ window.openActivitiesModal = function(cityName, packageTitle, price, image) {
         console.warn('cityData not loaded');
         grid.innerHTML = '<p class="text-center text-gray-500 py-8">Loading activities...</p>';
     } else {
-        const activities = cityData[cityName];
+        // Try to find matching city key (handle different formats like "cebu-city" vs "Cebu City")
+        let matchedCityName = cityName;
+        const cityKeys = Object.keys(cityData);
+        
+        // Direct match
+        if (cityData[cityName]) {
+            matchedCityName = cityName;
+        } else {
+            // Try to find matching key (case-insensitive or with hyphen/space conversion)
+            const normalizedInput = cityName.toLowerCase().replace(/-/g, ' ');
+            for (const key of cityKeys) {
+                const normalizedKey = key.toLowerCase().replace(/-/g, ' ');
+                if (normalizedKey === normalizedInput || normalizedKey.includes(normalizedInput) || normalizedInput.includes(normalizedKey)) {
+                    matchedCityName = key;
+                    break;
+                }
+            }
+        }
+        
+        const activities = cityData[matchedCityName];
         if (!activities || activities.length === 0) {
-            grid.innerHTML = '<p class="text-center text-gray-500 py-8">No activities available for ' + cityName + '</p>';
+            grid.innerHTML = '<p class="text-center text-gray-500 py-8">No activities available for ' + matchedCityName + '</p>';
         } else {
             // Clear existing content and build safely using DOM to prevent XSS
             grid.innerHTML = '';
@@ -1301,6 +1356,123 @@ window.openBookingModal = function(cityName, packageTitle, price, image) {
     document.body.style.overflow = 'hidden';
 };
 
+// Book full package - show modal with date and pax selection
+window.bookFullPackage = async function() {
+    const pkg = window.currentPackageData || currentPackageData;
+    if (!pkg || !pkg.title) {
+        console.warn('No package data available');
+        showNotification('Please select a package first', 'error');
+        return;
+    }
+    
+    console.log('bookFullPackage called, pkg:', pkg);
+    
+    // Wait for modals to be loaded
+    let attempts = 0;
+    let modal = document.getElementById('booking-modal');
+    
+    while (!modal && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        modal = document.getElementById('booking-modal');
+        attempts++;
+    }
+    
+    if (modal) {
+        console.log('Modal found, populating...');
+        const cityNameEl = document.getElementById('booking-city-name');
+        const pkgNameEl = document.getElementById('booking-package-name');
+        const pkgPriceEl = document.getElementById('booking-package-price');
+        
+        if (cityNameEl) cityNameEl.textContent = pkg.city || 'Tour Package';
+        if (pkgNameEl) pkgNameEl.textContent = pkg.title;
+        if (pkgPriceEl) pkgPriceEl.textContent = formatPrice(pkg.price);
+        
+        // Set default date
+        const dateInput = document.getElementById('booking-date');
+        if (dateInput) {
+            const travelDate = new Date();
+            travelDate.setDate(travelDate.getDate() + 7);
+            dateInput.value = travelDate.toISOString().split('T')[0];
+            // Set min date to today
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
+        }
+        
+        // Set default pax
+        const paxInput = document.getElementById('booking-pax');
+        if (paxInput) {
+            paxInput.value = 1;
+            const paxDisplay = document.getElementById('pax-display');
+            if (paxDisplay) paxDisplay.textContent = '1 Person';
+        }
+        
+        // Update total
+        const priceDisplay = document.getElementById('booking-price-display');
+        if (priceDisplay) {
+            priceDisplay.textContent = formatPrice(pkg.price);
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Set up form handler
+        const bookingForm = document.getElementById('booking-form');
+        if (bookingForm) {
+            bookingForm.onsubmit = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const pax = parseInt(document.getElementById('booking-pax').value) || 1;
+                const date = document.getElementById('booking-date').value;
+                
+                if (!date) {
+                    showNotification('Please select a travel date', 'error');
+                    return;
+                }
+                
+                // Validate date is not in the past
+                const selectedDate = new Date(date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (selectedDate < today) {
+                    showNotification('Please select a valid future date', 'error');
+                    return;
+                }
+                
+                const packageDataObj = {
+                    id: 'pkg_' + (pkg.city || '').toLowerCase().replace(/\s+/g, '_'),
+                    title: pkg.title,
+                    city: pkg.city,
+                    img: pkg.img,
+                    price: pkg.price,
+                    originalCurrency: 'PHP'
+                };
+                
+                if (typeof window.addToCart === 'function') {
+                    window.addToCart(packageDataObj, pax, date, []);
+                    showNotification('Package "' + pkg.title + '" added to cart for ' + pax + ' person(s)!', 'success');
+                }
+                
+                // Close modal
+                const m = document.getElementById('booking-modal');
+                if (m) {
+                    m.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+                
+                // Show floating cart
+                const floatingCart = document.getElementById('floating-cart');
+                if (floatingCart) floatingCart.classList.remove('hidden');
+                if (typeof window.updateFloatingCart === 'function') window.updateFloatingCart();
+            };
+        }
+    } else {
+        console.error('Booking modal not found');
+        showNotification('Unable to open booking modal', 'error');
+    }
+};
+
 // --- 20. ADMIN DASHBOARD NAVIGATION ---
 // Open admin dashboard
 window.openAdminDashboard = function() {
@@ -1323,10 +1495,22 @@ window.loadHomepagePackages = async function() {
             container.innerHTML = packages.map(pkg => {
                 const price = pkg.price || 0;
                 const duration = pkg.duration || 1;
-                const image = pkg.hero_image || 'Picture/placeholder.jpg';
+                const image = pkg.hero_image || 'Picture/Cebu%20City.jpg';
                 const name = pkg.name || 'Package';
                 const packageType = pkg.package_type || 'tour';
-                const destination = pkg.destination_name || (pkg.destinations ? pkg.destinations.name : '');
+                // Try destination_name first, then destinations.name, then try to extract from package name
+                let destination = pkg.destination_name || (pkg.destinations ? pkg.destinations.name : '');
+                
+                // If destination is still empty, try to extract from package name
+                if (!destination && name) {
+                    const cityNames = ['Cebu City', 'Manila', 'Baguio', 'Davao City', 'Puerto Princesa', 'Iloilo'];
+                    for (const city of cityNames) {
+                        if (name.toLowerCase().includes(city.toLowerCase())) {
+                            destination = city;
+                            break;
+                        }
+                    }
+                }
                 
                 return `
                     <div onclick="openActivitiesModal('${destination}', '${name.replace(/'/g, "\\'")}', ${price}, '${image}')" 
@@ -1334,7 +1518,7 @@ window.loadHomepagePackages = async function() {
                         <div class="relative overflow-hidden aspect-[4/5]">
                             <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">${duration}D${duration > 1 ? duration - 1 : ''}N ${packageType}</div>
                             <img src="${image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
-                                 onerror="this.src='Picture/placeholder.jpg'">
+                                 onerror="this.onerror=null;this.src='Picture/Intramuros.webp'">
                         </div>
                         <div class="p-4">
                             <h3 class="font-bold text-base leading-tight">${name}</h3>

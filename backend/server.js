@@ -113,21 +113,35 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files - use /app as project root
-const projectRoot = '/app';
+// Serve static files - detect project root dynamically
+// Note: 'path' is already required at the top of this file
+const fs = require('fs');
+
+// Try to detect the project root (parent of backend folder)
+let projectRoot = path.join(__dirname, '..');
+
+// Verify the detected path has expected files
+if (!fs.existsSync(path.join(projectRoot, 'index.html'))) {
+    // Fallback: assume server.js is in backend folder, go up one more level
+    projectRoot = path.join(__dirname, '..');
+    if (!fs.existsSync(path.join(projectRoot, 'index.html'))) {
+        // Another fallback: use current directory
+        projectRoot = __dirname;
+    }
+}
+
 console.log('Project root:', projectRoot);
 
-// Check if admin.html exists in /app
-const fs = require('fs');
-const adminPath = path.join(projectRoot, 'admin.html');
-console.log('admin.html exists in /app:', fs.existsSync(adminPath));
+// Check if index.html exists in project root
+const indexPath = path.join(projectRoot, 'index.html');
+console.log('index.html exists:', fs.existsSync(indexPath));
 
-// List files in /app
+// List files in project root to debug
 try {
   const files = fs.readdirSync(projectRoot);
-  console.log('Files in /app:', files.slice(0, 15));
+  console.log('Files in project root:', files.slice(0, 15));
 } catch(e) {
-  console.log('Error reading /app:', e.message);
+  console.log('Error reading project root:', e.message);
 }
 
 app.use(express.static(projectRoot));

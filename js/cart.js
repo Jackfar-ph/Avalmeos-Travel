@@ -393,6 +393,41 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('en-PH', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+// Get current user - checks all possible auth keys
+function getCurrentUser() {
+    // Check window.getCurrentUser first (from auth.js)
+    if (typeof window.getCurrentUser === 'function') {
+        const user = window.getCurrentUser();
+        if (user) return user;
+    }
+    
+    // Check Supabase auth
+    const supabaseAuth = localStorage.getItem('supabase_user_auth');
+    if (supabaseAuth) {
+        try {
+            return JSON.parse(supabaseAuth);
+        } catch (e) {}
+    }
+    
+    // Check avalmeos_auth (from chat.js)
+    const authData = localStorage.getItem('avalmeos_auth');
+    if (authData) {
+        try {
+            return JSON.parse(authData);
+        } catch (e) {}
+    }
+    
+    // Check local auth
+    const localAuth = localStorage.getItem('avalmeos_auth_local');
+    if (localAuth) {
+        try {
+            return JSON.parse(localAuth);
+        } catch (e) {}
+    }
+    
+    return null;
+}
+
 // Checkout
 async function checkout() {
     const user = getCurrentUser();

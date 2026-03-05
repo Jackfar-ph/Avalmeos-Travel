@@ -5,7 +5,7 @@
 
 -- First, update destinations with hero images
 UPDATE destinations SET hero_image = 'Picture/Cebu City.jpg' WHERE name ILIKE 'Cebu City';
-UPDATE destinations SET hero_image = 'Picture/Manila.jpg' WHERE name ILIKE 'Manila';
+UPDATE destinations SET hero_image = 'Picture/Old Manila.jpg' WHERE name ILIKE 'Manila';
 UPDATE destinations SET hero_image = 'Picture/Baguio.jpg' WHERE name ILIKE 'Baguio';
 UPDATE destinations SET hero_image = 'Picture/Davao.jpg' WHERE name ILIKE 'Davao City';
 UPDATE destinations SET hero_image = 'Picture/Puerto Princesa.jpg' WHERE name ILIKE 'Puerto Princesa';
