@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { supabase } = require('../config/database');
 
 // Verify JWT token middleware
 const authenticateToken = (req, res, next) => {
@@ -73,8 +74,55 @@ const generateToken = (user) => {
   );
 };
 
+// Authenticate with database verification
+const authenticateTokenWithDB = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Access token required' 
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Verify user still exists in database
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, email, role, is_active')
+      .eq('id', decoded.id)
+      .single();
+
+    if (error || !user) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Account is deactivated' 
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Invalid or expired token' 
+    });
+  }
+};
+
 module.exports = {
   authenticateToken,
+  authenticateTokenWithDB,
   optionalAuth,
   requireAdmin,
   generateToken

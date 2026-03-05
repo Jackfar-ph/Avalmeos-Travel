@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { supabase } = require('./config/database');
-const { authenticateToken, requireAdmin, generateToken } = require('./middleware/auth');
+const { authenticateToken, authenticateTokenWithDB, requireAdmin, generateToken } = require('./middleware/auth');
 const emailService = require('./services/email-service');
 const { 
   validateDestinationCreate, 
@@ -633,7 +633,7 @@ app.get('/api/reviews/activity/:activity_id', async (req, res) => {
 });
 
 // Submit a review (requires authentication)
-app.post('/api/reviews', authenticateToken, async (req, res) => {
+app.post('/api/reviews', authenticateTokenWithDB, async (req, res) => {
   try {
     const { destination_id, activity_id, rating, title, comment } = req.body;
     
@@ -721,6 +721,261 @@ app.get('/api/reviews/my', authenticateToken, async (req, res) => {
     res.json({ success: true, data: data || [] });
   } catch (error) {
     console.error('My reviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Delete user's own review
+app.delete('/api/reviews/:id', authenticateToken, async (req, res) => {
+  try {
+    const reviewId = req.params.id;
+    const userId = req.user.id;
+    
+    // First, verify the review exists and belongs to the user
+    const { data: review, error: fetchError } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (fetchError || !review) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Review not found or access denied' 
+      });
+    }
+    
+    // Delete the review
+    const { error: deleteError } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId);
+    
+    if (deleteError) throw deleteError;
+    
+    // Update destination average rating if this was a destination review
+    if (review.destination_id) {
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('destination_id', review.destination_id)
+        .eq('is_public', true);
+      
+      if (reviews?.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        await supabase
+          .from('destinations')
+          .update({ 
+            average_rating: avgRating.toFixed(2),
+            total_reviews: reviews.length
+          })
+          .eq('id', review.destination_id);
+      } else {
+        // No more reviews for this destination
+        await supabase
+          .from('destinations')
+          .update({ 
+            average_rating: 0,
+            total_reviews: 0
+          })
+          .eq('id', review.destination_id);
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Review deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Delete review error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin: Get all reviews (for admin review management)
+app.get('/api/admin/reviews', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search, destination_id, activity_id } = req.query;
+    const offset = (page - 1) * limit;
+    
+    let query = supabase
+      .from('reviews')
+      .select(`
+        *,
+        user:users(email, role),
+        user_profile:user_profiles(first_name, last_name, avatar_url),
+        destination:destinations(name),
+        activity:activities(name)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
+    
+    if (search) {
+      query = query.or(`comment.ilike.%${search}%,title.ilike.%${search}%`);
+    }
+    
+    if (destination_id) {
+      query = query.eq('destination_id', destination_id);
+    }
+    
+    if (activity_id) {
+      query = query.eq('activity_id', activity_id);
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) throw error;
+    
+    res.json({ 
+      success: true, 
+      data: data || [],
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count || 0,
+        pages: Math.ceil((count || 0) / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Admin reviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin: Delete any review with audit logging
+app.delete('/api/admin/reviews/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const reviewId = req.params.id;
+    const adminId = req.user.id;
+    
+    // Get review details before deletion for audit log
+    const { data: review, error: fetchError } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        user:users(email),
+        destination:destinations(name),
+        activity:activities(name)
+      `)
+      .eq('id', reviewId)
+      .single();
+    
+    if (fetchError || !review) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Review not found' 
+      });
+    }
+    
+    // Delete the review
+    const { error: deleteError } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId);
+    
+    if (deleteError) throw deleteError;
+    
+    // Create audit log entry
+    const auditLog = {
+      action: 'REVIEW_DELETED',
+      admin_id: adminId,
+      admin_email: req.user.email,
+      target_user_id: review.user_id,
+      target_user_email: review.user?.email,
+      review_id: reviewId,
+      review_content: {
+        title: review.title,
+        comment: review.comment,
+        rating: review.rating,
+        destination: review.destination?.name,
+        activity: review.activity?.name
+      },
+      reason: req.body.reason || 'Admin discretion',
+      ip_address: req.ip || req.connection.remoteAddress,
+      user_agent: req.get('User-Agent') || 'Unknown',
+      created_at: new Date().toISOString()
+    };
+    
+    // Store audit log (create table if it doesn't exist)
+    await supabase.from('review_audit_logs').insert(auditLog);
+    
+    // Update destination average rating if this was a destination review
+    if (review.destination_id) {
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('destination_id', review.destination_id)
+        .eq('is_public', true);
+      
+      if (reviews?.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        await supabase
+          .from('destinations')
+          .update({ 
+            average_rating: avgRating.toFixed(2),
+            total_reviews: reviews.length
+          })
+          .eq('id', review.destination_id);
+      } else {
+        // No more reviews for this destination
+        await supabase
+          .from('destinations')
+          .update({ 
+            average_rating: 0,
+            total_reviews: 0
+          })
+          .eq('id', review.destination_id);
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Review deleted successfully by admin',
+      audit_log: auditLog
+    });
+  } catch (error) {
+    console.error('Admin delete review error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin: Get review audit logs
+app.get('/api/admin/review-audit-logs', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, admin_id, target_user_id } = req.query;
+    const offset = (page - 1) * limit;
+    
+    let query = supabase
+      .from('review_audit_logs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
+    
+    if (admin_id) {
+      query = query.eq('admin_id', admin_id);
+    }
+    
+    if (target_user_id) {
+      query = query.eq('target_user_id', target_user_id);
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) throw error;
+    
+    res.json({ 
+      success: true, 
+      data: data || [],
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count || 0,
+        pages: Math.ceil((count || 0) / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Audit logs error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

@@ -143,6 +143,37 @@ class ApiService {
   }
 
   // ======================
+  // REVIEWS
+  // ======================
+
+  async getReviews(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/reviews${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getReviewsForActivity(activityId, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/reviews/activity/${activityId}${queryString ? '?' + queryString : ''}`);
+  }
+
+  async submitReview(reviewData) {
+    return this.request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
+  }
+
+  async getMyReviews() {
+    return this.request('/reviews/my');
+  }
+
+  async deleteReview(reviewId) {
+    return this.request(`/reviews/${reviewId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // ======================
   // INQUIRIES
   // ======================
 
