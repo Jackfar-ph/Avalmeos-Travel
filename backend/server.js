@@ -1581,8 +1581,24 @@ app.get('/api/admin/activities', authenticateToken, requireAdmin, async (req, re
 // Create activity with validation
 app.post('/api/admin/activities', authenticateToken, requireAdmin, validateActivityCreate, handleValidationErrors, async (req, res) => {
   try {
+    // Filter out fields that are not in the activities table schema
+    const { 
+      destination_name,  // Use destination_id instead
+      image_url,        // Use hero_image instead
+      min_participants, // Not in schema
+      max_participants, // Use max_group_size instead
+      ...activityData 
+    } = req.body;
+    
+    // Map frontend fields to database schema fields
+    const dbData = {
+      ...activityData,
+      hero_image: activityData.hero_image || image_url || null,
+      max_group_size: activityData.max_group_size || max_participants || null
+    };
+    
     const { data, error } = await supabase.from('activities')
-      .insert({ ...req.body, created_at: new Date().toISOString() })
+      .insert({ ...dbData, created_at: new Date().toISOString() })
       .select()
       .single();
     
@@ -1608,8 +1624,24 @@ app.post('/api/admin/activities', authenticateToken, requireAdmin, validateActiv
 app.put('/api/admin/activities/:id', authenticateToken, requireAdmin, validateActivityUpdate, async (req, res) => {
   try {
     const { id } = req.params;
+    // Filter out fields that are not in the activities table schema
+    const { 
+      destination_name,  // Use destination_id instead
+      image_url,        // Use hero_image instead
+      min_participants, // Not in schema
+      max_participants, // Use max_group_size instead
+      ...activityData 
+    } = req.body;
+    
+    // Map frontend fields to database schema fields
+    const dbData = {
+      ...activityData,
+      hero_image: activityData.hero_image || image_url || null,
+      max_group_size: activityData.max_group_size || max_participants || null
+    };
+    
     const { data, error } = await supabase.from('activities')
-      .update({ ...req.body, updated_at: new Date().toISOString() })
+      .update({ ...dbData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();

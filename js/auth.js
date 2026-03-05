@@ -216,15 +216,26 @@ function loginUser(email, password) {
             return;
         }
         
+        // Create user object for session (without password)
+        const userData = {
+            id: users[userKey].id,
+            email: users[userKey].email,
+            name: users[userKey].name,
+            phone: users[userKey].phone,
+            role: users[userKey].role,
+            personalization: users[userKey].personalization,
+            createdAt: users[userKey].createdAt
+        };
+        
         // Save auth session to BOTH keys for UI compatibility
         // supabase_user_auth is checked first by the UI
-        localStorage.setItem(SUPABASE_AUTH_KEY, JSON.stringify(authData));
-        localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
+        localStorage.setItem(SUPABASE_AUTH_KEY, JSON.stringify(userData));
+        localStorage.setItem(AUTH_KEY, JSON.stringify(userData));
         
         // Notify auth state listeners
         AuthState.notify();
         
-        resolve(authData);
+        resolve(userData);
     });
 }
 
