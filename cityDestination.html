@@ -592,7 +592,7 @@
         
         // FIX: Global function to render Explore Other Cities
         // This can be called from both loadFromHardcodedData() and displayPackage()
-        function renderExploreOtherCities() {
+        window.renderExploreOtherCities = function renderExploreOtherCities() {
             const navContainer = document.getElementById('other-cities-nav');
             if (!navContainer) {
                 console.error('[ExploreCities] navContainer not found!');
@@ -1733,8 +1733,30 @@
                 const date = new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 const verifiedBadge = review.is_verified ? '<span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Verified</span>' : '';
                 
+                // Check if user can delete this review (owner or admin)
+                const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+                const canDelete = currentUser && (currentUser.id === review.user_id || currentUser.role === 'admin');
+                
+                const deleteMenu = canDelete ? `
+                    <div class="relative">
+                        <button onclick="event.stopPropagation(); toggleReviewMenu('${review.id}')" class="p-1 hover:bg-gray-100 rounded-full text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                        <div id="review-menu-${review.id}" class="hidden absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <button onclick="event.stopPropagation(); deleteReview('${review.id}');" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                ` : '';
+                
                 return `
-                    <div class="review-item bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="review-item bg-white p-6 rounded-2xl border border-gray-100 shadow-sm" data-review-id="${review.id}">
                         <div class="flex items-start gap-4">
                             <div class="w-12 h-12 rounded-full bg-[#1a4d41] flex items-center justify-center text-white font-bold flex-shrink-0">
                                 ${avatarUrl ? `<img src="${avatarUrl}" alt="${userName}" class="w-12 h-12 rounded-full object-cover">` : userName.charAt(0).toUpperCase()}
@@ -1745,8 +1767,11 @@
                                         <h4 class="font-bold text-[#1a4d41]">${userName} ${verifiedBadge}</h4>
                                         <p class="text-xs text-gray-500">${date}</p>
                                     </div>
-                                    <div class="flex text-orange-400">
-                                        ${Array(5).fill(0).map((_, i) => `<span class="${i < review.rating ? 'text-orange-400' : 'text-gray-300'}">★</span>`).join('')}
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex text-orange-400">
+                                            ${Array(5).fill(0).map((_, i) => `<span class="${i < review.rating ? 'text-orange-400' : 'text-gray-300'}">★</span>`).join('')}
+                                        </div>
+                                        ${deleteMenu}
                                     </div>
                                 </div>
                                 ${review.title ? `<h5 class="font-bold text-gray-800 mt-2">${review.title}</h5>` : ''}
@@ -1886,6 +1911,105 @@
                 return localAuth ? JSON.parse(localAuth) : null;
             }
 
+            // Toggle review menu dropdown
+            function toggleReviewMenu(reviewId) {
+                const menu = document.getElementById(`review-menu-${reviewId}`);
+                if (menu) {
+                    // Close all other menus first
+                    document.querySelectorAll('[id^="review-menu-"]').forEach(m => {
+                        if (m.id !== `review-menu-${reviewId}`) {
+                            m.classList.add('hidden');
+                        }
+                    });
+                    menu.classList.toggle('hidden');
+                }
+            }
+            
+            // Close all review menus when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.relative')) {
+                    document.querySelectorAll('[id^="review-menu-"]').forEach(m => {
+                        m.classList.add('hidden');
+                    });
+                }
+            });
+            
+            // Delete review function
+            async function deleteReview(reviewId) {
+                const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+                
+                if (!currentUser) {
+                    alert('Please login to delete your review');
+                    return;
+                }
+                
+                // Confirm deletion
+                if (!confirm('Are you sure you want to delete this review?')) {
+                    return;
+                }
+                
+                try {
+                    const token = localStorage.getItem('supabase_user_auth') || localStorage.getItem('avalmeos_auth');
+                    let result;
+                    
+                    if (currentUser.role === 'admin') {
+                        // Admin user - use admin endpoint
+                        const response = await fetch(`/api/admin/reviews/${reviewId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${typeof token === 'string' ? token : token?.token || ''}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        result = await response.json();
+                    } else {
+                        // Regular user - use regular endpoint
+                        const response = await fetch(`/api/reviews/${reviewId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${typeof token === 'string' ? token : token?.token || ''}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        result = await response.json();
+                    }
+                    
+                    if (result.success) {
+                        // Remove review from UI
+                        const reviewElement = document.querySelector(`[data-review-id="${reviewId}"]`);
+                        if (reviewElement) {
+                            reviewElement.remove();
+                        }
+                        
+                        // Update review count
+                        const reviewCountEl = document.querySelector('#reviews-section .text-gray-500.text-sm');
+                        if (reviewCountEl) {
+                            const match = reviewCountEl.textContent.match(/\((\d+)\s+reviews?\)/);
+                            if (match) {
+                                const count = parseInt(match[1]) - 1;
+                                reviewCountEl.textContent = `(${count} review${count !== 1 ? 's' : ''})`;
+                            }
+                        }
+                        
+                        alert('Review deleted successfully');
+                    } else {
+                        alert(result.message || 'Failed to delete review');
+                    }
+                } catch (error) {
+                    console.error('Delete review error:', error);
+                    alert('An error occurred while deleting the review');
+                }
+                
+                // Close menu
+                document.querySelectorAll('[id^="review-menu-"]').forEach(m => {
+                    m.classList.add('hidden');
+                });
+            }
+            
+            // Make functions globally accessible
+            window.toggleReviewMenu = toggleReviewMenu;
+            window.deleteReview = deleteReview;
+            
             // Submit review
             async function submitReview(e) {
                 e.preventDefault();

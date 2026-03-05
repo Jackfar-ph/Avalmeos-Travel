@@ -173,6 +173,13 @@ class ApiService {
     });
   }
 
+  // Admin: Delete any review
+  async deleteReviewAsAdmin(reviewId) {
+    return this.request(`/admin/reviews/${reviewId}`, {
+      method: 'DELETE'
+    });
+  }
+
   // ======================
   // INQUIRIES
   // ======================

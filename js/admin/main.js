@@ -1388,6 +1388,16 @@ function getAdminToken() {
     if (!token) {
         token = sessionStorage.getItem('supabase_admin_token');
     }
+    
+    // Validate token format before returning
+    if (token && token.length < 20) {
+        console.warn('[Chat] Token appears invalid, clearing...');
+        localStorage.removeItem('avalmeos_token');
+        localStorage.removeItem('supabase_admin_token');
+        localStorage.removeItem('avalmeos_auth');
+        token = null;
+    }
+    
     console.log('[Chat] Token found:', token ? 'Yes' : 'No');
     return token;
 }
@@ -1402,7 +1412,8 @@ async function loadChatConversations() {
     try {
         const token = getAdminToken();
         if (!token) {
-            container.innerHTML = '<div class="p-4 text-center text-red-500">Please log in as admin</div>';
+            container.innerHTML = '<div class="p-4 text-center text-red-500">Please log in as admin to view conversations</div>';
+            // Optionally redirect to login
             return;
         }
         
@@ -1421,6 +1432,16 @@ async function loadChatConversations() {
         });
         
         console.log('[Chat] Response status:', response.status);
+        
+        if (response.status === 403 || response.status === 401) {
+            // Token is invalid or expired - clear auth and show login prompt
+            console.log('[Chat] Authentication failed, clearing tokens...');
+            localStorage.removeItem('avalmeos_token');
+            localStorage.removeItem('supabase_admin_token');
+            localStorage.removeItem('avalmeos_auth');
+            container.innerHTML = '<div class="p-4 text-center text-red-500">Session expired. Please log in again.</div>';
+            return;
+        }
         
         if (!response.ok) {
             const errorText = await response.text();
