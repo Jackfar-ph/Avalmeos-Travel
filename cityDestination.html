@@ -1563,6 +1563,9 @@
                 setTimeout(initReviews, 300);
             });
             
+            // Make loadMoreReviews globally accessible
+            window.loadMoreReviews = loadMoreReviews;
+            
             async function initReviews() {
                 // Get destination ID from the loaded package
                 const params = new URLSearchParams(window.location.search);
@@ -1871,6 +1874,18 @@
                 }
             };
             
+            // Helper function to get current user (consistent with auth.js)
+            function getCurrentUser() {
+                // Check Supabase auth first
+                const supabaseUser = localStorage.getItem('supabase_user_auth');
+                if (supabaseUser) {
+                    return JSON.parse(supabaseUser);
+                }
+                // Fall back to local auth
+                const localAuth = localStorage.getItem('avalmeos_auth');
+                return localAuth ? JSON.parse(localAuth) : null;
+            }
+
             // Submit review
             async function submitReview(e) {
                 e.preventDefault();
@@ -1896,10 +1911,17 @@
                     return;
                 }
                 
-                // Check login
-                const token = localStorage.getItem('avalmeos_token');
-                if (!token) {
+                // PROPER AUTHENTICATION CHECK
+                const user = getCurrentUser();
+                if (!user) {
                     alert('Please log in to submit a review. Use the Log In button above.');
+                    return;
+                }
+                
+                // Additional validation - ensure user has valid session
+                const token = localStorage.getItem('supabase_user_auth') || localStorage.getItem('avalmeos_auth');
+                if (!token) {
+                    alert('Your session has expired. Please log in again.');
                     return;
                 }
                 
@@ -1911,7 +1933,7 @@
                 submitBtn.innerText = 'Submitting...';
                 
                 try {
-                    const token = localStorage.getItem('avalmeos_token');
+                    const token = localStorage.getItem('supabase_user_auth') || localStorage.getItem('avalmeos_auth');
                     const response = await fetch('/api/reviews', {
                         method: 'POST',
                         headers: {
